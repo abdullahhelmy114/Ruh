@@ -1,34 +1,27 @@
 "use client";
 
-import { useLocale } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { Globe } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
-const localeNames: Record<string, string> = {
-  en: "EN",
-  ar: "AR",
-  tr: "TR",
-};
+const languages = [
+  { code: "en", label: "EN" },
+  { code: "ar", label: "AR" },
+  { code: "tr", label: "TR" },
+];
 
 export function LanguageSwitcher() {
-  const locale = useLocale();
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const cycleLocale = () => {
-    const locales = ["en", "ar", "tr"];
-    const currentIndex = locales.indexOf(locale);
-    const nextLocale = locales[(currentIndex + 1) % locales.length];
-    router.replace(pathname, { locale: nextLocale });
-  };
+  const { i18n } = useTranslation();
 
   return (
-    <button
-      onClick={cycleLocale}
-      aria-label="Change language"
-      className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card text-xs font-bold transition-colors hover:bg-accent"
+    <select
+      value={i18n.language}
+      onChange={(e) => i18n.changeLanguage(e.target.value)}
+      className="bg-transparent border border-border rounded-full px-3 py-1 text-sm"
     >
-      {localeNames[locale] || locale.toUpperCase()}
-    </button>
+      {languages.map((lang) => (
+        <option key={lang.code} value={lang.code}>
+          {lang.label}
+        </option>
+      ))}
+    </select>
   );
 }
