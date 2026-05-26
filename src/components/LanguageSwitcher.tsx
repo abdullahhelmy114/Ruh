@@ -1,27 +1,26 @@
 "use client";
 
 import { useTranslation } from "react-i18next";
+import { Globe } from "lucide-react";
 
-const languages = [
-  { code: "en", label: "EN" },
-  { code: "ar", label: "AR" },
-  { code: "tr", label: "TR" },
-];
+const locales = ["en", "ar", "tr"] as const;
 
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
+  const cycleLocale = () => {
+    const currentIndex = locales.indexOf(i18n.language as typeof locales[number]);
+    const nextLocale = locales[(currentIndex + 1) % locales.length];
+    i18n.changeLanguage(nextLocale);
+  };
+
   return (
-    <select
-      value={i18n.language}
-      onChange={(e) => i18n.changeLanguage(e.target.value)}
-      className="bg-transparent border border-border rounded-full px-3 py-1 text-sm"
+    <button
+      onClick={cycleLocale}
+      aria-label="Change language"
+      className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
     >
-      {languages.map((lang) => (
-        <option key={lang.code} value={lang.code}>
-          {lang.label}
-        </option>
-      ))}
-    </select>
+      <Globe className="h-4 w-4" />
+    </button>
   );
 }
