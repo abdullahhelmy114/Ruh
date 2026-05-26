@@ -8,11 +8,14 @@ const locales = ["en", "ar", "tr"] as const;
 export function LanguageSwitcher() {
   const { i18n } = useTranslation();
 
-  const cycleLocale = () => {
-    const currentIndex = locales.indexOf(i18n.language as typeof locales[number]);
-    const nextLocale = locales[(currentIndex + 1) % locales.length];
-    i18n.changeLanguage(nextLocale);
-  };
+
+const cycleLocale = () => {
+  const locales = ["en", "ar", "tr"] as const;
+  const currentIndex = locales.indexOf(i18n.language as typeof locales[number]);
+  const nextLocale = locales[(currentIndex + 1) % locales.length];
+  i18n.changeLanguage(nextLocale);
+  alert("Language changed to: " + nextLocale); // إضافة مؤقتة للتأكيد
+};
 
   return (
     <button
