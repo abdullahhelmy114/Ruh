@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "marketplace": "Market",
+    "community": "Topluluk",
+    "login": "Giriş Yap",
+    "signup": "Hesap Oluştur",
+    "dashboard": "Panel",
+    "profile": "Profil",
+    "logout": "Çıkış"
+  },
+  "home": {
+    "title": "Ruhulqudus Akademisi",
+    "subtitle": "Arapça öğrenmek için en iyi platform",
+    "cta": "Kursları Keşfet"
+  }
+}

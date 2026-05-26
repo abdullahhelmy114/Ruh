@@ -1,5 +1,6 @@
 "use client";
 
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Moon, Sun, BookOpen, User, LayoutDashboard, LogOut, ChevronDown } from "lucide-react";
@@ -7,9 +8,7 @@ import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/firebase/AuthProvider";
-import { signOut } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
-
+import { signOut, getAuth } from "firebase/auth";
 const links = [
   { to: "/", label: "Home" },
   { to: "/marketplace", label: "Marketplace" },
@@ -34,7 +33,7 @@ export function Navbar() {
   }, []);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    await signOut(getAuth());
     setMenuOpen(false);
   };
 
@@ -83,6 +82,10 @@ export function Navbar() {
         </nav>
 
         <div className="flex items-center gap-2">
+          {/* Language Switcher */}
+          <LanguageSwitcher />
+
+          {/* Theme Toggle */}
           <button
             onClick={toggle}
             aria-label="Toggle theme"

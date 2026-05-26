@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "home": "Home",
+    "marketplace": "Marketplace",
+    "community": "Community",
+    "login": "Sign In",
+    "signup": "Create Account",
+    "dashboard": "Dashboard",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "home": {
+    "title": "Ruhulqudus Academy",
+    "subtitle": "The finest platform for learning Arabic",
+    "cta": "Explore Courses"
+  }
+}
