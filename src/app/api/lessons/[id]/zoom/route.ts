@@ -5,10 +5,10 @@ import { sql } from '@/lib/db/client';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
-    const lessonId = params.id;
+    const { id: lessonId } = await context.params;
 
     const result = await sql`
       SELECT id, title, status, meeting_url, meeting_id, teacher_uid, course_id

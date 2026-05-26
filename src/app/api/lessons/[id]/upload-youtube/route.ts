@@ -91,9 +91,9 @@ async function uploadToYouTube(
 // ── API Route Handler ─────────────────────────────
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
-  const lessonId = params.id;
+  const { id: lessonId } = await context.params;
 
   try {
     // 1. جلب رابط تسجيل Zoom من قاعدة البيانات (يُفترض أن Zoom Webhook أضافه)

@@ -72,12 +72,11 @@ async function createZoomMeeting(topic: string, startTime: string): Promise<{ me
 // ─── PUT /api/lessons/[id] ─────────────────────────────────
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
     const { status, meetingUrl, meetingId } = await request.json();
-    const lessonId = params.id;
-
+    const { id: lessonId } = await context.params;
     if (!lessonId || !status) {
       return NextResponse.json({ error: 'Missing lesson ID or status' }, { status: 400 });
     }
