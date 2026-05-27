@@ -1,5 +1,6 @@
 "use client";
 
+import { T } from "@/components/TranslatedText";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -28,8 +29,8 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState<TabKey>("overview");
 
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
-  if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600">تسجيل الدخول</Link></div>;
-  if (user.email !== "abdullahhelmy114@gmail.com") return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600">غير مصرح</h1></div>;
+  if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
+  if (user.email !== "abdullahhelmy114@gmail.com") return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
@@ -40,14 +41,14 @@ export default function AdminDashboard() {
             <Crown className="h-6 w-6 text-white" />
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">Management Suite</div>
-            <h1 className="font-serif text-3xl">Admin Control Panel</h1>
-            <p className="text-sm text-muted-foreground">Oversee the entire Ruhulqudus Academy ecosystem.</p>
+            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Management Suite</T></div>
+            <h1 className="font-serif text-3xl"><T>Admin Control Panel</T></h1>
+            <p className="text-sm text-muted-foreground"><T>Oversee the entire Ruhulqudus Academy ecosystem.</T></p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 font-medium text-emerald-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> All systems operational
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> <T>All systems operational</T>
           </span>
         </div>
       </div>
@@ -59,7 +60,7 @@ export default function AdminDashboard() {
           const active = tab === t.key;
           return (
             <button key={t.key} onClick={() => setTab(t.key)} className={cn("inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all", active ? "bg-linear-to-r from-emerald-600 to-emerald-700 text-white shadow-elegant" : "text-muted-foreground hover:bg-accent hover:text-foreground")}>
-              <Icon className="h-4 w-4" /> {t.label}
+              <Icon className="h-4 w-4" /> <T>{t.label}</T>
             </button>
           );
         })}
@@ -118,7 +119,7 @@ function OverviewTab() {
                   </div>
                 </div>
                 <div className="mt-4 font-serif text-3xl">{s.value}</div>
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.label}</div>
+                <div className="text-xs uppercase tracking-wider text-muted-foreground"><T>{s.label}</T></div>
               </div>
             </div>
           );
@@ -126,19 +127,19 @@ function OverviewTab() {
       </div>
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="rounded-3xl border bg-card p-6 shadow-elegant lg:col-span-2">
-          <h3 className="font-serif text-xl">Revenue Trend (last 30 days)</h3>
+          <h3 className="font-serif text-xl"><T>Revenue Trend (last 30 days)</T></h3>
           <div className="mt-4 h-40 flex items-end gap-2">
             {Array.from({length:12}).map((_,i)=> <div key={i} className="flex-1 rounded-t bg-linear-to-t from-primary to-amber-500/70" style={{height: `${Math.random()*100}%`}}/>)}
           </div>
         </div>
         <div className="rounded-3xl border bg-card p-6 shadow-elegant">
-          <h3 className="font-serif text-xl">Pending Items</h3>
+          <h3 className="font-serif text-xl"><T>Pending Items</T></h3>
           <ul className="mt-4 space-y-3">
             {pendingList.map(item => {
               const Icon = item.icon;
               return (
                 <li key={item.label} className="flex items-center justify-between rounded-2xl border bg-background px-4 py-3">
-                  <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /> {item.label}</div>
+                  <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /> <T>{item.label}</T></div>
                   <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-800">{item.count}</span>
                 </li>
               );
@@ -172,18 +173,18 @@ function TeacherVerificationTab() {
 
   return (
     <div className="space-y-4">
-      <h2 className="font-serif text-2xl">Pending Teacher Applications</h2>
-      {apps.length === 0 ? <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground">No pending applications</div> :
+      <h2 className="font-serif text-2xl"><T>Pending Teacher Applications</T></h2>
+      {apps.length === 0 ? <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground"><T>No pending applications</T></div> :
         apps.map(app => (
           <div key={app.id} className="rounded-3xl border bg-card p-5 shadow-elegant flex justify-between items-center">
             <div>
               <h3 className="font-serif text-lg">{app.full_name}</h3>
-              <p className="text-xs text-muted-foreground">{app.email} · {app.country} · {app.years_experience} yrs · {app.specialization}</p>
-              {app.cv_url && <a href={app.cv_url} target="_blank" className="text-xs text-amber-600 hover:underline inline-flex items-center gap-1 mt-1"><ExternalLink size={12} /> View CV</a>}
+              <p className="text-xs text-muted-foreground">{app.email} · {app.country} · {app.years_experience} <T>yrs</T> · {app.specialization}</p>
+              {app.cv_url && <a href={app.cv_url} target="_blank" className="text-xs text-amber-600 hover:underline inline-flex items-center gap-1 mt-1"><ExternalLink size={12} /> <T>View CV</T></a>}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => handleAction(app.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-sm">Reject</button>
-              <button onClick={() => handleAction(app.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-sm">Approve</button>
+              <button onClick={() => handleAction(app.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-sm"><T>Reject</T></button>
+              <button onClick={() => handleAction(app.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-sm"><T>Approve</T></button>
             </div>
           </div>
         ))
@@ -228,13 +229,13 @@ function CourseModerationTab() {
 
     if (!res.ok) {
       const err = await res.json();
-      alert(`Failed: ${err.error || 'Unknown error'}`);
+      alert(`<T>Failed</T>: ${err.error || '<T>Unknown error</T>'}`);
       return;
     }
 
     setCourses(prev => prev.filter(c => c.id !== id));
   } catch (e: any) {
-    alert(`Network error: ${e.message}`);
+    alert(`<T>Network error</T>: ${e.message}`);
   }
 };
 
@@ -253,10 +254,10 @@ function CourseModerationTab() {
 
   return (
     <div>
-      <h2 className="font-serif text-2xl mb-4">Course & Lesson Moderation</h2>
+      <h2 className="font-serif text-2xl mb-4"><T>Course & Lesson Moderation</T></h2>
       {totalPending === 0 ? (
         <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground">
-          No pending courses or lessons
+          <T>No pending courses or lessons</T>
         </div>
       ) : (
         <div className="space-y-6">
@@ -264,18 +265,18 @@ function CourseModerationTab() {
           {courses.length > 0 && (
             <div>
               <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-amber-500" /> Courses ({courses.length})
+                <BookOpen className="h-5 w-5 text-amber-500" /> <T>Courses</T> ({courses.length})
               </h3>
               {courses.map(c => (
                 <div key={c.id} className="rounded-2xl border bg-card p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div>
                     <h4 className="font-medium">{c.title}</h4>
-                    <p className="text-xs text-muted-foreground">by {c.teacher_name} · Level {c.level} · ${c.price}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Submitted {new Date(c.created_at).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground"><T>by</T> {c.teacher_name} · <T>Level</T> {c.level} · ${c.price}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5"><T>Submitted</T> {new Date(c.created_at).toLocaleString()}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleCourseAction(c.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs">Reject</button>
-                    <button onClick={() => handleCourseAction(c.id, 'published')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs">Publish</button>
+                    <button onClick={() => handleCourseAction(c.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"><T>Reject</T></button>
+                    <button onClick={() => handleCourseAction(c.id, 'published')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"><T>Publish</T></button>
                   </div>
                 </div>
               ))}
@@ -286,18 +287,18 @@ function CourseModerationTab() {
           {lessons.length > 0 && (
             <div>
               <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                <Video className="h-5 w-5 text-amber-500" /> Lessons ({lessons.length})
+                <Video className="h-5 w-5 text-amber-500" /> <T>Lessons</T> ({lessons.length})
               </h3>
               {lessons.map(l => (
                 <div key={l.id} className="rounded-2xl border bg-card p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div>
                     <h4 className="font-medium">{l.title}</h4>
-                    <p className="text-xs text-muted-foreground">Course: {l.course_title} · Type: {l.type}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">Submitted {new Date(l.created_at).toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground"><T>Course</T>: {l.course_title} · <T>Type</T>: {l.type}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5"><T>Submitted</T> {new Date(l.created_at).toLocaleString()}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleLessonAction(l.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs">Reject</button>
-                    <button onClick={() => handleLessonAction(l.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs">Approve</button>
+                    <button onClick={() => handleLessonAction(l.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"><T>Reject</T></button>
+                    <button onClick={() => handleLessonAction(l.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"><T>Approve</T></button>
                   </div>
                 </div>
               ))}
@@ -327,11 +328,16 @@ function UserManagementTab() {
 
   return (
     <div>
-      <h2 className="font-serif text-2xl mb-4">User Management</h2>
+      <h2 className="font-serif text-2xl mb-4"><T>User Management</T></h2>
       <table className="w-full text-sm rounded-3xl border bg-card overflow-hidden">
         <thead className="bg-muted/40 text-xs uppercase">
           <tr>
-            <th className="px-5 py-3 text-left">User</th><th>Role</th><th>Plan</th><th>Status</th><th>Joined</th><th>Actions</th>
+            <th className="px-5 py-3 text-left"><T>User</T></th>
+            <th><T>Role</T></th>
+            <th><T>Plan</T></th>
+            <th><T>Status</T></th>
+            <th><T>Joined</T></th>
+            <th><T>Actions</T></th>
           </tr>
         </thead>
         <tbody>
@@ -341,7 +347,7 @@ function UserManagementTab() {
               <td>{u.role}</td><td>{u.plan}</td><td>{u.status}</td><td>{new Date(u.created_at).toLocaleDateString()}</td>
               <td>
                 <button onClick={() => toggleBan(u.id, u.status)} className={`px-2 py-1 rounded-full text-xs ${u.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                  {u.status === 'Active' ? 'Ban' : 'Unban'}
+                  {u.status === 'Active' ? <T>Ban</T> : <T>Unban</T>}
                 </button>
               </td>
             </tr>
@@ -363,10 +369,10 @@ function FinancialCenterTab() {
   }, []);
   return (
     <div>
-      <h2 className="font-serif text-2xl mb-4">Financial Center</h2>
+      <h2 className="font-serif text-2xl mb-4"><T>Financial Center</T></h2>
       <div className="grid md:grid-cols-2 gap-4">
         <div>
-          <h3 className="font-serif text-lg">Recent Transactions</h3>
+          <h3 className="font-serif text-lg"><T>Recent Transactions</T></h3>
           {transactions.map((t: any) => (
             <div key={t.id} className="flex justify-between p-2 border-b text-sm">
               <span>{t.user_name} – {t.item_name}</span>
@@ -375,7 +381,7 @@ function FinancialCenterTab() {
           ))}
         </div>
         <div>
-          <h3 className="font-serif text-lg">Pending Payouts</h3>
+          <h3 className="font-serif text-lg"><T>Pending Payouts</T></h3>
           {payouts.map((p: any) => (
             <div key={p.teacher_id} className="flex justify-between p-2 border-b text-sm">
               <span>{p.teacher_name}</span>
@@ -398,21 +404,20 @@ function AIConfigurationTab() {
   });
 
   const handleSave = () => {
-    alert('Configuration saved!');
-    // يمكنك إضافة API لحفظ الإعدادات في قاعدة البيانات
+    alert('<T>Configuration saved!</T>');
   };
 
   return (
     <div>
-      <h2 className="font-serif text-2xl mb-4">AI Configuration</h2>
+      <h2 className="font-serif text-2xl mb-4"><T>AI Configuration</T></h2>
       <div className="space-y-4 max-w-2xl">
         <div>
-          <label className="block text-sm font-medium">System Prompt</label>
+          <label className="block text-sm font-medium"><T>System Prompt</T></label>
           <textarea rows={4} value={config.systemPrompt} onChange={e => setConfig({...config, systemPrompt: e.target.value})}
             className="w-full rounded-2xl border bg-background p-4 text-sm mt-1" />
         </div>
         <div>
-          <label className="block text-sm font-medium">Model</label>
+          <label className="block text-sm font-medium"><T>Model</T></label>
           <select value={config.model} onChange={e => setConfig({...config, model: e.target.value})}
             className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1">
             <option>gpt-5.2</option>
@@ -422,17 +427,17 @@ function AIConfigurationTab() {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium">Temperature</label>
+            <label className="block text-sm font-medium"><T>Temperature</T></label>
             <input type="number" step={0.1} value={config.temperature} onChange={e => setConfig({...config, temperature: parseFloat(e.target.value)})}
               className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
           </div>
           <div>
-            <label className="block text-sm font-medium">Max Tokens</label>
+            <label className="block text-sm font-medium"><T>Max Tokens</T></label>
             <input type="number" value={config.maxTokens} onChange={e => setConfig({...config, maxTokens: parseInt(e.target.value)})}
               className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
           </div>
         </div>
-        <button onClick={handleSave} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white">Save Configuration</button>
+        <button onClick={handleSave} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white"><T>Save Configuration</T></button>
       </div>
     </div>
   );
@@ -446,23 +451,23 @@ function SiteSettingsTab() {
 
   return (
     <div className="max-w-2xl">
-      <h2 className="font-serif text-2xl mb-4">Site Settings</h2>
+      <h2 className="font-serif text-2xl mb-4"><T>Site Settings</T></h2>
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium">Site Name</label>
+          <label className="block text-sm font-medium"><T>Site Name</T></label>
           <input value={siteName} onChange={e => setSiteName(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
         </div>
         <div>
-          <label className="block text-sm font-medium">Contact Email</label>
+          <label className="block text-sm font-medium"><T>Contact Email</T></label>
           <input value={contactEmail} onChange={e => setContactEmail(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
         </div>
         <div className="flex items-center gap-3">
-          <label className="text-sm font-medium">Maintenance Mode</label>
+          <label className="text-sm font-medium"><T>Maintenance Mode</T></label>
           <button onClick={() => setMaintenanceMode(!maintenanceMode)} className={`h-6 w-11 rounded-full p-0.5 transition-colors ${maintenanceMode ? 'bg-emerald-600' : 'bg-gray-300'}`}>
             <div className={`h-5 w-5 rounded-full bg-white transition-transform ${maintenanceMode ? 'translate-x-5' : ''}`} />
           </button>
         </div>
-        <button className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white mt-4">Save Settings</button>
+        <button className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white mt-4"><T>Save Settings</T></button>
       </div>
     </div>
   );

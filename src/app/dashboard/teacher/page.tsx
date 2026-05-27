@@ -1,5 +1,6 @@
 "use client";
 
+import { T } from "@/components/TranslatedText";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -210,14 +211,14 @@ export default function TeacherDashboard() {
             {data.initial}
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">Instructor Portal</div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600"><T>Instructor Portal</T></div>
             <h1 className="mt-1 font-serif text-3xl">{data.fullName}</h1>
-            <p className="mt-1 text-sm italic text-muted-foreground">"Your students await your wisdom today."</p>
+            <p className="mt-1 text-sm italic text-muted-foreground"><T>"Your students await your wisdom today."</T></p>
           </div>
         </div>
         <div className="flex w-full gap-3 md:w-auto">
           <button onClick={() => setShowCourseModal(true)} className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent">
-            <Upload className="h-4 w-4 text-amber-500" /> New Course
+            <Upload className="h-4 w-4 text-amber-500" /> <T>New Course</T>
           </button>
           <button
             onClick={() => {
@@ -229,7 +230,7 @@ export default function TeacherDashboard() {
             }}
             className="inline-flex items-center gap-2 rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-3 text-sm font-bold text-white shadow-elegant"
           >
-            <Plus className="h-4 w-4" /> New Lesson
+            <Plus className="h-4 w-4" /> <T>New Lesson</T>
           </button>
         </div>
       </div>
@@ -243,16 +244,16 @@ export default function TeacherDashboard() {
                 <Star className="h-6 w-6 fill-white" />
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">Your Rating</div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Your Rating</T></div>
                 <div className="font-serif text-3xl">{ratingData.averageRating.toFixed(1)}</div>
-                <div className="text-sm text-muted-foreground">{ratingData.completedLessons} lessons completed</div>
+                <div className="text-sm text-muted-foreground">{ratingData.completedLessons} <T>lessons completed</T></div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">Commission Rate</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Commission Rate</T></div>
               <div className="font-serif text-3xl text-emerald-600">{commissionRate}%</div>
               <div className="text-xs text-muted-foreground">
-                +5% every 50 lessons at 4.5+ rating (max 50%)
+                <T>+5% every 50 lessons at 4.5+ rating (max 50%)</T>
               </div>
             </div>
           </div>
@@ -264,7 +265,7 @@ export default function TeacherDashboard() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Video className="h-5 w-5 text-amber-500" />
-            <h2 className="font-serif text-xl">Your Live Sessions</h2>
+            <h2 className="font-serif text-xl"><T>Your Live Sessions</T></h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {data.sessions.map(s => {
@@ -279,7 +280,7 @@ export default function TeacherDashboard() {
                     </div>
                   </div>
                   <Link href={`/live/${s.id}`} className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${joinable ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-muted text-muted-foreground pointer-events-none"}`}>
-                    {joinable ? <>Join Now <ArrowRight size={14} /></> : <><Clock size={14} /> Waiting</>}
+                    {joinable ? <><T>Join Now</T> <ArrowRight size={14} /></> : <><Clock size={14} /> <T>Waiting</T></>}
                   </Link>
                 </div>
               );
@@ -291,29 +292,29 @@ export default function TeacherDashboard() {
       {/* Courses List */}
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="font-serif text-2xl">Your Courses</h2>
+          <h2 className="font-serif text-2xl"><T>Your Courses</T></h2>
           {data.courses.length === 0 ? (
             <div className="rounded-3xl border bg-card p-8 text-center text-muted-foreground">
               <BookOpen className="mx-auto h-8 w-8 text-amber-500 mb-3" />
-              <p>You haven't created any courses yet.</p>
+              <p><T>You haven't created any courses yet.</T></p>
             </div>
           ) : (
             data.courses.map((course) => (
               <div key={course.id} className="rounded-3xl border bg-card p-5 shadow-elegant flex justify-between items-center">
                 <div>
                   <h3 className="font-serif text-lg">{course.title}</h3>
-                  <p className="text-sm text-muted-foreground">Level {course.level} · ${course.price}</p>
+                  <p className="text-sm text-muted-foreground"><T>Level</T> {course.level} · ${course.price}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${course.status === 'published' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
                     {course.status}
                   </span>
                   {course.recording_url && (
                     <button onClick={() => window.open(course.recording_url, '_blank')} className="ml-2 text-xs text-emerald-600 hover:underline inline-flex items-center gap-1">
-                      <Play size={12} /> View Recording
+                      <Play size={12} /> <T>View Recording</T>
                     </button>
                   )}
                 </div>
                 <Link href={`/dashboard/teacher/courses/${course.id}`} className="text-amber-600 text-sm font-semibold hover:underline">
-                  Manage →
+                  <T>Manage →</T>
                 </Link>
               </div>
             ))
@@ -323,12 +324,12 @@ export default function TeacherDashboard() {
         {/* Stats Sidebar */}
         <div className="space-y-4">
           <div className="rounded-3xl border bg-card p-6 shadow-elegant">
-            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">Stats</div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Stats</T></div>
             <div className="mt-4 space-y-3">
-              <div className="flex justify-between"><span className="text-muted-foreground">Students</span><span className="font-semibold">{data.students}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Active Courses</span><span className="font-semibold">{data.activeCourses}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Revenue</span><span className="font-semibold">${data.revenue}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Commission</span><span className="font-semibold text-emerald-600">{commissionRate}%</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground"><T>Students</T></span><span className="font-semibold">{data.students}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground"><T>Active Courses</T></span><span className="font-semibold">{data.activeCourses}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground"><T>Revenue</T></span><span className="font-semibold">${data.revenue}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground"><T>Commission</T></span><span className="font-semibold text-emerald-600">{commissionRate}%</span></div>
             </div>
           </div>
         </div>
@@ -339,28 +340,28 @@ export default function TeacherDashboard() {
         {showCourseModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-card rounded-3xl shadow-elegant max-w-md w-full p-6 space-y-6">
-              <h2 className="font-serif text-2xl">New Course</h2>
+              <h2 className="font-serif text-2xl"><T>New Course</T></h2>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Course Title</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Course Title</T></label>
                 <input value={newCourseTitle} onChange={(e) => setNewCourseTitle(e.target.value)} placeholder="e.g. Arabic for Beginners" className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Level</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Level</T></label>
                   <select value={newCourseLevel} onChange={(e) => setNewCourseLevel(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1">
                     <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Price (USD)</label>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Price (USD)</T></label>
                   <input type="number" value={newCoursePrice} onChange={(e) => setNewCoursePrice(parseInt(e.target.value))} className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1" />
                 </div>
               </div>
               {courseError && <p className="text-sm text-destructive">{courseError}</p>}
               <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowCourseModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm">Cancel</button>
+                <button onClick={() => setShowCourseModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm"><T>Cancel</T></button>
                 <button onClick={handleSaveCourse} disabled={savingCourse} className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {savingCourse ? <Loader2 size={16} className="animate-spin mx-auto" /> : 'Create Course'}
+                  {savingCourse ? <Loader2 size={16} className="animate-spin mx-auto" /> : <T>Create Course</T>}
                 </button>
               </div>
             </motion.div>
@@ -373,46 +374,46 @@ export default function TeacherDashboard() {
         {showLessonModal && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto">
-              <h2 className="font-serif text-2xl">New Lesson</h2>
+              <h2 className="font-serif text-2xl"><T>New Lesson</T></h2>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Select Course</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Select Course</T></label>
                 <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 mt-1 text-sm">
-                  <option value="">-- Choose a course --</option>
+                  <option value="">-- <T>Choose a course</T> --</option>
                   {data.courses.filter(c => c.status === 'published').map(c => (
-                    <option key={c.id} value={c.id}>{c.title} (Level {c.level})</option>
+                    <option key={c.id} value={c.id}>{c.title} (<T>Level</T> {c.level})</option>
                   ))}
                 </select>
                 <button type="button" onClick={() => { setShowLessonModal(false); setShowCourseModal(true); }} className="text-xs text-amber-600 hover:underline mt-1 inline-block">
-                  + Create a new course
+                  + <T>Create a new course</T>
                 </button>
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lesson Type</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Lesson Type</T></label>
                 <div className="mt-2 grid grid-cols-2 gap-3">
                   <button onClick={() => setLessonType("zoom")} className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${lessonType === "zoom" ? "bg-emerald-600 text-white border-emerald-600" : "bg-card hover:bg-accent"}`}>
-                    <Video size={16} /> Live Zoom
+                    <Video size={16} /> <T>Live Zoom</T>
                   </button>
                   <button onClick={() => setLessonType("recorded")} className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${lessonType === "recorded" ? "bg-emerald-600 text-white border-emerald-600" : "bg-card hover:bg-accent"}`}>
-                    <FileText size={16} /> Recorded
+                    <FileText size={16} /> <T>Recorded</T>
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Lesson Title</label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Lesson Title</T></label>
                 <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="e.g. Introduction to Arabic Grammar" className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" />
               </div>
 
               {lessonType === "zoom" && (
                 <div className="space-y-4">
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Session Date (min. 7 days ahead)</label>
+                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2"><T>Session Date (min. 7 days ahead)</T></label>
                     <CalendarPicker selected={sessionDate} onChange={setSessionDate} minDate={new Date(Date.now() + 7*24*60*60*1000)} />
                   </div>
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Session Time</label>
+                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2"><T>Session Time</T></label>
                     <TimeSlotPicker selected={sessionTime} onChange={setSessionTime} date={sessionDate} />
                   </div>
                 </div>
@@ -421,9 +422,9 @@ export default function TeacherDashboard() {
               {lessonError && <p className="text-sm text-destructive">{lessonError}</p>}
 
               <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowLessonModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm">Cancel</button>
+                <button onClick={() => setShowLessonModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm"><T>Cancel</T></button>
                 <button onClick={handleSaveLesson} disabled={savingLesson} className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {savingLesson ? <Loader2 size={16} className="animate-spin mx-auto" /> : "Submit for Review"}
+                  {savingLesson ? <Loader2 size={16} className="animate-spin mx-auto" /> : <T>Submit for Review</T>}
                 </button>
               </div>
             </motion.div>
