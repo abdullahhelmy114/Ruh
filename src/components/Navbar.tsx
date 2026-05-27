@@ -1,6 +1,6 @@
 "use client";
 
-import useTranslation from "next-translate/useTranslation";
+import { T } from "@/components/TranslatedText";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,12 +11,10 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { signOut, getAuth } from "firebase/auth";
 
-const { t } = useTranslation("common");
-
 const links = [
-  { to: "/", label: t("Home") },
-  { to: "/marketplace", label: t("Marketplace") },
-  { to: "/community", label: t("Community") },
+  { to: "/", label: "Home" },
+  { to: "/marketplace", label: "Marketplace" },
+  { to: "/community", label: "Community" },
 ];
 
 export function Navbar() {
@@ -80,16 +78,14 @@ export function Navbar() {
                 pathname === l.to && "bg-accent text-accent-foreground"
               )}
             >
-              {l.label}
+              <T>{l.label}</T>
             </Link>
           ))}
         </nav>
 
         <div className="flex items-center gap-2">
-          {/* Language Switcher */}
           <LanguageSwitcher />
 
-          {/* Theme Toggle */}
           <button
             onClick={toggle}
             aria-label="Toggle theme"
