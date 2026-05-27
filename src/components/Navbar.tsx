@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslation } from "react-i18next";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -9,10 +10,12 @@ import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { signOut, getAuth } from "firebase/auth";
+
+const { t } = useTranslation();
 const links = [
-  { to: "/", label: "Home" },
-  { to: "/marketplace", label: "Marketplace" },
-  { to: "/community", label: "Community" },
+  { to: "/", label: t("Home") },
+  { to: "/marketplace", label: t("Marketplace") },
+  { to: "/community", label: t("Community") },
 ];
 
 export function Navbar() {
