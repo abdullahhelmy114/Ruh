@@ -7,7 +7,6 @@ import { Toaster } from "@/components/ui/sonner";
 import { AIChatBubble } from "@/components/shared/AIChatBubble";
 import { Footer } from "@/components/shared/Footer";
 import { AuthProvider } from "@/lib/firebase/AuthProvider";
-import { I18nProvider } from "@/components/I18nProvider";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"] });
@@ -25,15 +24,13 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-            <I18nProvider>
-              <div className="relative flex min-h-screen flex-col">
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
-              </div>
-              <AIChatBubble />
-              <Toaster />
-            </I18nProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <AIChatBubble />
+            <Toaster />
           </ThemeProvider>
         </AuthProvider>
       </body>
