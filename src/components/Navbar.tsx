@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslation } from "react-i18next";
+import useTranslation from "next-translate/useTranslation";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,7 +11,8 @@ import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { signOut, getAuth } from "firebase/auth";
 
-const { t } = useTranslation();
+const { t } = useTranslation("common");
+
 const links = [
   { to: "/", label: t("Home") },
   { to: "/marketplace", label: t("Marketplace") },
