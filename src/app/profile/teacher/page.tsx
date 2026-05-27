@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { TeacherProfile } from "@/components/profile/TeacherProfile";
 import { Loader2 } from "lucide-react";
+import { T } from "@/components/TranslatedText";
 
 export default function TeacherProfilePage() {
   const { user, isLoading, role } = useAuth();
@@ -15,7 +16,6 @@ export default function TeacherProfilePage() {
       if (!user) {
         router.push("/login");
       } else if (role !== "teacher" && role !== "admin") {
-        // ليس معلمًا ولا أدمن؟ (أي طالب) نحوله إلى بروفايل الطالب
         router.push("/profile/student");
       }
     }

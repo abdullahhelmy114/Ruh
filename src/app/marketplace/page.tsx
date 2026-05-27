@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { Loader2, ShoppingCart, Star, Clock, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
+import { T } from "@/components/TranslatedText";
 
 interface Course {
   id: string;
@@ -63,21 +64,21 @@ export default function MarketplacePage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
       <div className="mb-8 text-center">
-        <div className="text-xs font-bold uppercase tracking-[0.3em] text-amber-600">Marketplace</div>
-        <h1 className="mt-3 font-serif text-4xl">Explore Our Courses</h1>
-        <p className="mt-2 text-muted-foreground">Master Arabic with the best instructors</p>
+        <div className="text-xs font-bold uppercase tracking-[0.3em] text-amber-600"><T>Marketplace</T></div>
+        <h1 className="mt-3 font-serif text-4xl"><T>Explore Our Courses</T></h1>
+        <p className="mt-2 text-muted-foreground"><T>Master Arabic with the best instructors</T></p>
       </div>
 
       {message && (
         <div className="mb-6 text-center text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-full">
-          {message}
+          <T>{message}</T>
         </div>
       )}
 
       {courses.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <BookOpen className="mx-auto h-12 w-12 mb-4 text-amber-500" />
-          <p>No courses available yet.</p>
+          <p><T>No courses available yet.</T></p>
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -95,7 +96,7 @@ export default function MarketplacePage() {
               </div>
               <div className="p-5">
                 <h3 className="font-serif text-lg leading-tight">{course.title}</h3>
-                <p className="text-sm text-muted-foreground mt-1">by {course.teacher_name}</p>
+                <p className="text-sm text-muted-foreground mt-1"><T>by</T> {course.teacher_name}</p>
                 <div className="mt-3 flex items-center justify-between">
                   <span className="font-serif text-2xl font-bold text-amber-600">${course.price}</span>
                   <button
@@ -108,7 +109,7 @@ export default function MarketplacePage() {
                     ) : (
                       <ShoppingCart size={16} />
                     )}
-                    Enroll
+                    <T>Enroll</T>
                   </button>
                 </div>
               </div>

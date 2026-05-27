@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase/client";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { T } from "@/components/TranslatedText";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -17,11 +18,8 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // دالة التوجيه بعد التسجيل
   const redirectAfterSignup = (userEmail: string, selectedRole: "student" | "teacher") => {
-    // تخزين الدور
     localStorage.setItem("userRole", selectedRole);
-    // توجيه
     if (userEmail === "abdullahhelmy114@gmail.com") {
       router.push("/dashboard/admin");
     } else if (selectedRole === "teacher") {
@@ -51,7 +49,7 @@ export default function SignupPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      redirectAfterSignup(result.user.email || "", "student"); // Google لا يحدد دوراً
+      redirectAfterSignup(result.user.email || "", "student");
     } catch (err: any) {
       setError(err.message || "Google signup failed");
     } finally {
@@ -65,7 +63,7 @@ export default function SignupPage() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      redirectAfterSignup(result.user.email || "", "student"); // Facebook لا يحدد دوراً
+      redirectAfterSignup(result.user.email || "", "student");
     } catch (err: any) {
       setError(err.message || "Facebook signup failed");
     } finally {
@@ -86,15 +84,14 @@ export default function SignupPage() {
         >
           <div className="mb-8 text-center">
             <div className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">
-              Ruhulqudus Academy
+              <T>Ruhulqudus Academy</T>
             </div>
-            <h1 className="mt-3 font-serif text-3xl md:text-4xl">Begin Your Journey</h1>
+            <h1 className="mt-3 font-serif text-3xl md:text-4xl"><T>Begin Your Journey</T></h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Join an elite community devoted to the Arabic language
+              <T>Join an elite community devoted to the Arabic language</T>
             </p>
           </div>
 
-          {/* مبدل الدور */}
           <div className="relative grid grid-cols-2 rounded-full border bg-muted p-1 mb-6">
             <motion.div
               layout
@@ -111,12 +108,11 @@ export default function SignupPage() {
                   role === r ? "text-primary-foreground" : "text-muted-foreground"
                 }`}
               >
-                {r === "student" ? "Student" : "Teacher"}
+                {r === "student" ? <T>Student</T> : <T>Teacher</T>}
               </button>
             ))}
           </div>
 
-          {/* أزرار التواصل الاجتماعي */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               type="button"
@@ -150,14 +146,14 @@ export default function SignupPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
+              <span className="bg-card px-2 text-muted-foreground"><T>or</T></span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                <User className="mr-1 inline h-3.5 w-3.5 text-gold" /> Full Name
+                <User className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Full Name</T>
               </label>
               <input
                 type="text"
@@ -170,7 +166,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> Email
+                <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
               <input
                 type="email"
@@ -184,7 +180,7 @@ export default function SignupPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> Password
+                <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
               <input
                 type="password"
@@ -205,12 +201,18 @@ export default function SignupPage() {
               disabled={loading}
               className="mt-2 w-full rounded-full bg-linear-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-elegant transition-transform hover:scale-[1.01] disabled:opacity-50"
             >
-              {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : `Create ${role === "teacher" ? "Teacher" : "Student"} Account`}
+              {loading ? (
+                <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+              ) : role === "teacher" ? (
+                <><T>Create</T> <T>Teacher</T> <T>Account</T></>
+              ) : (
+                <><T>Create</T> <T>Student</T> <T>Account</T></>
+              )}
             </button>
             <p className="text-center text-xs text-muted-foreground">
-              Already enrolled?{" "}
+              <T>Already enrolled?</T>{" "}
               <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
-                Sign in
+                <T>Sign in</T>
               </Link>
             </p>
           </form>

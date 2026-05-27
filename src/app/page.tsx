@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Award, Users, BookOpen, Sparkles } from "lucide-react";
+import { T } from "@/components/TranslatedText";
 
 export const metadata: Metadata = {
   title: "Ruhulqudus Academy — Elite Arabic Language Learning",
@@ -19,26 +20,27 @@ export default function HomePage() {
 
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 md:grid-cols-2 md:px-8 md:py-28">
           <div className="animate-fade-in-up">
-            <div className="text-xs uppercase tracking-[0.3em] text-gold ornament">Est. by Dr. Jehan Ali Ahmed</div>
+            <div className="text-xs uppercase tracking-[0.3em] text-gold ornament">
+              <T>Est. by Dr. Jehan Ali Ahmed</T>
+            </div>
             <h1 className="mt-5 font-serif text-5xl leading-[1.05] md:text-7xl">
-              The art of <em className="text-gold">Arabic</em>,<br />taught with reverence.
+              <T>The art of</T> <em className="text-gold"><T>Arabic</T></em>,<br /><T>taught with reverence.</T>
             </h1>
             <p className="mt-6 max-w-lg text-lg text-muted-foreground">
-              An elite academy for those who seek mastery of the Arabic language —
-              classical, modern, and Quranic — through live mentorship and timeless curriculum.
+              <T>An elite academy for those who seek mastery of the Arabic language — classical, modern, and Quranic — through live mentorship and timeless curriculum.</T>
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
                 href="/signup"
                 className="inline-flex items-center gap-2 rounded-full gradient-emerald px-6 py-3 text-sm font-semibold text-white shadow-elegant transition hover:scale-[1.02]"
               >
-                Begin Your Journey <ArrowRight className="h-4 w-4" />
+                <T>Begin Your Journey</T> <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 href="/marketplace"
                 className="inline-flex items-center gap-2 rounded-full border bg-card px-6 py-3 text-sm font-semibold transition hover:bg-accent"
               >
-                Browse Courses
+                <T>Browse Courses</T>
               </Link>
             </div>
 
@@ -50,7 +52,7 @@ export default function HomePage() {
               ].map((s) => (
                 <div key={s.l}>
                   <div className="font-serif text-2xl text-gold">{s.v}</div>
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">{s.l}</div>
+                  <div className="text-xs uppercase tracking-wider text-muted-foreground"><T>{s.l}</T></div>
                 </div>
               ))}
             </div>
@@ -59,7 +61,6 @@ export default function HomePage() {
           <div className="relative animate-fade-in-scale">
             <div className="absolute -inset-6 rounded-[2.5rem] bg-gold/20 blur-2xl" />
             <div className="relative overflow-hidden rounded-[2.5rem] gradient-hero p-10 shadow-elegant">
-              {/* hero-text → أسود في light، أبيض في dark تلقائياً */}
               <div
                 className="hero-text text-right text-7xl leading-tight"
                 style={{ fontFamily: "Amiri, serif" }}
@@ -67,7 +68,7 @@ export default function HomePage() {
                 ٱقْرَأْ
               </div>
               <div className="hero-accent mt-2 text-right text-sm">
-                Read · The first command
+                <T>Read</T> · <T>The first command</T>
               </div>
 
               <div className="mt-10 space-y-4">
@@ -80,7 +81,7 @@ export default function HomePage() {
                     <div className="grid h-9 w-9 place-items-center rounded-xl bg-gold text-gold-foreground">
                       {f.icon}
                     </div>
-                    <span className="hero-text-muted text-sm">{f.t}</span>
+                    <span className="hero-text-muted text-sm"><T>{f.t}</T></span>
                   </div>
                 ))}
               </div>
@@ -92,8 +93,8 @@ export default function HomePage() {
       {/* Pillars */}
       <section className="mx-auto max-w-7xl px-4 py-16 md:px-8">
         <div className="text-center">
-          <div className="text-xs uppercase tracking-[0.3em] text-gold ornament">The Academy</div>
-          <h2 className="mt-3 font-serif text-4xl">Three pillars of mastery</h2>
+          <div className="text-xs uppercase tracking-[0.3em] text-gold ornament"><T>The Academy</T></div>
+          <h2 className="mt-3 font-serif text-4xl"><T>Three pillars of mastery</T></h2>
         </div>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {[
@@ -105,8 +106,8 @@ export default function HomePage() {
               <div className="grid h-12 w-12 place-items-center rounded-2xl gradient-emerald text-white">
                 {p.i}
               </div>
-              <h3 className="mt-5 font-serif text-2xl">{p.t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{p.d}</p>
+              <h3 className="mt-5 font-serif text-2xl"><T>{p.t}</T></h3>
+              <p className="mt-2 text-sm text-muted-foreground"><T>{p.d}</T></p>
             </div>
           ))}
         </div>
@@ -117,18 +118,17 @@ export default function HomePage() {
         <div className="relative overflow-hidden rounded-3xl gradient-hero p-10 shadow-elegant md:p-16">
           <Sparkles className="hero-accent absolute right-10 top-10 h-8 w-8" />
           <div className="relative max-w-2xl">
-            {/* hero-text → أسود في light، أبيض في dark تلقائياً */}
             <h2 className="hero-text font-serif text-4xl md:text-5xl">
-              A tradition of excellence, now at your fingertips.
+              <T>A tradition of excellence, now at your fingertips.</T>
             </h2>
             <p className="hero-text-muted mt-4">
-              Whether you're beginning your first letter or refining your scholarly voice, the Academy welcomes you.
+              <T>Whether you're beginning your first letter or refining your scholarly voice, the Academy welcomes you.</T>
             </p>
             <Link
               href="/signup"
               className="mt-8 inline-flex items-center gap-2 rounded-full gradient-gold px-6 py-3 text-sm font-semibold text-gold-foreground shadow-gold"
             >
-              Enroll Today <ArrowRight className="h-4 w-4" />
+              <T>Enroll Today</T> <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>

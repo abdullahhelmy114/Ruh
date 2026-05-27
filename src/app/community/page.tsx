@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageCircle, Heart, Pin, Plus } from "lucide-react";
+import { T } from "@/components/TranslatedText";
 
 const threads = [
   { author: "Dr. Jehan", role: "Instructor", title: "Weekly Conversation Challenge — Travel Vocabulary", replies: 42, likes: 128, pinned: true, time: "2h" },
@@ -18,19 +19,19 @@ export default function CommunityPage() {
 
         <div className="relative z-10">
           <div className="hero-accent text-xs font-bold uppercase tracking-[0.4em]">
-            Arabic Community Hub
+            <T>Arabic Community Hub</T>
           </div>
 
           <h1 className="hero-text mt-4 font-serif text-4xl leading-[1.1] tracking-tight md:text-6xl">
-            Where language becomes <br className="hidden md:block" /> conversation.
+            <T>Where language becomes</T> <br className="hidden md:block" /> <T>conversation.</T>
           </h1>
 
           <p className="hero-text-muted mt-4 max-w-xl text-lg leading-relaxed">
-            Ask, share, practice, and grow alongside students and teachers from around the world.
+            <T>Ask, share, practice, and grow alongside students and teachers from around the world.</T>
           </p>
 
           <button className="mt-8 inline-flex items-center gap-3 rounded-full gradient-gold px-8 py-4 text-sm font-bold text-gold-foreground shadow-xl transition hover:scale-105 active:scale-95">
-            <Plus className="h-5 w-5" /> Start a Thread
+            <Plus className="h-5 w-5" /> <T>Start a Thread</T>
           </button>
         </div>
       </header>
@@ -46,7 +47,7 @@ export default function CommunityPage() {
                 : "border bg-card text-muted-foreground hover:bg-accent hover:text-foreground"
             }`}
           >
-            {t}
+            <T>{t}</T>
           </button>
         ))}
       </div>
@@ -70,12 +71,12 @@ export default function CommunityPage() {
                     ? "border border-gold/20 bg-gold/10 text-gold"
                     : "bg-accent text-muted-foreground"
                 }`}>
-                  {t.role}
+                  <T>{t.role}</T>
                 </span>
                 <span>· {t.time}</span>
                 {t.pinned && (
                   <span className="inline-flex items-center gap-1 font-bold text-gold">
-                    <Pin className="h-3 w-3" /> Pinned
+                    <Pin className="h-3 w-3" /> <T>Pinned</T>
                   </span>
                 )}
               </div>

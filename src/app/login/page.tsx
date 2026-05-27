@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebase/client";
 import { motion } from "framer-motion";
 import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { T } from "@/components/TranslatedText";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  // دالة التوجيه بعد تسجيل الدخول (إلى البروفايل بدلاً من الداشبورد)
   const redirectAfterLogin = (userEmail: string) => {
     if (userEmail === "abdullahhelmy114@gmail.com") {
       router.push("/profile/admin");
@@ -83,11 +83,11 @@ export default function LoginPage() {
         >
           <div className="mb-8 text-center">
             <div className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">
-              Ruhulqudus Academy
+              <T>Ruhulqudus Academy</T>
             </div>
-            <h1 className="mt-3 font-serif text-3xl md:text-4xl">Welcome Back</h1>
+            <h1 className="mt-3 font-serif text-3xl md:text-4xl"><T>Welcome Back</T></h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              Continue your path with Dr. Jehan Ali Ahmed
+              <T>Continue your path with Dr. Jehan Ali Ahmed</T>
             </p>
           </div>
 
@@ -125,14 +125,14 @@ export default function LoginPage() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">or</span>
+              <span className="bg-card px-2 text-muted-foreground"><T>or</T></span>
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> Email
+                <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
               <input
                 type="email"
@@ -146,7 +146,7 @@ export default function LoginPage() {
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
-                <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> Password
+                <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
               <input
                 type="password"
@@ -167,12 +167,12 @@ export default function LoginPage() {
               disabled={loading}
               className="mt-2 w-full rounded-full bg-linear-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-elegant transition-transform hover:scale-[1.01] disabled:opacity-50"
             >
-              {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "Sign In"}
+              {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Sign In</T>}
             </button>
             <p className="text-center text-xs text-muted-foreground">
-              Don&apos;t have an account?{" "}
+              <T>Don't have an account?</T>{" "}
               <Link href="/signup" className="text-amber-600 underline-offset-4 hover:underline">
-                Create one
+                <T>Create one</T>
               </Link>
             </p>
           </form>

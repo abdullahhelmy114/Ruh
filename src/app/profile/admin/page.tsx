@@ -15,7 +15,6 @@ export default function AdminProfilePage() {
       if (!user) {
         router.push("/login");
       } else if (user.email !== "abdullahhelmy114@gmail.com") {
-        // ليس أدمن؟ نرجعه إلى صفحته المناسبة
         const storedRole = localStorage.getItem("userRole");
         if (storedRole === "teacher") {
           router.push("/profile/teacher");
@@ -34,6 +33,5 @@ export default function AdminProfilePage() {
     );
   }
 
-  // إذا وصل إلى هنا، فهو الأدمن
   return <AdminProfile />;
 }
