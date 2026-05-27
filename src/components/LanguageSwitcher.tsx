@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Globe, Check } from "lucide-react";
-import { useLanguage } from "@/components/LanguageProvider";
 import { cn } from "@/lib/utils";
+import { translations, defaultLocale } from "@/i18n/translations";
 
 const localeOptions = [
   { code: "en", label: "EN" },
@@ -11,23 +11,39 @@ const localeOptions = [
   { code: "tr", label: "TR" },
 ];
 
+function getStoredLocale(): string {
+  if (typeof window === "undefined") return defaultLocale;
+  return localStorage.getItem("preferred-locale") || defaultLocale;
+}
+
+function setStoredLocale(locale: string) {
+  localStorage.setItem("preferred-locale", locale);
+  window.dispatchEvent(new CustomEvent("locale-change", { detail: locale }));
+}
+
 export function LanguageSwitcher() {
-  const { locale, setLocale } = useLanguage();
+  const [locale, setLocale] = useState(getStoredLocale);
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handler = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setLocale(customEvent.detail);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    window.addEventListener("locale-change", handler);
+    return () => window.removeEventListener("locale-change", handler);
   }, []);
 
+  const changeLocale = (newLocale: string) => {
+    setStoredLocale(newLocale);
+    setOpen(false);
+  };
+
   return (
-    <div className="relative" ref={ref}>
+    <div className="relative">
       <button
         onClick={() => setOpen(!open)}
+        aria-label="Change language"
         className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
       >
         <Globe className="h-4 w-4" />
@@ -37,7 +53,7 @@ export function LanguageSwitcher() {
           {localeOptions.map((opt) => (
             <button
               key={opt.code}
-              onClick={() => { setLocale(opt.code); setOpen(false); }}
+              onClick={() => changeLocale(opt.code)}
               className={cn(
                 "flex items-center justify-between w-full rounded-full px-3 py-2 text-sm font-medium transition-colors",
                 locale === opt.code ? "bg-primary text-primary-foreground" : "hover:bg-accent text-muted-foreground"
