@@ -1,13 +1,13 @@
 "use client";
 
 import { useSearchParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { Mail, ArrowRight, ArrowLeft, Loader2 } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { sendEmailVerification } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const email = searchParams.get("email") || "your email";
@@ -81,5 +81,13 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin" /></div>}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
