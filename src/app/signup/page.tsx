@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
-  createUserWithEmailAndPassword,
   GoogleAuthProvider,
   FacebookAuthProvider,
   signInWithPopup,
@@ -28,28 +27,31 @@ export default function SignupPage() {
   const completeSignup = useCallback(
     async (token: string) => {
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-        // إرسال كود التحقق
+        // لا ننشئ حساب Firebase هنا! نرسل رمز التحقق فقط ونخزن البيانات مؤقتًا
         await fetch("/api/send-verification-code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: userCredential.user.email }),
+          body: JSON.stringify({ email }),
         });
+
+        // تخزين بيانات الاعتماد في sessionStorage (تُحذف تلقائيًا عند إغلاق المتصفح)
+        sessionStorage.setItem("signup_name", name);
+        sessionStorage.setItem("signup_email", email);
+        sessionStorage.setItem("signup_password", password);
+        sessionStorage.setItem("signup_role", role);
 
         // إرسال بريد الترحيب
         await fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            email: userCredential.user.email,
+            email,
             name,
             captchaToken: token,
           }),
         });
 
-        localStorage.setItem("userRole", role);
-        router.push(`/verify-email?email=${encodeURIComponent(userCredential.user.email || email)}`);
+        router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       } catch (err: any) {
         setError(err.message || "Signup failed");
         setLoading(false);
@@ -87,7 +89,6 @@ export default function SignupPage() {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
 
-      // إنشاء الملف الشخصي فورًا لأن Google لا يمر بصفحة تحقق
       await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

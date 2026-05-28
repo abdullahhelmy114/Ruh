@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { auth } from "@/lib/firebase/client";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
 
@@ -21,10 +22,7 @@ export default function VerifyEmailPage() {
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
-
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
   const handleSubmit = async () => {
@@ -37,47 +35,66 @@ export default function VerifyEmailPage() {
     setLoading(true);
     setError("");
 
-    const email = auth.currentUser?.email;
-    if (!email) {
-      setError("No user found. Please sign up again.");
+    // استرداد البيانات المخزنة مؤقتًا
+    const storedEmail = sessionStorage.getItem("signup_email") || "";
+    const storedPassword = sessionStorage.getItem("signup_password") || "";
+    const storedName = sessionStorage.getItem("signup_name") || "";
+    const storedRole = sessionStorage.getItem("signup_role") || "student";
+
+    if (!storedEmail || !storedPassword) {
+      setError("Session expired. Please sign up again.");
       setLoading(false);
       return;
     }
 
+    // 1. التحقق من الرمز عبر API
     const res = await fetch("/api/verify-email-code", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code: fullCode }),
+      body: JSON.stringify({ email: storedEmail, code: fullCode }),
     });
 
-    if (res.ok) {
-      // إنشاء الملف الشخصي بعد التحقق الناجح
-      const user = auth.currentUser;
-      if (user) {
-        await fetch("/api/user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            uid: user.uid,
-            email: user.email,
-            fullName: user.displayName || user.email?.split("@")[0] || "Student",
-            role: localStorage.getItem("userRole") || "student",
-          }),
-        });
-      }
-
-      setSuccess(true);
-      setTimeout(() => {
-        const role = localStorage.getItem("userRole");
-        router.push(role === "teacher" ? "/dashboard/teacher" : "/dashboard/student");
-      }, 2000);
-    } else {
+    if (!res.ok) {
       const err = await res.json();
       setError(err.error || "Verification failed.");
       setCode(Array(6).fill(""));
       inputRefs.current[0]?.focus();
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+
+    // 2. الآن ننشئ حساب Firebase
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, storedEmail, storedPassword);
+
+      // 3. ننشئ الملف الشخصي في Neon
+      await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: userCredential.user.uid,
+          email: storedEmail,
+          fullName: storedName,
+          role: storedRole,
+        }),
+      });
+
+      // 4. تنظيف sessionStorage
+      sessionStorage.removeItem("signup_name");
+      sessionStorage.removeItem("signup_email");
+      sessionStorage.removeItem("signup_password");
+      sessionStorage.removeItem("signup_role");
+
+      // 5. نجاح
+      setSuccess(true);
+      localStorage.setItem("userRole", storedRole);
+      setTimeout(() => {
+        router.push(storedRole === "teacher" ? "/dashboard/teacher" : "/dashboard/student");
+      }, 2000);
+    } catch (err: any) {
+      setError(err.message || "Failed to create account. Please try again.");
+      setLoading(false);
+    }
   };
 
   const handlePaste = (e: React.ClipboardEvent) => {
@@ -86,9 +103,7 @@ export default function VerifyEmailPage() {
     if (pastedData.length === 6) {
       const newCode = pastedData.split("");
       setCode(newCode);
-      newCode.forEach((_, i) => {
-        if (inputRefs.current[i]) inputRefs.current[i]!.value = newCode[i];
-      });
+      newCode.forEach((_, i) => { if (inputRefs.current[i]) inputRefs.current[i]!.value = newCode[i]; });
       inputRefs.current[5]?.focus();
     }
   };
@@ -102,17 +117,13 @@ export default function VerifyEmailPage() {
             <>
               <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
               <h1 className="font-serif text-2xl"><T>Email Verified!</T></h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                <T>You will be redirected shortly...</T>
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground"><T>You will be redirected shortly...</T></p>
             </>
           ) : (
             <>
               <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
               <h1 className="font-serif text-2xl"><T>Enter Verification Code</T></h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                <T>We sent a 6-digit code to your email.</T>
-              </p>
+              <p className="mt-2 text-sm text-muted-foreground"><T>We sent a 6-digit code to your email.</T></p>
 
               <div className="flex justify-center gap-3 mt-6" onPaste={handlePaste}>
                 {code.map((digit, idx) => (
@@ -140,10 +151,7 @@ export default function VerifyEmailPage() {
                 {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Verify</T>}
               </button>
 
-              <div className="mt-4">
-                <ResendVerificationButton />
-              </div>
-
+              <div className="mt-4"><ResendVerificationButton /></div>
               <Link href="/login" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline">
                 <ArrowLeft className="h-4 w-4" /> <T>Back to Sign In</T>
               </Link>
