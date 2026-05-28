@@ -52,7 +52,7 @@ export default function SignupPage() {
     [email, password, name, role, router]
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -238,16 +238,13 @@ export default function SignupPage() {
               )}
             </button>
 
-            {/* كابتشا مخفية تمامًا – لا شارة ولا شعار */}
-            <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                size="invisible"
-                badge="inline"
-                onChange={onCaptchaChange}
-              />
-            </div>
+            {/* reCAPTCHA غير مرئي – سيظهر فقط للمستخدمين المشبوهين */}
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+              size="invisible"
+              onChange={onCaptchaChange}
+            />
 
             <p className="text-center text-xs text-muted-foreground">
               <T>Already enrolled?</T>{" "}
