@@ -2,12 +2,6 @@
 
 import { MessageCircle, Heart, Pin, Plus } from "lucide-react";
 import { T } from "@/components/TranslatedText";
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Community | Ruhulqudus Academy",
-  description: "Connect with Arabic learners and teachers worldwide.",
-};
 
 const threads = [
   { author: "Dr. Jehan", role: "Instructor", title: "Weekly Conversation Challenge — Travel Vocabulary", replies: 42, likes: 128, pinned: true, time: "2h" },
