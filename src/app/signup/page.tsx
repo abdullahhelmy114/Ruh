@@ -28,26 +28,16 @@ export default function SignupPage() {
   const completeSignup = useCallback(
     async (token: string) => {
       try {
-        // 1. إنشاء الحساب
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await fetch("/api/create-profile", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    uid: userCredential.user.uid,
-    email: userCredential.user.email,
-    fullName: name,
-    role: role,
-  }),
-});
-        // 2. إرسال كود التحقق عبر البريد
+
+        // إرسال كود التحقق
         await fetch("/api/send-verification-code", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email: userCredential.user.email }),
         });
 
-        // 3. استدعاء API إرسال بريد الترحيب
+        // إرسال بريد الترحيب
         await fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -58,7 +48,6 @@ export default function SignupPage() {
           }),
         });
 
-        // 4. تخزين الدور والتوجيه
         localStorage.setItem("userRole", role);
         router.push(`/verify-email?email=${encodeURIComponent(userCredential.user.email || email)}`);
       } catch (err: any) {
@@ -84,69 +73,67 @@ export default function SignupPage() {
     }
 
     setLoading(true);
-    setShowCaptcha(true); // إظهار الكابتشا
+    setShowCaptcha(true);
   };
 
   const handleCustomCaptcha = (token: string) => {
-    // بعد التحقق الناجح من الكابتشا، أكمل التسجيل
     completeSignup(token);
   };
 
   const handleGoogleSignUp = async () => {
-  setLoading(true);
-  setError("");
-  try {
-    const provider = new GoogleAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+    setLoading(true);
+    setError("");
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
 
-    // إنشاء الملف الشخصي في Neon (لأن Google لا يمر بصفحة تحقق)
-    await fetch("/api/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        uid: result.user.uid,
-        email: result.user.email,
-        fullName: result.user.displayName || "Student",
-        role: "student",
-      }),
-    });
+      // إنشاء الملف الشخصي فورًا لأن Google لا يمر بصفحة تحقق
+      await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: result.user.uid,
+          email: result.user.email,
+          fullName: result.user.displayName || "Student",
+          role: "student",
+        }),
+      });
 
-    localStorage.setItem("userRole", "student");
-    router.push("/dashboard/student");
-  } catch (err: any) {
-    setError(err.message || "Google signup failed");
-  } finally {
-    setLoading(false);
-  }
-};
+      localStorage.setItem("userRole", "student");
+      router.push("/dashboard/student");
+    } catch (err: any) {
+      setError(err.message || "Google signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-const handleFacebookSignUp = async () => {
-  setLoading(true);
-  setError("");
-  try {
-    const provider = new FacebookAuthProvider();
-    const result = await signInWithPopup(auth, provider);
+  const handleFacebookSignUp = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const provider = new FacebookAuthProvider();
+      const result = await signInWithPopup(auth, provider);
 
-    // إنشاء الملف الشخصي في Neon (لأن Facebook لا يمر بصفحة تحقق)
-    await fetch("/api/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        uid: result.user.uid,
-        email: result.user.email,
-        fullName: result.user.displayName || "Student",
-        role: "student",
-      }),
-    });
+      await fetch("/api/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          uid: result.user.uid,
+          email: result.user.email,
+          fullName: result.user.displayName || "Student",
+          role: "student",
+        }),
+      });
 
-    localStorage.setItem("userRole", "student");
-    router.push("/dashboard/student");
-  } catch (err: any) {
-    setError(err.message || "Facebook signup failed");
-  } finally {
-    setLoading(false);
-  }
-};
+      localStorage.setItem("userRole", "student");
+      router.push("/dashboard/student");
+    } catch (err: any) {
+      setError(err.message || "Facebook signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center bg-background px-4 py-12">
@@ -269,7 +256,7 @@ const handleFacebookSignUp = async () => {
               </div>
             )}
 
-            {/* الكابتشا تظهر فقط بعد الضغط على زر التسجيل */}
+            {/* Captcha or Submit Button */}
             {showCaptcha ? (
               <CustomCaptcha onVerify={handleCustomCaptcha} />
             ) : (
