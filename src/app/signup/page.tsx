@@ -1,8 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createUserWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import { motion } from "framer-motion";
 import { Mail, Lock, User, Loader2, AlertCircle } from "lucide-react";
@@ -19,6 +24,7 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const router = useRouter();
+  const recaptchaRef = useRef<any>(null);
 
   const redirectAfterSignup = (userEmail: string, selectedRole: "student" | "teacher") => {
     localStorage.setItem("userRole", selectedRole);
@@ -31,34 +37,43 @@ export default function SignupPage() {
     }
   };
 
+  // مراقبة الكابتشا وإكمال التسجيل عند توفر الرمز
+  useEffect(() => {
+    if (!captchaToken) return;
+
+    const completeSignup = async () => {
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+        await fetch("/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: userCredential.user.email,
+            name,
+            captchaToken,
+          }),
+        });
+
+        redirectAfterSignup(userCredential.user.email || "", role);
+      } catch (err: any) {
+        setError(err.message || "Signup failed");
+      } finally {
+        setLoading(false);
+        setCaptchaToken(null);
+      }
+    };
+
+    completeSignup();
+  }, [captchaToken]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!captchaToken) {
-      setError("Please complete the captcha");
-      return;
-    }
     setLoading(true);
     setError("");
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
-      // طلب إرسال بريد الترحيب
-      await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: userCredential.user.email,
-          name,
-          captchaToken,
-        }),
-      });
-
-      redirectAfterSignup(userCredential.user.email || "", role);
-    } catch (err: any) {
-      setError(err.message || "Signup failed");
-    } finally {
-      setLoading(false);
-    }
+    // تشغيل reCAPTCHA غير المرئي
+    recaptchaRef.current?.execute();
   };
 
   const handleGoogleSignUp = async () => {
@@ -227,7 +242,7 @@ export default function SignupPage() {
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
                 placeholder="••••••••"
               />
-
+            </div>
 
             {error && (
               <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -247,21 +262,16 @@ export default function SignupPage() {
                 <><T>Create</T> <T>Student</T> <T>Account</T></>
               )}
             </button>
-                        </div>
 
-            {/* reCAPTCHA */}
-            <div className="flex justify-center">
-  <div className="p-3 rounded-2xl glass border border-border/50 shadow-elegant">
-    <div style={{ transform: "scale(0.85)", transformOrigin: "0 0" }}>
-      <ReCAPTCHA
-        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-        theme="dark"
-        size="compact"
-        onChange={(token) => setCaptchaToken(token)}
-      />
-    </div>
-  </div>
-</div>
+            {/* reCAPTCHA غير مرئي (يظهر فقط شعار صغير في الأسفل) */}
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+              size="invisible"
+              badge="bottomright"
+              onChange={(token) => setCaptchaToken(token)}
+            />
+
             <p className="text-center text-xs text-muted-foreground">
               <T>Already enrolled?</T>{" "}
               <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
