@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
+  sendEmailVerification,
   GoogleAuthProvider,
   FacebookAuthProvider,
   signInWithPopup,
@@ -26,17 +27,6 @@ export default function SignupPage() {
   const router = useRouter();
   const recaptchaRef = useRef<any>(null);
 
-  const redirectAfterSignup = (userEmail: string, selectedRole: "student" | "teacher") => {
-    localStorage.setItem("userRole", selectedRole);
-    if (userEmail === "abdullahhelmy114@gmail.com") {
-      router.push("/dashboard/admin");
-    } else if (selectedRole === "teacher") {
-      router.push("/dashboard/teacher");
-    } else {
-      router.push("/dashboard/student");
-    }
-  };
-
   // مراقبة الكابتشا وإكمال التسجيل عند توفر الرمز
   useEffect(() => {
     if (!captchaToken) return;
@@ -45,6 +35,10 @@ export default function SignupPage() {
       try {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
+        // إرسال بريد التحقق من Firebase
+        await sendEmailVerification(userCredential.user);
+
+        // طلب إرسال بريد الترحيب
         await fetch("/api/signup", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -55,7 +49,11 @@ export default function SignupPage() {
           }),
         });
 
-        redirectAfterSignup(userCredential.user.email || "", role);
+        // تخزين الدور
+        localStorage.setItem("userRole", role);
+
+        // توجيه إلى صفحة التحقق بدلاً من الداشبورد
+        router.push(`/verify-email?email=${encodeURIComponent(userCredential.user.email || email)}`);
       } catch (err: any) {
         setError(err.message || "Signup failed");
       } finally {
@@ -82,16 +80,8 @@ export default function SignupPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: result.user.email,
-          name: result.user.displayName || "Student",
-          captchaToken: "google-auth",
-        }),
-      });
-      redirectAfterSignup(result.user.email || "", "student");
+      localStorage.setItem("userRole", "student");
+      router.push("/dashboard/student");
     } catch (err: any) {
       setError(err.message || "Google signup failed");
     } finally {
@@ -105,16 +95,8 @@ export default function SignupPage() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: result.user.email,
-          name: result.user.displayName || "Student",
-          captchaToken: "facebook-auth",
-        }),
-      });
-      redirectAfterSignup(result.user.email || "", "student");
+      localStorage.setItem("userRole", "student");
+      router.push("/dashboard/student");
     } catch (err: any) {
       setError(err.message || "Facebook signup failed");
     } finally {
@@ -166,29 +148,12 @@ export default function SignupPage() {
 
           {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-3 mb-6">
-            <button
-              type="button"
-              onClick={handleGoogleSignUp}
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-full border bg-background px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-accent disabled:opacity-50"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-              </svg>
+            <button onClick={handleGoogleSignUp} disabled={loading} className="...">
+              <svg>...</svg>
               Google
             </button>
-            <button
-              type="button"
-              onClick={handleFacebookSignUp}
-              disabled={loading}
-              className="inline-flex items-center justify-center gap-2 rounded-full border bg-background px-4 py-2.5 text-sm font-medium shadow-sm transition hover:bg-accent disabled:opacity-50"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="#1877F2">
-                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-              </svg>
+            <button onClick={handleFacebookSignUp} disabled={loading} className="...">
+              <svg>...</svg>
               Facebook
             </button>
           </div>
@@ -207,41 +172,19 @@ export default function SignupPage() {
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <User className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Full Name</T>
               </label>
-              <input
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                placeholder="Your full name"
-              />
+              <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold" placeholder="Your full name" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                dir="ltr"
-                placeholder="you@example.com"
-              />
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold" dir="ltr" placeholder="you@example.com" />
             </div>
             <div>
               <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                placeholder="••••••••"
-              />
+              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold" placeholder="••••••••" />
             </div>
 
             {error && (
@@ -263,7 +206,7 @@ export default function SignupPage() {
               )}
             </button>
 
-            {/* reCAPTCHA غير مرئي (يظهر فقط شعار صغير في الأسفل) */}
+            {/* reCAPTCHA غير مرئي */}
             <ReCAPTCHA
               ref={recaptchaRef}
               sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
