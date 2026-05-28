@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   createUserWithEmailAndPassword,
@@ -26,43 +26,50 @@ export default function SignupPage() {
   const router = useRouter();
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
+  const completeSignup = useCallback(
+    async (token: string) => {
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await sendEmailVerification(userCredential.user);
+
+        await fetch("/api/signup", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email: userCredential.user.email,
+            name,
+            captchaToken: token,
+          }),
+        });
+
+        localStorage.setItem("userRole", role);
+        router.push(`/verify-email?email=${encodeURIComponent(userCredential.user.email || email)}`);
+      } catch (err: any) {
+        setError(err.message || "Signup failed");
+        setLoading(false);
+      }
+    },
+    [email, password, name, role, router]
+  );
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    try {
-      // احصل على رمز الكابتشا مباشرة
-      const token = await recaptchaRef.current?.executeAsync();
-      if (!token) {
-        setError("Please complete the captcha.");
-        setLoading(false);
-        return;
-      }
+    if (recaptchaRef.current) {
+      recaptchaRef.current.execute();
+    } else {
+      setError("reCAPTCHA not ready. Please refresh the page.");
+      setLoading(false);
+    }
+  };
 
-      // أنشئ المستخدم
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
-      // أرسل بريد التحقق
-      await sendEmailVerification(userCredential.user);
-
-      // أرسل طلب الترحيب
-      await fetch("/api/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: userCredential.user.email,
-          name,
-          captchaToken: token,
-        }),
-      });
-
-      // خزّن الدور وانتقل إلى صفحة التحقق
-      localStorage.setItem("userRole", role);
-      router.push(`/verify-email?email=${encodeURIComponent(userCredential.user.email || email)}`);
-    } catch (err: any) {
-      setError(err.message || "Signup failed");
-    } finally {
+  const onCaptchaChange = (token: string | null) => {
+    if (token) {
+      completeSignup(token);
+    } else {
+      setError("Captcha verification failed. Please try again.");
       setLoading(false);
     }
   };
@@ -139,7 +146,7 @@ export default function SignupPage() {
             ))}
           </div>
 
-          {/* Social Buttons – أيقونات كاملة مع نصوص */}
+          {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               type="button"
@@ -183,12 +190,8 @@ export default function SignupPage() {
                 <User className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Full Name</T>
               </label>
               <input
-                id="signup-name"
-                name="name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                id="signup-name" name="name" type="text" required
+                value={name} onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
                 placeholder="Your full name"
               />
@@ -198,15 +201,10 @@ export default function SignupPage() {
                 <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
               <input
-                id="signup-email"
-                name="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="signup-email" name="email" type="email" required
+                value={email} onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                dir="ltr"
-                placeholder="you@example.com"
+                dir="ltr" placeholder="you@example.com"
               />
             </div>
             <div>
@@ -214,12 +212,8 @@ export default function SignupPage() {
                 <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
               <input
-                id="signup-password"
-                name="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="signup-password" name="password" type="password" required
+                value={password} onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
                 placeholder="••••••••"
               />
@@ -244,13 +238,16 @@ export default function SignupPage() {
               )}
             </button>
 
-            {/* كابتشا غير مرئية – تظهر أسفل يسار الشاشة لتجنب التعارض مع المساعد الذكي */}
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-              size="invisible"
-              badge="bottomleft"
-            />
+            {/* كابتشا مخفية تمامًا – لا شارة ولا شعار */}
+            <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                size="invisible"
+                badge="inline"
+                onChange={onCaptchaChange}
+              />
+            </div>
 
             <p className="text-center text-xs text-muted-foreground">
               <T>Already enrolled?</T>{" "}
