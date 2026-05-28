@@ -169,22 +169,50 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="signup-name" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <User className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Full Name</T>
               </label>
-              <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold" placeholder="Your full name" />
+              <input
+                id="signup-name"
+                name="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
+                placeholder="Your full name"
+              />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="signup-email" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
-              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold" dir="ltr" placeholder="you@example.com" />
+              <input
+                id="signup-email"
+                name="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
+                dir="ltr"
+                placeholder="you@example.com"
+              />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="signup-password" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
-              <input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold" placeholder="••••••••" />
+              <input
+                id="signup-password"
+                name="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
+                placeholder="••••••••"
+              />
             </div>
 
             {error && (
