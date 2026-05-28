@@ -227,15 +227,7 @@ export default function SignupPage() {
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
                 placeholder="••••••••"
               />
-            </div>
 
-            {/* reCAPTCHA */}
-            <div className="flex justify-center">
-              <ReCAPTCHA
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                onChange={(token) => setCaptchaToken(token)}
-              />
-            </div>
 
             {error && (
               <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
@@ -255,6 +247,15 @@ export default function SignupPage() {
                 <><T>Create</T> <T>Student</T> <T>Account</T></>
               )}
             </button>
+                        </div>
+
+            {/* reCAPTCHA */}
+            <div className="flex justify-center">
+              <ReCAPTCHA
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                onChange={(token) => setCaptchaToken(token)}
+              />
+            </div>
             <p className="text-center text-xs text-muted-foreground">
               <T>Already enrolled?</T>{" "}
               <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
