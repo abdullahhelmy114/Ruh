@@ -11,6 +11,12 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Ruhulqudus Academy",
+  robots: "noindex, nofollow", // لا تريد محركات البحث تفهرس لوحة التحكم
+};
 
 interface LiveSession {
   id: string; title: string; scheduled_at: string; meeting_url: string;

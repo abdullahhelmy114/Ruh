@@ -10,6 +10,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { CalendarPicker } from "@/components/dashboard/CalendarPicker";
 import { TimeSlotPicker } from "@/components/dashboard/TimeSlotPicker";
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Ruhulqudus Academy",
+  robots: "noindex, nofollow", // لا تريد محركات البحث تفهرس لوحة التحكم
+};
 
 interface Course {
   id: string; title: string; level: string; price: number; status: string; recording_url?: string;

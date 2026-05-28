@@ -11,6 +11,12 @@ import {
   Filter, Download, Bot, Save, Loader2, Ban, UserCheck, ExternalLink, Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Ruhulqudus Academy",
+  robots: "noindex, nofollow", // لا تريد محركات البحث تفهرس لوحة التحكم
+};
 
 type TabKey = "overview" | "teachers" | "courses" | "users" | "finance" | "ai" | "settings";
 

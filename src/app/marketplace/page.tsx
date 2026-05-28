@@ -6,6 +6,12 @@ import { useRouter } from "next/navigation";
 import { Loader2, ShoppingCart, Star, Clock, BookOpen } from "lucide-react";
 import { motion } from "framer-motion";
 import { T } from "@/components/TranslatedText";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Marketplace | Ruhulqudus Academy",
+  description: "Explore our courses and master Arabic with the best instructors.",
+};
 
 interface Course {
   id: string;

@@ -1,11 +1,19 @@
-import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Award, Users, BookOpen, Sparkles } from "lucide-react";
 import { T } from "@/components/TranslatedText";
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Ruhulqudus Academy — Elite Arabic Language Learning",
-  description: "An elite digital institution for the Arabic language led by Dr. Gehan Ali Ahmed.",
+  title: "Ruhulqudus Academy | أرقى منصة لتعلم العربية",
+  description: "An elite digital institution for the Arabic language, founded by Dr. Gehan Ali Ahmed.",
+  openGraph: {
+    title: "Ruhulqudus Academy",
+    description: "Master Arabic with the best instructors",
+    url: "https://ruhulqudus.net",
+    siteName: "Ruhulqudus Academy",
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function HomePage() {

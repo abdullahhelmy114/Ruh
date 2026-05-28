@@ -2,6 +2,7 @@ export const runtime = 'edge';
 
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
+import { sendEmail } from '@/lib/email';
 
 // ─── دوال Zoom ──────────────────────────────────────────────
 async function getZoomAccessToken(): Promise<string> {
@@ -104,6 +105,19 @@ export async function PUT(
         }
       }
     }
+
+    if (status === 'approved') {
+  const [teacher] = await sql`SELECT email, full_name FROM profiles WHERE firebase_uid = (SELECT teacher_uid FROM lessons WHERE id = ${lessonId})`;
+  if (teacher?.email) {
+    await sendEmail(
+      teacher.email,
+      'Your lesson has been approved!',
+      `<h1>Lesson Approved!</h1>
+       <p>Your lesson has been approved and is now live.</p>
+       <p><a href="https://ruhulqudus.net/live/${lessonId}">View Lesson</a></p>`
+    );
+  }
+}
 
     // تحديث الدرس في قاعدة البيانات
     const result = await sql`
