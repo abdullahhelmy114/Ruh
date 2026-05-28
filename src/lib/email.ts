@@ -1,7 +1,9 @@
 import nodemailer from 'nodemailer';
 
 const transporter = nodemailer.createTransport({
-  service: 'gmail',
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
@@ -10,7 +12,7 @@ const transporter = nodemailer.createTransport({
 
 export async function sendEmail(to: string, subject: string, html: string) {
   await transporter.sendMail({
-    from: `Ruhulqudus Academy <${process.env.EMAIL_FROM}>`,
+    from: `Ruhulqudus Academy <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html,
