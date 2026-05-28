@@ -251,11 +251,17 @@ export default function SignupPage() {
 
             {/* reCAPTCHA */}
             <div className="flex justify-center">
-              <ReCAPTCHA
-                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
-                onChange={(token) => setCaptchaToken(token)}
-              />
-            </div>
+  <div className="p-3 rounded-2xl glass border border-border/50 shadow-elegant">
+    <div style={{ transform: "scale(0.85)", transformOrigin: "0 0" }}>
+      <ReCAPTCHA
+        sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+        theme="dark"
+        size="compact"
+        onChange={(token) => setCaptchaToken(token)}
+      />
+    </div>
+  </div>
+</div>
             <p className="text-center text-xs text-muted-foreground">
               <T>Already enrolled?</T>{" "}
               <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
