@@ -110,6 +110,17 @@ export default function TeacherDashboard() {
       });
   }, [user, router]);
 
+  useEffect(() => {
+  if (!user) return;
+  fetch(`/api/user?uid=${user.uid}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.profile && !d.profile.profile_completed) {
+        router.push("/onboarding");
+      }
+    });
+}, [user, router]);
+
   // تحديث البيانات تلقائيًا عند التركيز على النافذة (بعد موافقة الأدمن مثلاً)
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;

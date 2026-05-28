@@ -55,6 +55,17 @@ useEffect(() => {
   }, [user, router]);
 
   useEffect(() => {
+  if (!user) return;
+  fetch(`/api/user?uid=${user.uid}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.profile && !d.profile.profile_completed) {
+        router.push("/onboarding");
+      }
+    });
+}, [user, router]);
+
+  useEffect(() => {
     if (!user || !user.uid) return;
     fetch(`/api/student/dashboard?uid=${user.uid}`)
       .then(r => r.json())

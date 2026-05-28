@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { auth } from "@/lib/firebase/client";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
 
@@ -85,11 +85,16 @@ export default function VerifyEmailPage() {
       sessionStorage.removeItem("signup_password");
       sessionStorage.removeItem("signup_role");
 
-      // 5. نجاح
+      // 5. تسجيل الخروج فوراً وعدم بقاء المستخدم مسجلاً
+      await signOut(auth);
+
+      // 6. نجاح
       setSuccess(true);
+      // نخزن الدور للمستقبل عند تسجيل الدخول الفعلي
       localStorage.setItem("userRole", storedRole);
       setTimeout(() => {
-        router.push(storedRole === "teacher" ? "/dashboard/teacher" : "/dashboard/student");
+        // التوجيه إلى صفحة تسجيل الدخول مع إشارة نجاح
+        router.push("/login?verified=1");
       }, 2000);
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
@@ -117,7 +122,7 @@ export default function VerifyEmailPage() {
             <>
               <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
               <h1 className="font-serif text-2xl"><T>Email Verified!</T></h1>
-              <p className="mt-2 text-sm text-muted-foreground"><T>You will be redirected shortly...</T></p>
+              <p className="mt-2 text-sm text-muted-foreground"><T>Redirecting to login page...</T></p>
             </>
           ) : (
             <>

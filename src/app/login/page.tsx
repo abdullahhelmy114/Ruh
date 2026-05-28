@@ -23,7 +23,21 @@ export default function LoginPage() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
-  const redirectAfterLogin = (userEmail: string) => {
+  const redirectAfterLogin = async (userEmail: string, uid: string) => {
+    // ✅ فحص اكتمال الملف الشخصي
+    try {
+      const res = await fetch(`/api/user?uid=${uid}`);
+      const data = await res.json();
+      if (data.profile && !data.profile.profile_completed) {
+        // مستخدم جديد غير مكتمل البروفايل -> Onboarding
+        router.push("/onboarding");
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to check profile:", err);
+    }
+
+    // ✅ توجيه طبيعي حسب الدور
     if (userEmail === "abdullahhelmy114@gmail.com") {
       router.push("/profile/admin");
     } else {
@@ -39,7 +53,7 @@ export default function LoginPage() {
   const performLogin = async (captchaToken: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      redirectAfterLogin(userCredential.user.email || "");
+      await redirectAfterLogin(userCredential.user.email || "", userCredential.user.uid);
     } catch (err: any) {
       setError(err.message || "Login failed");
       setShowCaptcha(false);
@@ -65,7 +79,7 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      redirectAfterLogin(result.user.email || "");
+      await redirectAfterLogin(result.user.email || "", result.user.uid);
     } catch (err: any) {
       setError(err.message || "Google login failed");
     } finally {
@@ -79,7 +93,7 @@ export default function LoginPage() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      redirectAfterLogin(result.user.email || "");
+      await redirectAfterLogin(result.user.email || "", result.user.uid);
     } catch (err: any) {
       setError(err.message || "Facebook login failed");
     } finally {

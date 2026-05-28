@@ -40,6 +40,18 @@ export default function AdminDashboard() {
         router.push("/verify-email");
       }
     });
+
+    useEffect(() => {
+  if (!user) return;
+  fetch(`/api/user?uid=${user.uid}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.profile && !d.profile.profile_completed) {
+        router.push("/onboarding");
+      }
+    });
+}, [user, router]);
+
 }, [user, router]);
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
