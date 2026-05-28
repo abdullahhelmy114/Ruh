@@ -14,10 +14,9 @@ export async function GET(request: Request) {
     `;
     if (!profile) return NextResponse.json({ error: 'Teacher not found' }, { status: 404 });
 
-    // عدد الكورسات النشطة فقط (بدون إيرادات)
     const [stats] = await sql`
-      SELECT COUNT(*) AS active_courses
-      FROM courses WHERE teacher_uid = ${uid} AND status = 'published'
+      SELECT
+        (SELECT COUNT(*) FROM courses WHERE teacher_uid = ${uid} AND status = 'published') AS active_courses
     `;
 
     const sessions = await sql`
@@ -33,7 +32,7 @@ export async function GET(request: Request) {
       certificationProgress: 0,
       students: 0,
       activeCourses: stats?.active_courses || 0,
-      revenue: 0, // مؤقتاً حتى تجهيز جدول transactions
+      revenue: 0,
       sessions,
     });
   } catch (err: any) {
