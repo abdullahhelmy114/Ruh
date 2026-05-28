@@ -9,9 +9,13 @@ function getStoredLocale(): string {
 }
 
 export function T({ children: key }: { children: string }) {
-  const [locale, setLocale] = useState(getStoredLocale);
+  // 🟢 ابدأ دائماً باللغة الافتراضية لتجنب Hydration Mismatch
+  const [locale, setLocale] = useState(defaultLocale);
 
   useEffect(() => {
+    // بعد Hydration، حدث اللغة إلى المفضلة
+    setLocale(getStoredLocale());
+
     const handler = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
       setLocale(customEvent.detail);

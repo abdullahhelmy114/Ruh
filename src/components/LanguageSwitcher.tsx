@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Globe, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { translations, defaultLocale } from "@/i18n/translations";
+import { defaultLocale } from "@/i18n/translations";
 
 const localeOptions = [
   { code: "en", label: "EN" },
@@ -11,21 +11,16 @@ const localeOptions = [
   { code: "tr", label: "TR" },
 ];
 
-function getStoredLocale(): string {
-  if (typeof window === "undefined") return defaultLocale;
-  return localStorage.getItem("preferred-locale") || defaultLocale;
-}
-
-function setStoredLocale(locale: string) {
-  localStorage.setItem("preferred-locale", locale);
-  window.dispatchEvent(new CustomEvent("locale-change", { detail: locale }));
-}
-
 export function LanguageSwitcher() {
-  const [locale, setLocale] = useState(getStoredLocale);
+  // ابدأ باللغة الافتراضية لتجنب Hydration Mismatch
+  const [locale, setLocale] = useState(defaultLocale);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    // بعد Hydration، اقرأ اللغة الحقيقية من localStorage
+    const stored = localStorage.getItem("preferred-locale");
+    if (stored) setLocale(stored);
+
     const handler = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
       setLocale(customEvent.detail);
@@ -35,7 +30,9 @@ export function LanguageSwitcher() {
   }, []);
 
   const changeLocale = (newLocale: string) => {
-    setStoredLocale(newLocale);
+    localStorage.setItem("preferred-locale", newLocale);
+    setLocale(newLocale);
+    window.dispatchEvent(new CustomEvent("locale-change", { detail: newLocale }));
     setOpen(false);
   };
 
