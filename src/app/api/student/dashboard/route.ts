@@ -36,7 +36,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       firstName: profile.full_name || profile.email.split('@')[0],
-      streak: 0, // تحتاج إلى جدول streak منفصل
+      streak: 0,
       inProgress: inProgress.map((c: any) => ({
         title: c.title, next: c.next_lesson || 'Start course', progress: c.progress_percent, courseId: c.course_id
       })),
