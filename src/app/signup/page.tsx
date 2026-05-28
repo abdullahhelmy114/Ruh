@@ -93,34 +93,60 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignUp = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      localStorage.setItem("userRole", "student");
-      router.push("/dashboard/student");
-    } catch (err: any) {
-      setError(err.message || "Google signup failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  setLoading(true);
+  setError("");
+  try {
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
 
-  const handleFacebookSignUp = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const provider = new FacebookAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      localStorage.setItem("userRole", "student");
-      router.push("/dashboard/student");
-    } catch (err: any) {
-      setError(err.message || "Facebook signup failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // إنشاء الملف الشخصي في Neon (لأن Google لا يمر بصفحة تحقق)
+    await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: result.user.uid,
+        email: result.user.email,
+        fullName: result.user.displayName || "Student",
+        role: "student",
+      }),
+    });
+
+    localStorage.setItem("userRole", "student");
+    router.push("/dashboard/student");
+  } catch (err: any) {
+    setError(err.message || "Google signup failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
+const handleFacebookSignUp = async () => {
+  setLoading(true);
+  setError("");
+  try {
+    const provider = new FacebookAuthProvider();
+    const result = await signInWithPopup(auth, provider);
+
+    // إنشاء الملف الشخصي في Neon (لأن Facebook لا يمر بصفحة تحقق)
+    await fetch("/api/user", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: result.user.uid,
+        email: result.user.email,
+        fullName: result.user.displayName || "Student",
+        role: "student",
+      }),
+    });
+
+    localStorage.setItem("userRole", "student");
+    router.push("/dashboard/student");
+  } catch (err: any) {
+    setError(err.message || "Facebook signup failed");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center bg-background px-4 py-12">

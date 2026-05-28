@@ -13,15 +13,22 @@ export async function GET(request: Request) {
   return NextResponse.json({ profile });
 }
 
-// POST: إنشاء ملف شخصي جديد (ويُستخدم أيضًا من صفحة التسجيل)
+// POST: إنشاء ملف شخصي جديد (ويُستخدم أيضًا من صفحة التسجيل) – نسخة متسامحة
 export async function POST(request: Request) {
   try {
-    const { uid, email, fullName, role } = await request.json();
-    if (!uid || !email) return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    // استخراج البيانات بأمان، مع قبول JSON فارغ
+    const body = await request.json().catch(() => ({}));
+    const uid = body.uid || "";
+    const email = body.email || "";
+
+    // إذا كانت البيانات ناقصة، نتجاوز دون خطأ
+    if (!uid || !email) {
+      return NextResponse.json({ skipped: true });
+    }
 
     await sql`
       INSERT INTO profiles (firebase_uid, email, full_name, role, email_verified)
-      VALUES (${uid}, ${email}, ${fullName || email.split('@')[0]}, ${role || 'student'}, false)
+      VALUES (${uid}, ${email}, ${body.fullName || email.split('@')[0]}, ${body.role || 'student'}, false)
       ON CONFLICT (firebase_uid) DO UPDATE SET email = ${email}
     `;
     return NextResponse.json({ success: true });

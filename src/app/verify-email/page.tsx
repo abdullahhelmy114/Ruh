@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
@@ -22,7 +22,6 @@ export default function VerifyEmailPage() {
     newCode[index] = value;
     setCode(newCode);
 
-    // الانتقال تلقائيًا إلى الحقل التالي
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -52,8 +51,22 @@ export default function VerifyEmailPage() {
     });
 
     if (res.ok) {
+      // إنشاء الملف الشخصي بعد التحقق الناجح
+      const user = auth.currentUser;
+      if (user) {
+        await fetch("/api/user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            fullName: user.displayName || user.email?.split("@")[0] || "Student",
+            role: localStorage.getItem("userRole") || "student",
+          }),
+        });
+      }
+
       setSuccess(true);
-      // التوجيه بعد ثانيتين إلى الداشبورد
       setTimeout(() => {
         const role = localStorage.getItem("userRole");
         router.push(role === "teacher" ? "/dashboard/teacher" : "/dashboard/student");
@@ -101,7 +114,6 @@ export default function VerifyEmailPage() {
                 <T>We sent a 6-digit code to your email.</T>
               </p>
 
-              {/* 6 حقول لإدخال الكود */}
               <div className="flex justify-center gap-3 mt-6" onPaste={handlePaste}>
                 {code.map((digit, idx) => (
                   <input
@@ -132,8 +144,8 @@ export default function VerifyEmailPage() {
                 <ResendVerificationButton />
               </div>
 
-              <Link href="/signup" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline">
-                <ArrowLeft className="h-4 w-4" /> <T>Back to Sign Up</T>
+              <Link href="/login" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline">
+                <ArrowLeft className="h-4 w-4" /> <T>Back to Sign In</T>
               </Link>
             </>
           )}
