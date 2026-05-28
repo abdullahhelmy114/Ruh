@@ -11,6 +11,7 @@ import {
   Filter, Download, Bot, Save, Loader2, Ban, UserCheck, ExternalLink, Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 
 
@@ -29,7 +30,17 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
 export default function AdminDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<TabKey>("overview");
-
+  const router = useRouter();
+  useEffect(() => {
+  if (!user) return;
+  fetch(`/api/user?uid=${user.uid}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.profile && !d.profile.email_verified) {
+        router.push("/verify-email");
+      }
+    });
+}, [user, router]);
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
   if (user.email !== "abdullahhelmy114@gmail.com") return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;

@@ -30,7 +30,16 @@ export default function SignupPage() {
       try {
         // 1. إنشاء الحساب
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-
+        await fetch("/api/create-profile", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    uid: userCredential.user.uid,
+    email: userCredential.user.email,
+    fullName: name,
+    role: role,
+  }),
+});
         // 2. إرسال كود التحقق عبر البريد
         await fetch("/api/send-verification-code", {
           method: "POST",

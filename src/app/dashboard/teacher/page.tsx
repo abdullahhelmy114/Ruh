@@ -66,7 +66,7 @@ export default function TeacherDashboard() {
 
   // ---------- جميع Hooks قبل أي return ----------
 
-  // Fetch initial data
+// Fetch initial data
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
     const fetchData = async () => {
@@ -98,20 +98,21 @@ export default function TeacherDashboard() {
     if (!isLoading && (!user || (role !== "teacher" && role !== "admin"))) router.push("/login");
   }, [user, isLoading, role, router]);
 
+  // فحص البريد الإلكتروني المؤكد
+  useEffect(() => {
+    if (!user) return;
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile && !d.profile.email_verified) {
+          router.push("/verify-email");
+        }
+      });
+  }, [user, router]);
+
   // تحديث البيانات تلقائيًا عند التركيز على النافذة (بعد موافقة الأدمن مثلاً)
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
-
-  useEffect(() => {
-  if (!user) return;
-  fetch(`/api/user?uid=${user.uid}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.profile && !d.profile.email_verified) {
-        router.push("/verify-email");
-      }
-    });
-}, [user, router]);
 
     const onFocus = () => {
       fetch(`/api/teacher/courses?uid=${user.uid}`)

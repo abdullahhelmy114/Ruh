@@ -43,6 +43,17 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedRecording, setSelectedRecording] = useState<{ url: string; title: string } | null>(null);
 
+useEffect(() => {
+    if (!user) return;
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile && !d.profile.email_verified) {
+          router.push("/verify-email");
+        }
+      });
+  }, [user, router]);
+
   useEffect(() => {
     if (!user || !user.uid) return;
     fetch(`/api/student/dashboard?uid=${user.uid}`)
