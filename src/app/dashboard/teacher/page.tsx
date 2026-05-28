@@ -102,6 +102,17 @@ export default function TeacherDashboard() {
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
 
+  useEffect(() => {
+  if (!user) return;
+  fetch(`/api/user?uid=${user.uid}`)
+    .then(r => r.json())
+    .then(d => {
+      if (d.profile && !d.profile.email_verified) {
+        router.push("/verify-email");
+      }
+    });
+}, [user, router]);
+
     const onFocus = () => {
       fetch(`/api/teacher/courses?uid=${user.uid}`)
         .then(r => r.json())

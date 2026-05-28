@@ -2,18 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword, GoogleAuthProvider, FacebookAuthProvider, signInWithPopup } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import { motion } from "framer-motion";
 import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { T } from "@/components/TranslatedText";
+import { CustomCaptcha } from "@/components/CustomCaptcha";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
   const redirectAfterLogin = (userEmail: string) => {
@@ -29,18 +36,27 @@ export default function LoginPage() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+  const performLogin = async (captchaToken: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       redirectAfterLogin(userCredential.user.email || "");
     } catch (err: any) {
       setError(err.message || "Login failed");
+      setShowCaptcha(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    if (!email.trim() || !password.trim()) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    setLoading(true);
+    setShowCaptcha(true); // إظهار الكابتشا
   };
 
   const handleGoogleLogin = async () => {
@@ -131,44 +147,47 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="login-email" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
               <input
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="login-email" name="email" type="email" required
+                value={email} onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                dir="ltr"
-                placeholder="you@example.com"
+                dir="ltr" placeholder="you@example.com"
               />
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              <label htmlFor="login-password" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
               <input
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                id="login-password" name="password" type="password" required
+                value={password} onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
                 placeholder="••••••••"
               />
             </div>
+
             {error && (
               <div className="flex items-center gap-2 rounded-lg bg-destructive/10 p-3 text-sm text-destructive">
                 <AlertCircle className="h-4 w-4" /> {error}
               </div>
             )}
-            <button
-              type="submit"
-              disabled={loading}
-              className="mt-2 w-full rounded-full bg-linear-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-elegant transition-transform hover:scale-[1.01] disabled:opacity-50"
-            >
-              {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Sign In</T>}
-            </button>
+
+            {/* الكابتشا تظهر فقط بعد الضغط على زر تسجيل الدخول */}
+            {showCaptcha ? (
+              <CustomCaptcha onVerify={(token) => { performLogin(token); }} />
+            ) : (
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 w-full rounded-full bg-linear-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-elegant transition-transform hover:scale-[1.01] disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Sign In</T>}
+              </button>
+            )}
+
             <p className="text-center text-xs text-muted-foreground">
               <T>Don't have an account?</T>{" "}
               <Link href="/signup" className="text-amber-600 underline-offset-4 hover:underline">

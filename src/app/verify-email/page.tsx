@@ -1,46 +1,142 @@
-import { Mail, ArrowLeft } from "lucide-react";
-import Link from "next/link";
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
+import { auth } from "@/lib/firebase/client";
+import { ResendVerificationButton } from "@/components/ResendVerificationButton";
+import Link from "next/link";
 
 export default function VerifyEmailPage() {
+  const router = useRouter();
+  const [code, setCode] = useState<string[]>(Array(6).fill(""));
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  const handleInput = (index: number, value: string) => {
+    if (!/^\d?$/.test(value)) return;
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+
+    // الانتقال تلقائيًا إلى الحقل التالي
+    if (value && index < 5) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  const handleSubmit = async () => {
+    const fullCode = code.join("");
+    if (fullCode.length < 6) {
+      setError("Please enter the full 6-digit code.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    const email = auth.currentUser?.email;
+    if (!email) {
+      setError("No user found. Please sign up again.");
+      setLoading(false);
+      return;
+    }
+
+    const res = await fetch("/api/verify-email-code", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, code: fullCode }),
+    });
+
+    if (res.ok) {
+      setSuccess(true);
+      // التوجيه بعد ثانيتين إلى الداشبورد
+      setTimeout(() => {
+        const role = localStorage.getItem("userRole");
+        router.push(role === "teacher" ? "/dashboard/teacher" : "/dashboard/student");
+      }, 2000);
+    } else {
+      const err = await res.json();
+      setError(err.error || "Verification failed.");
+      setCode(Array(6).fill(""));
+      inputRefs.current[0]?.focus();
+    }
+    setLoading(false);
+  };
+
+  const handlePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pastedData.length === 6) {
+      const newCode = pastedData.split("");
+      setCode(newCode);
+      newCode.forEach((_, i) => {
+        if (inputRefs.current[i]) inputRefs.current[i]!.value = newCode[i];
+      });
+      inputRefs.current[5]?.focus();
+    }
+  };
+
   return (
     <div className="grid min-h-[calc(100vh-4rem)] place-items-center bg-background px-4 py-12">
       <div className="relative w-full max-w-xl">
         <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[3rem] bg-amber-500/20 blur-3xl" />
         <div className="glass rounded-3xl p-8 md:p-10 shadow-elegant text-center">
-          <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-          <h1 className="font-serif text-2xl"><T>Check your email</T></h1>
-          <p className="mt-3 text-sm text-muted-foreground">
-            <T>We sent a verification link to your email address.</T>
-          </p>
-          <p className="text-sm font-semibold text-foreground mt-1">
-            <T>Please check your inbox and click the link to activate your account.</T>
-          </p>
+          {success ? (
+            <>
+              <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
+              <h1 className="font-serif text-2xl"><T>Email Verified!</T></h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                <T>You will be redirected shortly...</T>
+              </p>
+            </>
+          ) : (
+            <>
+              <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+              <h1 className="font-serif text-2xl"><T>Enter Verification Code</T></h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                <T>We sent a 6-digit code to your email.</T>
+              </p>
 
-          {/* 6 مربعات رقمية باهتة للشكل فقط */}
-          <div className="flex justify-center gap-3 mt-6">
-            {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div
-                key={i}
-                className="h-12 w-10 rounded-xl border border-border bg-muted/50 flex items-center justify-center text-lg font-mono text-muted-foreground/40 shadow-inner select-none"
-              >
-                0
+              {/* 6 حقول لإدخال الكود */}
+              <div className="flex justify-center gap-3 mt-6" onPaste={handlePaste}>
+                {code.map((digit, idx) => (
+                  <input
+                    key={idx}
+                    ref={(el) => { inputRefs.current[idx] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleInput(idx, e.target.value)}
+                    className="h-14 w-11 rounded-xl border bg-background text-center text-xl font-semibold outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500"
+                    autoFocus={idx === 0}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground mt-3">
-            <T>This is a secure code placeholder.</T>
-          </p>
 
-          <div className="mt-6 flex justify-center">
-            <Link
-              href="/login"
-              className="inline-flex items-center justify-center gap-2 rounded-full border bg-background px-5 py-2.5 text-sm font-medium hover:bg-accent"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              <T>Back to Sign In</T>
-            </Link>
-          </div>
+              {error && <p className="mt-3 text-sm text-red-500">{error}</p>}
+
+              <button
+                onClick={handleSubmit}
+                disabled={loading || code.some(d => d === "")}
+                className="mt-6 w-full rounded-full bg-amber-500 py-3 text-sm font-semibold text-black shadow-lg hover:bg-amber-400 disabled:opacity-50"
+              >
+                {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Verify</T>}
+              </button>
+
+              <div className="mt-4">
+                <ResendVerificationButton />
+              </div>
+
+              <Link href="/signup" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline">
+                <ArrowLeft className="h-4 w-4" /> <T>Back to Sign Up</T>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>

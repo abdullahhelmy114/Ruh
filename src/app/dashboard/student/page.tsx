@@ -69,6 +69,8 @@ export default function StudentDashboard() {
   if (isLoading || loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user || !data) return null;
 
+
+
   const isJoinable = (scheduledAt: string) => {
     const now = new Date();
     const t = new Date(scheduledAt);
