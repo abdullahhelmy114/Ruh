@@ -9,7 +9,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarPicker } from "@/components/dashboard/CalendarPicker";
 import { TimeSlotPicker } from "@/components/dashboard/TimeSlotPicker";
-import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 interface Course {
   id: string; title: string; level: string; price: number; status: string; recording_url?: string;
@@ -64,9 +64,7 @@ export default function TeacherDashboard() {
   const [savingCourse, setSavingCourse] = useState(false);
   const [courseError, setCourseError] = useState('');
 
-  // ---------- جميع Hooks قبل أي return ----------
-
-// Fetch initial data
+  // Fetch initial data
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
     const fetchData = async () => {
@@ -98,7 +96,7 @@ export default function TeacherDashboard() {
     if (!isLoading && (!user || (role !== "teacher" && role !== "admin"))) router.push("/login");
   }, [user, isLoading, role, router]);
 
-  // فحص البريد الإلكتروني المؤكد
+  // Email verification check
   useEffect(() => {
     if (!user) return;
     fetch(`/api/user?uid=${user.uid}`)
@@ -110,21 +108,21 @@ export default function TeacherDashboard() {
       });
   }, [user, router]);
 
+  // Profile completion check
   useEffect(() => {
-  if (!user) return;
-  fetch(`/api/user?uid=${user.uid}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.profile && !d.profile.profile_completed) {
-        router.push("/onboarding");
-      }
-    });
-}, [user, router]);
+    if (!user) return;
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile && !d.profile.profile_completed) {
+          router.push("/onboarding");
+        }
+      });
+  }, [user, router]);
 
-  // تحديث البيانات تلقائيًا عند التركيز على النافذة (بعد موافقة الأدمن مثلاً)
+  // Auto-refresh on window focus
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
-
     const onFocus = () => {
       fetch(`/api/teacher/courses?uid=${user.uid}`)
         .then(r => r.json())
@@ -133,12 +131,9 @@ export default function TeacherDashboard() {
         })
         .catch(console.error);
     };
-
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
   }, [user, role]);
-
-  // ---------- الآن يمكن وضع شروط الإرجاع المبكر ----------
 
   if (isLoading || loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!data) return null;
@@ -260,7 +255,7 @@ export default function TeacherDashboard() {
 
       {/* Commission Card */}
       {ratingData && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="rounded-4xl border bg-card p-6 shadow-elegant">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="commission-card rounded-4xl border bg-card p-6 shadow-elegant">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-linear-to-r from-amber-400 to-amber-500 text-white">
@@ -285,7 +280,7 @@ export default function TeacherDashboard() {
 
       {/* Live Sessions */}
       {data.sessions.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="live-sessions glass rounded-3xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Video className="h-5 w-5 text-amber-500" />
             <h2 className="font-serif text-xl"><T>Your Live Sessions</T></h2>
@@ -314,7 +309,7 @@ export default function TeacherDashboard() {
 
       {/* Courses List */}
       <div className="grid gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 space-y-4">
+        <div className="lg:col-span-2 space-y-4 your-courses">
           <h2 className="font-serif text-2xl"><T>Your Courses</T></h2>
           {data.courses.length === 0 ? (
             <div className="rounded-3xl border bg-card p-8 text-center text-muted-foreground">
@@ -345,7 +340,7 @@ export default function TeacherDashboard() {
         </div>
 
         {/* Stats Sidebar */}
-        <div className="space-y-4">
+        <div className="stats-sidebar space-y-4">
           <div className="rounded-3xl border bg-card p-6 shadow-elegant">
             <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Stats</T></div>
             <div className="mt-4 space-y-3">
@@ -398,7 +393,6 @@ export default function TeacherDashboard() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
             <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto">
               <h2 className="font-serif text-2xl"><T>New Lesson</T></h2>
-
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Select Course</T></label>
                 <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 mt-1 text-sm">
@@ -411,7 +405,6 @@ export default function TeacherDashboard() {
                   + <T>Create a new course</T>
                 </button>
               </div>
-
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Lesson Type</T></label>
                 <div className="mt-2 grid grid-cols-2 gap-3">
@@ -423,12 +416,10 @@ export default function TeacherDashboard() {
                   </button>
                 </div>
               </div>
-
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Lesson Title</T></label>
                 <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="e.g. Introduction to Arabic Grammar" className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" />
               </div>
-
               {lessonType === "zoom" && (
                 <div className="space-y-4">
                   <div>
@@ -441,9 +432,7 @@ export default function TeacherDashboard() {
                   </div>
                 </div>
               )}
-
               {lessonError && <p className="text-sm text-destructive">{lessonError}</p>}
-
               <div className="flex gap-3 justify-end">
                 <button onClick={() => setShowLessonModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm"><T>Cancel</T></button>
                 <button onClick={handleSaveLesson} disabled={savingLesson} className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
@@ -454,6 +443,22 @@ export default function TeacherDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Onboarding Tour */}
+      {typeof window !== "undefined" && !localStorage.getItem("onboarding_tour_seen") && (
+  <OnboardingTour
+    steps={[
+     { target: "body", placement: "center", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
+      { target: ".commission-card", title: "📊 عمولتك", content: "نسبة عمولتك تزيد مع تقدمك في التقييمات.", placement: "bottom" },
+      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'.", placement: "top" },
+      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات التي أنشأتها.", placement: "bottom" },
+      { target: ".stats-sidebar", title: "📈 إحصائياتك", content: "متابعة عدد طلابك وكورساتك النشطة.", placement: "left" },
+      { target: "body", placement: "center", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
+    ]}
+    tourKey="onboarding_tour_seen"
+  />
+
+)}
     </div>
   );
 }

@@ -4,18 +4,18 @@ import { T } from "@/components/TranslatedText";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Users, GraduationCap, DollarSign, TrendingUp, ShieldCheck, FileText,
   CheckCircle2, XCircle, Search, BookOpen, Clock, Wallet,
   Sparkles, Settings2, Crown, AlertCircle, ArrowUpRight, MoreHorizontal,
   Filter, Download, Bot, Save, Loader2, Ban, UserCheck, ExternalLink, Video,
+  MessageSquare, Bell, Trash2, Eye, Send, Mail, Edit3, UserX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useRouter } from "next/navigation";
 
-
-
-type TabKey = "overview" | "teachers" | "courses" | "users" | "finance" | "ai" | "settings";
+// ─── Types ─────────────────────────────────────────────
+type TabKey = "overview" | "teachers" | "courses" | "users" | "finance" | "ai" | "settings" | "messaging" | "notifications";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: TrendingUp },
@@ -23,40 +23,46 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "courses", label: "Course Moderation", icon: BookOpen },
   { key: "users", label: "User Management", icon: Users },
   { key: "finance", label: "Financial Center", icon: Wallet },
+  { key: "messaging", label: "Messaging", icon: MessageSquare },
+  { key: "notifications", label: "Notifications", icon: Bell },
   { key: "ai", label: "AI Configuration", icon: Bot },
   { key: "settings", label: "Site Settings", icon: Settings2 },
 ];
 
+// ─── Main Component ────────────────────────────────────
 export default function AdminDashboard() {
   const { user, isLoading: authLoading } = useAuth();
   const [tab, setTab] = useState<TabKey>("overview");
   const router = useRouter();
+
+  // Email verification check
   useEffect(() => {
-  if (!user) return;
-  fetch(`/api/user?uid=${user.uid}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.profile && !d.profile.email_verified) {
-        router.push("/verify-email");
-      }
-    });
+    if (!user) return;
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile && !d.profile.email_verified) {
+          router.push("/verify-email");
+        }
+      });
+  }, [user, router]);
 
-    useEffect(() => {
-  if (!user) return;
-  fetch(`/api/user?uid=${user.uid}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.profile && !d.profile.profile_completed) {
-        router.push("/onboarding");
-      }
-    });
-}, [user, router]);
+  // Profile completion check
+  useEffect(() => {
+    if (!user) return;
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile && !d.profile.profile_completed) {
+          router.push("/onboarding");
+        }
+      });
+  }, [user, router]);
 
-}, [user, router]);
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
   if (user.email !== "abdullahhelmy114@gmail.com") return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
-  
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
       {/* Header */}
@@ -97,6 +103,8 @@ export default function AdminDashboard() {
         {tab === "courses" && <CourseModerationTab />}
         {tab === "users" && <UserManagementTab />}
         {tab === "finance" && <FinancialCenterTab />}
+        {tab === "messaging" && <MessagingTab />}
+        {tab === "notifications" && <NotificationsTab />}
         {tab === "ai" && <AIConfigurationTab />}
         {tab === "settings" && <SiteSettingsTab />}
       </div>
@@ -218,8 +226,6 @@ function TeacherVerificationTab() {
   );
 }
 
-
-
 /* ─────────── Course Moderation Tab ─────────── */
 function CourseModerationTab() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -247,24 +253,22 @@ function CourseModerationTab() {
   }, []);
 
   const handleCourseAction = async (id: string, status: string) => {
-  try {
-    const res = await fetch('/api/approve-course', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ courseId: id, status }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      alert(`<T>Failed</T>: ${err.error || '<T>Unknown error</T>'}`);
-      return;
+    try {
+      const res = await fetch('/api/approve-course', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId: id, status }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Failed: ${err.error || 'Unknown error'}`);
+        return;
+      }
+      setCourses(prev => prev.filter(c => c.id !== id));
+    } catch (e: any) {
+      alert(`Network error: ${e.message}`);
     }
-
-    setCourses(prev => prev.filter(c => c.id !== id));
-  } catch (e: any) {
-    alert(`<T>Network error</T>: ${e.message}`);
-  }
-};
+  };
 
   const handleLessonAction = async (id: string, status: string) => {
     await fetch(`/api/lessons/${id}`, {
@@ -283,17 +287,12 @@ function CourseModerationTab() {
     <div>
       <h2 className="font-serif text-2xl mb-4"><T>Course & Lesson Moderation</T></h2>
       {totalPending === 0 ? (
-        <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground">
-          <T>No pending courses or lessons</T>
-        </div>
+        <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground"><T>No pending courses or lessons</T></div>
       ) : (
         <div className="space-y-6">
-          {/* Pending Courses */}
           {courses.length > 0 && (
             <div>
-              <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-amber-500" /> <T>Courses</T> ({courses.length})
-              </h3>
+              <h3 className="font-serif text-lg mb-3 flex items-center gap-2"><BookOpen className="h-5 w-5 text-amber-500" /> <T>Courses</T> ({courses.length})</h3>
               {courses.map(c => (
                 <div key={c.id} className="rounded-2xl border bg-card p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div>
@@ -309,13 +308,9 @@ function CourseModerationTab() {
               ))}
             </div>
           )}
-
-          {/* Pending Lessons */}
           {lessons.length > 0 && (
             <div>
-              <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                <Video className="h-5 w-5 text-amber-500" /> <T>Lessons</T> ({lessons.length})
-              </h3>
+              <h3 className="font-serif text-lg mb-3 flex items-center gap-2"><Video className="h-5 w-5 text-amber-500" /> <T>Lessons</T> ({lessons.length})</h3>
               {lessons.map(l => (
                 <div key={l.id} className="rounded-2xl border bg-card p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
                   <div>
@@ -336,9 +331,18 @@ function CourseModerationTab() {
     </div>
   );
 }
-/* ─────────── User Management Tab ─────────── */
+
+/* ─────────── User Management Tab (Enhanced) ─────────── */
 function UserManagementTab() {
   const [users, setUsers] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showMessageModal, setShowMessageModal] = useState<any>(null);
+  const [messageText, setMessageText] = useState("");
+  const [sending, setSending] = useState(false);
+
   useEffect(() => {
     fetch('/api/admin/users').then(r => r.json()).then(d => setUsers(d.users));
   }, []);
@@ -353,34 +357,127 @@ function UserManagementTab() {
     setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u));
   };
 
+  const deleteUser = async (id: string) => {
+    await fetch(`/api/admin/users/${id}`, { method: 'DELETE' });
+    setUsers(prev => prev.filter(u => u.id !== id));
+    setShowDeleteConfirm(null);
+  };
+
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !showMessageModal) return;
+    setSending(true);
+    await fetch('/api/admin/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: showMessageModal.id, message: messageText }),
+    });
+    setSending(false);
+    setShowMessageModal(null);
+    setMessageText("");
+    alert("Message sent!");
+  };
+
+  const filteredUsers = users.filter(u =>
+    (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div>
-      <h2 className="font-serif text-2xl mb-4"><T>User Management</T></h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-serif text-2xl"><T>User Management</T></h2>
+        <div className="relative w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search users..."
+            className="w-full rounded-full border bg-background pl-10 pr-4 py-2 text-sm outline-none"
+          />
+        </div>
+      </div>
+
       <table className="w-full text-sm rounded-3xl border bg-card overflow-hidden">
         <thead className="bg-muted/40 text-xs uppercase">
           <tr>
             <th className="px-5 py-3 text-left"><T>User</T></th>
             <th><T>Role</T></th>
-            <th><T>Plan</T></th>
             <th><T>Status</T></th>
             <th><T>Joined</T></th>
-            <th><T>Actions</T></th>
+            <th className="text-right"><T>Actions</T></th>
           </tr>
         </thead>
         <tbody>
-          {users.map((u: any) => (
+          {filteredUsers.map((u: any) => (
             <tr key={u.id} className="border-t hover:bg-accent/40">
-              <td className="px-5 py-4">{u.full_name}<br/><span className="text-xs text-muted-foreground">{u.email}</span></td>
-              <td>{u.role}</td><td>{u.plan}</td><td>{u.status}</td><td>{new Date(u.created_at).toLocaleDateString()}</td>
-              <td>
-                <button onClick={() => toggleBan(u.id, u.status)} className={`px-2 py-1 rounded-full text-xs ${u.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
-                  {u.status === 'Active' ? <T>Ban</T> : <T>Unban</T>}
-                </button>
+              <td className="px-5 py-4">{u.full_name}<br /><span className="text-xs text-muted-foreground">{u.email}</span></td>
+              <td>{u.role}</td>
+              <td>{u.status}</td>
+              <td>{new Date(u.created_at).toLocaleDateString()}</td>
+              <td className="text-right">
+                <div className="flex items-center justify-end gap-1">
+                  <button onClick={() => { setSelectedUser(u); setShowProfile(true); }} className="p-1.5 rounded-full hover:bg-accent" title="View Profile"><Eye className="h-4 w-4" /></button>
+                  <button onClick={() => setShowMessageModal(u)} className="p-1.5 rounded-full hover:bg-accent" title="Send Message"><Mail className="h-4 w-4" /></button>
+                  <button onClick={() => toggleBan(u.id, u.status)} className={`px-2 py-1 rounded-full text-xs ${u.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                    {u.status === 'Active' ? <T>Ban</T> : <T>Unban</T>}
+                  </button>
+                  <button onClick={() => setShowDeleteConfirm(u.id)} className="p-1.5 rounded-full hover:bg-red-100 text-red-500" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+
+      {/* View Profile Modal */}
+      {showProfile && selectedUser && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl p-6 max-w-md w-full shadow-elegant space-y-3">
+            <h3 className="font-serif text-xl">{selectedUser.full_name}</h3>
+            <p className="text-sm text-muted-foreground">{selectedUser.email}</p>
+            <p className="text-sm"><T>Role</T>: {selectedUser.role}</p>
+            <p className="text-sm"><T>Status</T>: {selectedUser.status}</p>
+            <p className="text-sm"><T>Joined</T>: {new Date(selectedUser.created_at).toLocaleDateString()}</p>
+            <button onClick={() => setShowProfile(false)} className="mt-4 rounded-full border px-4 py-2 text-sm"><T>Close</T></button>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl p-6 max-w-sm w-full shadow-elegant text-center space-y-4">
+            <Trash2 className="mx-auto h-10 w-10 text-red-500" />
+            <p className="font-medium"><T>Are you sure you want to delete this user?</T></p>
+            <div className="flex gap-3 justify-center">
+              <button onClick={() => setShowDeleteConfirm(null)} className="rounded-full border px-4 py-2 text-sm"><T>Cancel</T></button>
+              <button onClick={() => deleteUser(showDeleteConfirm)} className="rounded-full bg-red-600 text-white px-4 py-2 text-sm"><T>Delete</T></button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Send Message Modal */}
+      {showMessageModal && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="bg-card rounded-3xl p-6 max-w-md w-full shadow-elegant space-y-4">
+            <h3 className="font-serif text-xl"><T>Send Message to</T> {showMessageModal.full_name}</h3>
+            <textarea
+              value={messageText}
+              onChange={(e) => setMessageText(e.target.value)}
+              rows={4}
+              className="w-full rounded-2xl border bg-background p-4 text-sm"
+              placeholder="Type your message..."
+            />
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => setShowMessageModal(null)} className="rounded-full border px-4 py-2 text-sm"><T>Cancel</T></button>
+              <button onClick={handleSendMessage} disabled={sending} className="rounded-full bg-emerald-600 text-white px-4 py-2 text-sm disabled:opacity-50">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4" /> <T>Send</T></>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -416,6 +513,112 @@ function FinancialCenterTab() {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────── Messaging Tab (New) ─────────── */
+function MessagingTab() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/users').then(r => r.json()).then(d => setUsers(d.users));
+  }, []);
+
+  const handleSend = async () => {
+    if (!selectedUser || !message.trim()) return;
+    setSending(true);
+    await fetch('/api/admin/send-message', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: selectedUser.id, message }),
+    });
+    setSending(false);
+    setMessage("");
+    alert("Message sent to " + selectedUser.full_name);
+  };
+
+  return (
+    <div>
+      <h2 className="font-serif text-2xl mb-4"><T>Send Message to User</T></h2>
+      <div className="grid md:grid-cols-2 gap-6">
+        <div>
+          <h3 className="text-sm font-medium mb-2"><T>Select User</T></h3>
+          <div className="max-h-80 overflow-y-auto space-y-2">
+            {users.map(u => (
+              <button
+                key={u.id}
+                onClick={() => setSelectedUser(u)}
+                className={`w-full text-left rounded-2xl border p-3 text-sm transition ${selectedUser?.id === u.id ? 'bg-emerald-50 border-emerald-500' : 'hover:bg-accent'}`}
+              >
+                {u.full_name} <span className="text-muted-foreground">({u.email})</span>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          {selectedUser ? (
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium"><T>Message to</T>: {selectedUser.full_name}</h3>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={6}
+                className="w-full rounded-2xl border bg-background p-4 text-sm"
+                placeholder="Type your message..."
+              />
+              <button onClick={handleSend} disabled={sending} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">
+                {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4" /> <T>Send</T></>}
+              </button>
+            </div>
+          ) : (
+            <div className="text-center text-muted-foreground py-12"><T>Select a user to send a message</T></div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────── Notifications Tab (New) ─────────── */
+function NotificationsTab() {
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async () => {
+    if (!title.trim() || !body.trim()) return;
+    setSending(true);
+    await fetch('/api/admin/send-notification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, body }),
+    });
+    setSending(false);
+    setTitle("");
+    setBody("");
+    alert("Notification sent to all users!");
+  };
+
+  return (
+    <div className="max-w-2xl">
+      <h2 className="font-serif text-2xl mb-4"><T>Send Global Notification</T></h2>
+      <div className="space-y-4">
+        <div>
+          <label className="text-sm font-medium"><T>Title</T></label>
+          <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm mt-1" placeholder="Notification title" />
+        </div>
+        <div>
+          <label className="text-sm font-medium"><T>Body</T></label>
+          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} className="w-full rounded-2xl border bg-background p-4 text-sm mt-1" placeholder="Notification body..." />
+        </div>
+        <button onClick={handleSend} disabled={sending} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Bell className="h-4 w-4" /> <T>Send to All Users</T></>}
+        </button>
       </div>
     </div>
   );

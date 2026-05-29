@@ -140,45 +140,44 @@ export function TeacherProfile() {
         <Section step={1} title="Identity" arabic="الهوية" icon={<IdCard size={20} />}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Full Name" arabic="الاسم الكامل" icon={<User size={14} />}>
-              <Input value={s.fullName} onChange={(e) => set("fullName", e.target.value)} />
+              <Input className="profile-fullname" value={s.fullName} onChange={(e) => set("fullName", e.target.value)} />
             </Field>
             <Field label="Email" arabic="البريد">
-              <Input value={s.email} disabled />
+              <Input className="profile-email" value={s.email} disabled />
             </Field>
             <Field label="Gender" arabic="الجنس">
-              <Select value={s.gender} onChange={(e) => set("gender", e.target.value)}>
+              <Select className="profile-gender" value={s.gender} onChange={(e) => set("gender", e.target.value)}>
                 <option value="">Select…</option>
                 <option value="male">Male / ذكر</option>
                 <option value="female">Female / أنثى</option>
               </Select>
             </Field>
             <Field label="Nationality" arabic="الجنسية" required error={errors.nationality} icon={<Globe2 size={14} />}>
-              <Input value={s.nationality} onChange={(e) => set("nationality", e.target.value)} placeholder="e.g. Egyptian" />
+              <Input className="profile-nationality" value={s.nationality} onChange={(e) => set("nationality", e.target.value)} placeholder="e.g. Egyptian" />
             </Field>
             <Field label="Country of Residence" arabic="بلد الإقامة" required error={errors.residence} icon={<MapPin size={14} />}>
-              <Input value={s.residence} onChange={(e) => set("residence", e.target.value)} />
+              <Input className="profile-residence" value={s.residence} onChange={(e) => set("residence", e.target.value)} />
             </Field>
           </div>
         </Section>
 
         <Section step={2} title="Languages" arabic="اللغات" icon={<Languages size={20} />}>
           <div className="grid gap-5 md:grid-cols-2">
-            <Field label="Native Language" arabic="اللغة الأم" required error={errors.nativeLanguage}>
-              <Input value={s.nativeLanguage} onChange={(e) => set("nativeLanguage", e.target.value)} />
-            </Field>
             <Field label="Languages Spoken" arabic="اللغات التي تجيدها" required error={errors.languages}>
-              <MultiInput values={s.languages} onChange={(v) => set("languages", v)} placeholder="Add a language and press Enter" />
-            </Field>
-          </div>
+          <div className="profile-languages">
+            <MultiInput values={s.languages} onChange={(v) => set("languages", v)} placeholder="Add a language and press Enter" />
+         </div>
+          </Field>
+        </div>
         </Section>
 
         <Section step={3} title="Contact" arabic="وسائل التواصل" icon={<Phone size={20} />}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="WhatsApp Number" arabic="رقم واتساب" required error={errors.whatsapp} icon={<Phone size={14} />}>
-              <Input dir="ltr" value={s.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="+20 100 000 0000" />
+              <Input className="profile-whatsapp" dir="ltr" value={s.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} placeholder="+20 100 000 0000" />
             </Field>
             <Field label="Telegram Username" arabic="حساب تيليجرام" required error={errors.telegram} icon={<Send size={14} />}>
-              <Input value={s.telegram} onChange={(e) => set("telegram", e.target.value)} placeholder="@username" />
+              <Input className="profile-telegram" value={s.telegram} onChange={(e) => set("telegram", e.target.value)} placeholder="@username" />
             </Field>
           </div>
         </Section>
@@ -190,9 +189,9 @@ export function TeacherProfile() {
         <Section step={5} title="About & Credentials" arabic="نبذة وسيرة ذاتية" icon={<BookOpen size={20} />} defaultOpen={false}>
           <div className="space-y-5">
             <Field label="Bio" arabic="نبذة عنه">
-              <Textarea value={s.bio} onChange={(e) => set("bio", e.target.value)} placeholder="Tell students about your teaching philosophy, qualifications, and experience..." maxLength={800} />
+              <Textarea className="profile-bio" value={s.bio} onChange={(e) => set("bio", e.target.value)} placeholder="Tell students about your teaching philosophy, qualifications, and experience..." maxLength={800} />
             </Field>
-            <div>
+            <div className="profile-cv">
               <p className="mb-2 text-sm font-medium text-foreground">
                 CV Upload <span dir="rtl" className="font-arabic text-xs text-muted-foreground">(السيرة الذاتية)</span>
               </p>
@@ -215,7 +214,9 @@ export function TeacherProfile() {
           <p className="text-xs text-muted-foreground">
             Profile completion: <span className="font-semibold text-emerald dark:text-gold">{completion}%</span>
           </p>
-          <SaveButton onClick={submit} state={save} />
+          <div className="profile-save-btn">
+            <SaveButton onClick={submit} state={save} />
+          </div>
         </div>
       </motion.div>
     </div>

@@ -144,51 +144,50 @@ export function StudentProfile() {
         <Section step={1} title="Personal" arabic="المعلومات الشخصية" icon={<User size={20} />}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Gender" arabic="الجنس">
-              <Select value={s.gender} onChange={(e) => set("gender", e.target.value)}>
+              <Select className="profile-gender" value={s.gender} onChange={(e) => set("gender", e.target.value)}>
                 <option value="">Select…</option>
                 <option value="male">Male / ذكر</option>
                 <option value="female">Female / أنثى</option>
               </Select>
             </Field>
             <Field label="Age" arabic="العمر">
-              <Input type="number" min={5} max={99} value={s.age} onChange={(e) => set("age", e.target.value)} />
+              <Input className="profile-age" type="number" min={5} max={99} value={s.age} onChange={(e) => set("age", e.target.value)} />
             </Field>
             <Field label="Nationality" arabic="الجنسية" icon={<Globe2 size={14} />}>
-              <Input value={s.nationality} onChange={(e) => set("nationality", e.target.value)} />
+              <Input className="profile-nationality" value={s.nationality} onChange={(e) => set("nationality", e.target.value)} />
             </Field>
             <Field label="Country of Residence" arabic="بلد الإقامة">
-              <Input value={s.residence} onChange={(e) => set("residence", e.target.value)} />
+              <Input className="profile-residence" value={s.residence} onChange={(e) => set("residence", e.target.value)} />
             </Field>
           </div>
         </Section>
 
         <Section step={2} title="Languages" arabic="اللغات" icon={<Languages size={20} />}>
-          <div className="grid gap-5 md:grid-cols-2">
-            <Field label="Native Language" arabic="اللغة الأم" required error={errors.nativeLanguage}>
-              <Input value={s.nativeLanguage} onChange={(e) => set("nativeLanguage", e.target.value)} />
-            </Field>
-            <Field label="Other Languages" arabic="لغات أخرى">
-              <MultiInput values={s.otherLanguages} onChange={(v) => set("otherLanguages", v)} placeholder="Add a language" />
-            </Field>
-          </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <Field label="Other Languages" arabic="لغات أخرى">
+        <div className="profile-other-languages">
+          <MultiInput values={s.otherLanguages} onChange={(v) => set("otherLanguages", v)} placeholder="Add a language" />
+        </div>
+          </Field>
+        </div>
         </Section>
 
         <Section step={3} title="Contact" arabic="وسائل التواصل" icon={<Phone size={20} />} defaultOpen={false}>
           <div className="grid gap-5 md:grid-cols-2">
             <Field label="Email" arabic="البريد" icon={<Mail size={14} />}>
-              <Input value={s.email} disabled />
+              <Input className="profile-email" value={s.email} disabled />
             </Field>
             <Field label="WhatsApp" arabic="واتساب" icon={<Phone size={14} />}>
-              <Input dir="ltr" value={s.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
+              <Input className="profile-whatsapp" dir="ltr" value={s.whatsapp} onChange={(e) => set("whatsapp", e.target.value)} />
             </Field>
             <Field label="Telegram" arabic="تيليجرام" icon={<MessageCircle size={14} />}>
-              <Input value={s.telegram} onChange={(e) => set("telegram", e.target.value)} placeholder="@username" />
+              <Input className="profile-telegram" value={s.telegram} onChange={(e) => set("telegram", e.target.value)} placeholder="@username" />
             </Field>
             <Field label="Facebook" arabic="فيسبوك">
-              <Input value={s.facebook} onChange={(e) => set("facebook", e.target.value)} />
+              <Input className="profile-facebook" value={s.facebook} onChange={(e) => set("facebook", e.target.value)} />
             </Field>
             <Field label="Instagram" arabic="إنستغرام">
-              <Input value={s.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="@handle" />
+              <Input className="profile-instagram" value={s.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="@handle" />
             </Field>
           </div>
         </Section>
@@ -197,7 +196,9 @@ export function StudentProfile() {
           <p className="text-xs text-muted-foreground">
             Profile completion: <span className="font-semibold text-emerald dark:text-gold">{completion}%</span>
           </p>
-          <SaveButton onClick={submit} state={save} />
+          <div className="profile-save-btn">
+            <SaveButton onClick={submit} state={save} />
+          </div>
         </div>
       </motion.div>
     </div>

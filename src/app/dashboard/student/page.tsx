@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
-
+import { OnboardingTour } from "@/components/OnboardingTour";
 
 interface LiveSession {
   id: string; title: string; scheduled_at: string; meeting_url: string;
@@ -43,7 +43,8 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedRecording, setSelectedRecording] = useState<{ url: string; title: string } | null>(null);
 
-useEffect(() => {
+  // فحص البريد الإلكتروني المؤكد
+  useEffect(() => {
     if (!user) return;
     fetch(`/api/user?uid=${user.uid}`)
       .then(r => r.json())
@@ -54,17 +55,19 @@ useEffect(() => {
       });
   }, [user, router]);
 
+  // فحص اكتمال الملف الشخصي (Onboarding)
   useEffect(() => {
-  if (!user) return;
-  fetch(`/api/user?uid=${user.uid}`)
-    .then(r => r.json())
-    .then(d => {
-      if (d.profile && !d.profile.profile_completed) {
-        router.push("/onboarding");
-      }
-    });
-}, [user, router]);
+    if (!user) return;
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile && !d.profile.profile_completed) {
+          router.push("/onboarding");
+        }
+      });
+  }, [user, router]);
 
+  // جلب بيانات الداشبورد
   useEffect(() => {
     if (!user || !user.uid) return;
     fetch(`/api/student/dashboard?uid=${user.uid}`)
@@ -73,6 +76,7 @@ useEffect(() => {
       .catch(() => setLoading(false));
   }, [user]);
 
+  // حماية المسار
   useEffect(() => {
     if (!isLoading) {
       if (!user) router.push("/login");
@@ -80,6 +84,7 @@ useEffect(() => {
     }
   }, [user, isLoading, role, router]);
 
+  // جلب الكورسات المسجل بها
   useEffect(() => {
     if (!user) return;
     fetch(`/api/student/courses?uid=${user.uid}`)
@@ -90,8 +95,6 @@ useEffect(() => {
 
   if (isLoading || loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user || !data) return null;
-
-
 
   const isJoinable = (scheduledAt: string) => {
     const now = new Date();
@@ -116,7 +119,7 @@ useEffect(() => {
 
       {/* Live Sessions */}
       {data.sessions.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass rounded-3xl p-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="live-sessions glass rounded-3xl p-6">
           <div className="flex items-center gap-2 mb-4">
             <Video className="h-5 w-5 text-amber-500" />
             <h2 className="font-serif text-xl"><T>Upcoming Live Sessions</T></h2>
@@ -147,7 +150,7 @@ useEffect(() => {
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-10 lg:col-span-2">
           {/* My Courses */}
-          <section>
+          <section className="your-courses">
             <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600"><T>My Courses</T></div>
             <h2 className="font-serif text-2xl"><T>Enrolled Courses</T></h2>
             <div className="mt-4 space-y-4">
@@ -229,7 +232,7 @@ useEffect(() => {
             )}
           </section>
 
-          <div className="group relative overflow-hidden rounded-4xl border-2 border-amber-500/30 bg-card p-8 shadow-elegant">
+          <div className="placement-test group relative overflow-hidden rounded-4xl border-2 border-amber-500/30 bg-card p-8 shadow-elegant">
             <GraduationCap className="mb-4 h-10 w-10 text-amber-500" />
             <h3 className="font-serif text-2xl"><T>Placement Test</T></h3>
             <p className="mt-2 text-sm text-muted-foreground"><T>Discover your level — get a tailored learning path from our experts.</T></p>
@@ -283,6 +286,20 @@ useEffect(() => {
           </motion.div>
         </div>
       )}
+
+      {/* Onboarding Tour – تظهر مرة واحدة فقط */}
+{typeof window !== "undefined" && !localStorage.getItem("onboarding_tour_seen") && (
+  <OnboardingTour
+    steps={[
+      { target: "body", placement: "center", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
+      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات المسجل بها.", placement: "bottom" },
+      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'.", placement: "top" },
+      { target: ".placement-test", title: "🧪 اختبار تحديد المستوى", content: "يمكنك إجراء اختبار لتحديد مستواك.", placement: "left" },
+      { target: "body", placement: "center", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
+    ]}
+    tourKey="onboarding_tour_seen"
+  />
+)}
     </div>
   );
 }
