@@ -12,16 +12,22 @@ export default function StudentProfilePage() {
   const { user, isLoading, role } = useAuth();
   const router = useRouter();
 
+  // الحماية: توجيه غير المسجلين أو الأدوار الأخرى
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
         router.push("/login");
-      } else if (role !== "student" && role !== "admin") {
+        return;
+      }
+
+      // السماح بالدخول فقط للطلاب والأدمن
+      if (role !== "student" && role !== "admin") {
         router.push("/profile/teacher");
       }
     }
   }, [user, isLoading, role, router]);
 
+  // شاشة التحميل
   if (isLoading || !user) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -30,9 +36,10 @@ export default function StudentProfilePage() {
     );
   }
 
+  // عدم عرض أي شيء إذا كان الدور غير مسموح (يتجنب وميض المحتوى)
   if (role !== "student" && role !== "admin") return null;
 
-  // خطوات الجولة الإرشادية لبروفايل الطالب
+  // خطوات الجولة الإرشادية
   const steps = [
     {
       target: ".profile-gender",
@@ -91,15 +98,26 @@ export default function StudentProfilePage() {
     },
   ];
 
+  // لا تعرض الجولة على الشاشات الصغيرة (عرض أقل من 768px)
+  const isMobile =
+    typeof window !== "undefined" ? window.innerWidth < 768 : false;
+
   return (
     <>
-      <StudentProfile />
-      {typeof window !== "undefined" && !localStorage.getItem("profile_tour_student") && (
-        <OnboardingTour
-          steps={steps}
-          tourKey="profile_tour_student"
-        />
-      )}
+      {/* غلاف متجاوب يمنع التمدد الأفقي */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-hidden pb-20">
+        <StudentProfile />
+      </div>
+
+      {/* الجولة الإرشادية تظهر فقط على الشاشات الكبيرة */}
+      {!isMobile &&
+        typeof window !== "undefined" &&
+        !localStorage.getItem("profile_tour_student") && (
+          <OnboardingTour
+            steps={steps}
+            tourKey="profile_tour_student"
+          />
+        )}
     </>
   );
 }

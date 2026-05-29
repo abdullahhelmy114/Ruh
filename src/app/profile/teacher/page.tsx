@@ -12,16 +12,22 @@ export default function TeacherProfilePage() {
   const { user, isLoading, role } = useAuth();
   const router = useRouter();
 
+  // الحماية: توجيه غير المسجلين أو الأدوار الأخرى
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
         router.push("/login");
-      } else if (role !== "teacher" && role !== "admin") {
+        return;
+      }
+
+      // السماح بالدخول فقط للمعلمين والأدمن
+      if (role !== "teacher" && role !== "admin") {
         router.push("/profile/student");
       }
     }
   }, [user, isLoading, role, router]);
 
+  // شاشة التحميل
   if (isLoading || !user) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
@@ -30,6 +36,7 @@ export default function TeacherProfilePage() {
     );
   }
 
+  // عدم عرض أي شيء إذا كان الدور غير مسموح (يتجنب وميض المحتوى)
   if (role !== "teacher" && role !== "admin") return null;
 
   // خطوات الجولة الإرشادية لبروفايل المعلم
@@ -103,15 +110,26 @@ export default function TeacherProfilePage() {
     },
   ];
 
+  // لا تعرض الجولة على الشاشات الصغيرة (عرض أقل من 768px)
+  const isMobile =
+    typeof window !== "undefined" ? window.innerWidth < 768 : false;
+
   return (
     <>
-      <TeacherProfile />
-      {typeof window !== "undefined" && !localStorage.getItem("profile_tour_teacher") && (
-        <OnboardingTour
-          steps={steps}
-          tourKey="profile_tour_teacher"
-        />
-      )}
+      {/* غلاف متجاوب يمنع التمدد الأفقي */}
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-hidden pb-20">
+        <TeacherProfile />
+      </div>
+
+      {/* الجولة الإرشادية تظهر فقط على الشاشات الكبيرة */}
+      {!isMobile &&
+        typeof window !== "undefined" &&
+        !localStorage.getItem("profile_tour_teacher") && (
+          <OnboardingTour
+            steps={steps}
+            tourKey="profile_tour_teacher"
+          />
+        )}
     </>
   );
 }

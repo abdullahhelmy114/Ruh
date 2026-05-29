@@ -55,8 +55,6 @@ export default function StudentDashboard() {
       });
   }, [user, router]);
 
-
-
   // جلب بيانات الداشبورد
   useEffect(() => {
     if (!user || !user.uid) return;
@@ -83,7 +81,13 @@ export default function StudentDashboard() {
       .catch(console.error);
   }, [user]);
 
-  if (isLoading || loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
+  if (isLoading || loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+  }
   if (!user || !data) return null;
 
   const isJoinable = (scheduledAt: string) => {
@@ -98,36 +102,74 @@ export default function StudentDashboard() {
       <div className="relative overflow-hidden rounded-4xl border border-border bg-card p-8 shadow-elegant flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
         <div className="relative z-10">
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600"><T>As‑salāmu ʿalaykum</T></div>
-          <h1 className="mt-1 font-serif text-3xl md:text-4xl"><T>Welcome back,</T> {data.firstName}</h1>
-          <p className="mt-2 text-sm italic text-muted-foreground"><T>Continue where you left off — every word is a victory.</T></p>
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+            <T>As‑salāmu ʿalaykum</T>
+          </div>
+          <h1 className="mt-1 font-serif text-3xl md:text-4xl">
+            <T>Welcome back,</T> {data.firstName}
+          </h1>
+          <p className="mt-2 text-sm italic text-muted-foreground">
+            <T>Continue where you left off — every word is a victory.</T>
+          </p>
         </div>
         <div className="flex items-center gap-3 rounded-full border border-amber-500/20 bg-background/50 px-5 py-2.5 text-sm font-semibold">
-          <Trophy className="h-5 w-5 animate-bounce text-amber-500" /> {data.streak}<T>-day streak</T>
+          <Trophy className="h-5 w-5 animate-bounce text-amber-500" />
+          {data.streak}
+          <T>-day streak</T>
         </div>
       </div>
 
       {/* Live Sessions */}
       {data.sessions.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="live-sessions glass rounded-3xl p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="live-sessions glass rounded-3xl p-6"
+        >
           <div className="flex items-center gap-2 mb-4">
             <Video className="h-5 w-5 text-amber-500" />
-            <h2 className="font-serif text-xl"><T>Upcoming Live Sessions</T></h2>
+            <h2 className="font-serif text-xl">
+              <T>Upcoming Live Sessions</T>
+            </h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {data.sessions.map(s => {
               const joinable = isJoinable(s.scheduled_at);
               return (
-                <div key={s.id} className="flex items-center justify-between bg-background/50 rounded-2xl p-4 border">
+                <div
+                  key={s.id}
+                  className="flex items-center justify-between bg-background/50 rounded-2xl p-4 border"
+                >
                   <div>
                     <h3 className="font-serif text-sm font-semibold">{s.title}</h3>
-                    <p className="text-xs text-muted-foreground">{s.course_title} · {s.teacher_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {s.course_title} · {s.teacher_name}
+                    </p>
                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
-                      <Clock size={12} /> {new Date(s.scheduled_at).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}
+                      <Clock size={12} />
+                      {new Date(s.scheduled_at).toLocaleString("en-US", {
+                        dateStyle: "medium",
+                        timeStyle: "short",
+                      })}
                     </div>
                   </div>
-                  <Link href={`/live/${s.id}`} className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${joinable ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-muted text-muted-foreground pointer-events-none"}`}>
-                    {joinable ? <><ChevronRight size={14} /> <T>Join Now</T></> : <><Clock size={14} /> <T>Waiting</T></>}
+                  <Link
+                    href={`/live/${s.id}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${
+                      joinable
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        : "bg-muted text-muted-foreground pointer-events-none"
+                    }`}
+                  >
+                    {joinable ? (
+                      <>
+                        <ChevronRight size={14} /> <T>Join Now</T>
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={14} /> <T>Waiting</T>
+                      </>
+                    )}
                   </Link>
                 </div>
               );
@@ -141,27 +183,50 @@ export default function StudentDashboard() {
         <div className="space-y-10 lg:col-span-2">
           {/* My Courses */}
           <section className="your-courses">
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600"><T>My Courses</T></div>
-            <h2 className="font-serif text-2xl"><T>Enrolled Courses</T></h2>
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">
+              <T>My Courses</T>
+            </div>
+            <h2 className="font-serif text-2xl">
+              <T>Enrolled Courses</T>
+            </h2>
             <div className="mt-4 space-y-4">
               {enrolledCourses.length === 0 ? (
                 <div className="rounded-4xl border bg-card p-8 text-center text-muted-foreground">
                   <BookOpen className="mx-auto h-8 w-8 text-amber-500 mb-3" />
-                  <p><T>You haven't enrolled in any courses yet.</T></p>
-                  <Link href="/marketplace" className="mt-3 inline-block text-sm font-medium text-amber-600 hover:underline"><T>Browse Courses →</T></Link>
+                  <p>
+                    <T>You haven't enrolled in any courses yet.</T>
+                  </p>
+                  <Link
+                    href="/marketplace"
+                    className="mt-3 inline-block text-sm font-medium text-amber-600 hover:underline"
+                  >
+                    <T>Browse Courses →</T>
+                  </Link>
                 </div>
               ) : (
                 enrolledCourses.map(c => (
                   <div key={c.id} className="rounded-3xl border bg-card p-5 shadow-elegant">
                     <h3 className="font-serif text-lg">{c.title}</h3>
-                    <p className="text-sm text-muted-foreground"><T>Level</T> {c.level}</p>
+                    <p className="text-sm text-muted-foreground">
+                      <T>Level</T> {c.level}
+                    </p>
                     <div className="mt-2 flex items-center gap-2">
                       <div className="h-2 flex-1 bg-muted rounded-full overflow-hidden">
-                        <div className="h-full bg-emerald-500" style={{ width: `${(c.completed_lessons / c.total_lessons) * 100 || 0}%` }} />
+                        <div
+                          className="h-full bg-emerald-500"
+                          style={{
+                            width: `${(c.completed_lessons / c.total_lessons) * 100 || 0}%`,
+                          }}
+                        />
                       </div>
-                      <span className="text-xs text-muted-foreground">{c.completed_lessons}/{c.total_lessons}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {c.completed_lessons}/{c.total_lessons}
+                      </span>
                     </div>
-                    <Link href={`/dashboard/student/courses/${c.id}`} className="mt-3 inline-block text-sm font-semibold text-amber-600 hover:underline">
+                    <Link
+                      href={`/dashboard/student/courses/${c.id}`}
+                      className="mt-3 inline-block text-sm font-semibold text-amber-600 hover:underline"
+                    >
                       <T>View Course →</T>
                     </Link>
                   </div>
@@ -173,19 +238,32 @@ export default function StudentDashboard() {
           {/* Completed Courses with Recording */}
           {data.completed.length > 0 && (
             <section>
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600"><T>Your milestones</T></div>
-              <h2 className="font-serif text-2xl"><T>Completed</T></h2>
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">
+                <T>Your milestones</T>
+              </div>
+              <h2 className="font-serif text-2xl">
+                <T>Completed</T>
+              </h2>
               <div className="mt-4 space-y-3">
                 {data.completed.map(c => (
-                  <div key={c.courseId} className="flex items-center gap-3 rounded-2xl border bg-card p-4">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-700"><Award className="h-5 w-5" /></div>
+                  <div
+                    key={c.courseId}
+                    className="flex items-center gap-3 rounded-2xl border bg-card p-4"
+                  >
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-700">
+                      <Award className="h-5 w-5" />
+                    </div>
                     <div className="flex-1">
                       <div className="font-serif text-sm">{c.title}</div>
-                      <div className="text-xs text-muted-foreground"><T>Completed</T> {c.date}</div>
+                      <div className="text-xs text-muted-foreground">
+                        <T>Completed</T> {c.date}
+                      </div>
                     </div>
                     {c.recording_url && (
                       <button
-                        onClick={() => setSelectedRecording({ url: c.recording_url!, title: c.title })}
+                        onClick={() =>
+                          setSelectedRecording({ url: c.recording_url!, title: c.title })
+                        }
                         className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-medium text-white flex items-center gap-1"
                       >
                         <Play size={12} /> <T>Watch</T>
@@ -200,21 +278,34 @@ export default function StudentDashboard() {
 
         <div className="space-y-8">
           <section>
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600"><T>Your milestones</T></div>
-            <h2 className="font-serif text-2xl"><T>Achievements</T></h2>
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">
+              <T>Your milestones</T>
+            </div>
+            <h2 className="font-serif text-2xl">
+              <T>Achievements</T>
+            </h2>
             {data.completed.length === 0 ? (
               <div className="mt-4 rounded-4xl border bg-card p-6 text-center text-muted-foreground">
                 <Award className="mx-auto h-8 w-8 text-amber-500 mb-3" />
-                <p><T>No completed courses yet.</T></p>
+                <p>
+                  <T>No completed courses yet.</T>
+                </p>
               </div>
             ) : (
               <div className="mt-4 space-y-3">
                 {data.completed.map(c => (
-                  <div key={c.courseId} className="flex items-center gap-3 rounded-2xl border bg-card p-4">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-700"><Award className="h-5 w-5" /></div>
+                  <div
+                    key={c.courseId}
+                    className="flex items-center gap-3 rounded-2xl border bg-card p-4"
+                  >
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-700">
+                      <Award className="h-5 w-5" />
+                    </div>
                     <div>
                       <div className="font-serif text-sm">{c.title}</div>
-                      <div className="text-xs text-muted-foreground"><T>Completed</T> {c.date}</div>
+                      <div className="text-xs text-muted-foreground">
+                        <T>Completed</T> {c.date}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -224,32 +315,55 @@ export default function StudentDashboard() {
 
           <div className="placement-test group relative overflow-hidden rounded-4xl border-2 border-amber-500/30 bg-card p-8 shadow-elegant">
             <GraduationCap className="mb-4 h-10 w-10 text-amber-500" />
-            <h3 className="font-serif text-2xl"><T>Placement Test</T></h3>
-            <p className="mt-2 text-sm text-muted-foreground"><T>Discover your level — get a tailored learning path from our experts.</T></p>
-            <button className="mt-6 w-full rounded-full bg-amber-500 py-3 text-sm font-bold text-black shadow-lg"><T>Launch Assessment</T></button>
+            <h3 className="font-serif text-2xl">
+              <T>Placement Test</T>
+            </h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              <T>Discover your level — get a tailored learning path from our experts.</T>
+            </p>
+            <button className="mt-6 w-full rounded-full bg-amber-500 py-3 text-sm font-bold text-black shadow-lg">
+              <T>Launch Assessment</T>
+            </button>
           </div>
 
           <div className="rounded-4xl border bg-card p-8 shadow-elegant">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600"><T>Referral Center</T></div>
-            <h3 className="mt-2 font-serif text-xl"><T>Share the Academy</T></h3>
-            <p className="mt-2 text-xs text-muted-foreground"><T>Earn credits for every friend who joins.</T></p>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+              <T>Referral Center</T>
+            </div>
+            <h3 className="mt-2 font-serif text-xl">
+              <T>Share the Academy</T>
+            </h3>
+            <p className="mt-2 text-xs text-muted-foreground">
+              <T>Earn credits for every friend who joins.</T>
+            </p>
             <div className="mt-5 flex items-center gap-2 rounded-xl border bg-background p-2 text-[10px]">
               <code className="flex-1 truncate px-2">{data.referral.code}</code>
-              <button className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground"><Copy className="h-4 w-4" /></button>
+              <button className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+                <Copy className="h-4 w-4" />
+              </button>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 text-center">
               <div className="rounded-2xl border bg-background p-4">
                 <div className="font-serif text-2xl">{data.referral.count}</div>
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"><T>Referrals</T></div>
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <T>Referrals</T>
+                </div>
               </div>
               <div className="rounded-2xl border bg-background p-4">
-                <div className="font-serif text-2xl text-amber-600">${data.referral.credits}</div>
-                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground"><T>Credits</T></div>
+                <div className="font-serif text-2xl text-amber-600">
+                  ${data.referral.credits}
+                </div>
+                <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+                  <T>Credits</T>
+                </div>
               </div>
             </div>
           </div>
 
-          <Link href="/marketplace" className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 text-sm font-bold text-amber-600 hover:bg-amber-500/10">
+          <Link
+            href="/marketplace"
+            className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 text-sm font-bold text-amber-600 hover:bg-amber-500/10"
+          >
             <T>Explore Marketplace →</T>
           </Link>
         </div>
@@ -277,18 +391,35 @@ export default function StudentDashboard() {
         </div>
       )}
 
-{/* Onboarding Tour */}
-{typeof window !== "undefined" && !localStorage.getItem("student_dashboard_tour") && (
-  <OnboardingTour
-    steps={[
-      { target: ".your-courses", title: "My Courses", content: "Here you can see all the courses you are enrolled in.", placement: "bottom" },
-      { target: ".live-sessions", title: "Live Sessions", content: "When it's time, click 'Join Now' to enter the Zoom meeting.", placement: "top", optional: true },
-      { target: ".placement-test", title: "Placement Test", content: "Take a test to determine your level.", placement: "left", optional: true },
-    ]}
-    tourKey="student_dashboard_tour"
-    onFinish={() => console.log("Tour finished")}
-  />
-)}
+      {/* Onboarding Tour */}
+      {typeof window !== "undefined" &&
+        !localStorage.getItem("student_dashboard_tour") && (
+          <OnboardingTour
+            steps={[
+              {
+                target: ".your-courses",
+                title: "My Courses",
+                content: "Here you can see all the courses you are enrolled in.",
+                placement: "bottom",
+              },
+              {
+                target: ".live-sessions",
+                title: "Live Sessions",
+                content: "When it's time, click 'Join Now' to enter the Zoom meeting.",
+                placement: "top",
+                optional: true,
+              },
+              {
+                target: ".placement-test",
+                title: "Placement Test",
+                content: "Take a test to determine your level.",
+                placement: "left",
+                optional: true,
+              },
+            ]}
+            tourKey="student_dashboard_tour"
+          />
+        )}
     </div>
   );
 }

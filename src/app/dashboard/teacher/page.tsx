@@ -4,7 +4,10 @@ import { T } from "@/components/TranslatedText";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Plus, Upload, Loader2, Video, Clock, ArrowRight, Star, BookOpen, FileText, Play } from "lucide-react";
+import {
+  Plus, Upload, Loader2, Video, Clock, ArrowRight,
+  Star, BookOpen, FileText, Play, CheckCircle, XCircle
+} from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { CalendarPicker } from "@/components/dashboard/CalendarPicker";
@@ -12,22 +15,45 @@ import { TimeSlotPicker } from "@/components/dashboard/TimeSlotPicker";
 import { OnboardingTour } from "@/components/OnboardingTour";
 
 interface Course {
-  id: string; title: string; level: string; price: number; status: string; recording_url?: string;
+  id: string;
+  title: string;
+  level: string;
+  price: number;
+  status: string;
+  recording_url?: string;
 }
 
 interface Session {
-  id: string; title: string; scheduled_at: string; meeting_url: string; course_id: string; course_title: string;
+  id: string;
+  title: string;
+  scheduled_at: string;
+  meeting_url: string;
+  course_id: string;
+  course_title: string;
 }
 
 interface TeacherData {
-  fullName: string; initial: string; certificationProgress: number;
-  students: number; activeCourses: number; revenue: number; sessions: Session[];
+  fullName: string;
+  initial: string;
+  certificationProgress: number;
+  students: number;
+  activeCourses: number;
+  revenue: number;
+  sessions: Session[];
   courses: Course[];
 }
 
 interface RatingData {
   averageRating: number;
   completedLessons: number;
+}
+
+interface PendingLesson {
+  id: string;
+  title: string;
+  course_title: string;
+  created_at: string;
+  status: string;
 }
 
 function getCommissionRate(rating: number, completedLessons: number): number {
@@ -45,6 +71,8 @@ export default function TeacherDashboard() {
   const [data, setData] = useState<TeacherData | null>(null);
   const [ratingData, setRatingData] = useState<RatingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pendingLessons, setPendingLessons] = useState<PendingLesson[]>([]);
+  const [lessonsLoading, setLessonsLoading] = useState(true);
 
   // New Lesson states
   const [showLessonModal, setShowLessonModal] = useState(false);
@@ -64,7 +92,7 @@ export default function TeacherDashboard() {
   const [savingCourse, setSavingCourse] = useState(false);
   const [courseError, setCourseError] = useState('');
 
-  // Fetch initial data
+  // Fetch initial teacher data
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
     const fetchData = async () => {
@@ -91,6 +119,25 @@ export default function TeacherDashboard() {
     fetchData();
   }, [user, role]);
 
+  // Fetch pending lessons
+  useEffect(() => {
+    if (!user || !user.uid) return;
+    const fetchPendingLessons = async () => {
+      try {
+        const res = await fetch(`/api/lessons?teacherUid=${user.uid}&status=pending`);
+        if (res.ok) {
+          const json = await res.json();
+          setPendingLessons(json.lessons || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLessonsLoading(false);
+      }
+    };
+    fetchPendingLessons();
+  }, [user]);
+
   // Auth guard
   useEffect(() => {
     if (!isLoading && (!user || (role !== "teacher" && role !== "admin"))) router.push("/login");
@@ -108,9 +155,6 @@ export default function TeacherDashboard() {
       });
   }, [user, router]);
 
-  // Profile completion check
-
-
   // Auto-refresh on window focus
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
@@ -126,14 +170,36 @@ export default function TeacherDashboard() {
     return () => window.removeEventListener('focus', onFocus);
   }, [user, role]);
 
-  if (isLoading || loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
+  const handleLessonAction = async (lessonId: string, newStatus: string) => {
+    try {
+      const res = await fetch(`/api/lessons/${lessonId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (res.ok) {
+        setPendingLessons(prev => prev.filter(l => l.id !== lessonId));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  if (isLoading || loading) return (
+    <div className="flex min-h-screen items-center justify-center">
+      <Loader2 className="h-10 w-10 animate-spin text-primary" />
+    </div>
+  );
   if (!data) return null;
 
-  const commissionRate = ratingData ? getCommissionRate(ratingData.averageRating, ratingData.completedLessons) : 20;
+  const commissionRate = ratingData
+    ? getCommissionRate(ratingData.averageRating, ratingData.completedLessons)
+    : 20;
 
   const isJoinable = (s: string) => {
     const n = new Date(), t = new Date(s);
-    return n >= new Date(t.getTime() - 10*60*1000) && n <= new Date(t.getTime() + 60*60*1000);
+    return n >= new Date(t.getTime() - 10 * 60 * 1000) &&
+           n <= new Date(t.getTime() + 60 * 60 * 1000);
   };
 
   const handleSaveLesson = async () => {
@@ -155,7 +221,9 @@ export default function TeacherDashboard() {
       teacherUid: user!.uid,
     };
     if (lessonType === "zoom" && sessionDate && sessionTime) {
-      payload.scheduledAt = new Date(`${sessionDate.toDateString()} ${sessionTime}`).toISOString();
+      payload.scheduledAt = new Date(
+        `${sessionDate.toDateString()} ${sessionTime}`
+      ).toISOString();
     }
 
     try {
@@ -220,13 +288,20 @@ export default function TeacherDashboard() {
             {data.initial}
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600"><T>Instructor Portal</T></div>
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+              <T>Instructor Portal</T>
+            </div>
             <h1 className="mt-1 font-serif text-3xl">{data.fullName}</h1>
-            <p className="mt-1 text-sm italic text-muted-foreground"><T>"Your students await your wisdom today."</T></p>
+            <p className="mt-1 text-sm italic text-muted-foreground">
+              <T>"Your students await your wisdom today."</T>
+            </p>
           </div>
         </div>
         <div className="flex w-full gap-3 md:w-auto">
-          <button onClick={() => setShowCourseModal(true)} className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent">
+          <button
+            onClick={() => setShowCourseModal(true)}
+            className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent"
+          >
             <Upload className="h-4 w-4 text-amber-500" /> <T>New Course</T>
           </button>
           <button
@@ -246,21 +321,35 @@ export default function TeacherDashboard() {
 
       {/* Commission Card */}
       {ratingData && (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="commission-card rounded-4xl border bg-card p-6 shadow-elegant">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="commission-card rounded-4xl border bg-card p-6 shadow-elegant"
+        >
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="grid h-14 w-14 place-items-center rounded-2xl bg-linear-to-r from-amber-400 to-amber-500 text-white">
                 <Star className="h-6 w-6 fill-white" />
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Your Rating</T></div>
-                <div className="font-serif text-3xl">{ratingData.averageRating.toFixed(1)}</div>
-                <div className="text-sm text-muted-foreground">{ratingData.completedLessons} <T>lessons completed</T></div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+                  <T>Your Rating</T>
+                </div>
+                <div className="font-serif text-3xl">
+                  {ratingData.averageRating.toFixed(1)}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {ratingData.completedLessons} <T>lessons completed</T>
+                </div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Commission Rate</T></div>
-              <div className="font-serif text-3xl text-emerald-600">{commissionRate}%</div>
+              <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+                <T>Commission Rate</T>
+              </div>
+              <div className="font-serif text-3xl text-emerald-600">
+                {commissionRate}%
+              </div>
               <div className="text-xs text-muted-foreground">
                 <T>+5% every 50 lessons at 4.5+ rating (max 50%)</T>
               </div>
@@ -271,7 +360,11 @@ export default function TeacherDashboard() {
 
       {/* Live Sessions */}
       {data.sessions.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="live-sessions glass rounded-3xl p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="live-sessions glass rounded-3xl p-6"
+        >
           <div className="flex items-center gap-2 mb-4">
             <Video className="h-5 w-5 text-amber-500" />
             <h2 className="font-serif text-xl"><T>Your Live Sessions</T></h2>
@@ -288,12 +381,72 @@ export default function TeacherDashboard() {
                       <Clock size={12} /> {new Date(s.scheduled_at).toLocaleString()}
                     </div>
                   </div>
-                  <Link href={`/live/${s.id}`} className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${joinable ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-muted text-muted-foreground pointer-events-none"}`}>
-                    {joinable ? <><T>Join Now</T> <ArrowRight size={14} /></> : <><Clock size={14} /> <T>Waiting</T></>}
+                  <Link
+                    href={`/live/${s.id}`}
+                    className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${
+                      joinable
+                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        : "bg-muted text-muted-foreground pointer-events-none"
+                    }`}
+                  >
+                    {joinable ? (
+                      <><T>Join Now</T> <ArrowRight size={14} /></>
+                    ) : (
+                      <><Clock size={14} /> <T>Waiting</T></>
+                    )}
                   </Link>
                 </div>
               );
             })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Pending Lessons (New) */}
+      {!lessonsLoading && pendingLessons.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-3xl p-6"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <FileText className="h-5 w-5 text-amber-500" />
+            <h2 className="font-serif text-xl"><T>Pending Lessons</T></h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {pendingLessons.map(lesson => (
+              <div
+                key={lesson.id}
+                className="flex items-center justify-between bg-background/50 rounded-2xl p-4 border"
+              >
+                <div>
+                  <h3 className="font-serif text-sm font-semibold">
+                    {lesson.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {lesson.course_title}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    <T>Submitted</T>{" "}
+                    {new Date(lesson.created_at).toLocaleString()}
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleLessonAction(lesson.id, 'rejected')}
+                    className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"
+                  >
+                    <T>Reject</T>
+                  </button>
+                  <button
+                    onClick={() => handleLessonAction(lesson.id, 'approved')}
+                    className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"
+                  >
+                    <T>Approve</T>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </motion.div>
       )}
@@ -308,21 +461,38 @@ export default function TeacherDashboard() {
               <p><T>You haven't created any courses yet.</T></p>
             </div>
           ) : (
-            data.courses.map((course) => (
-              <div key={course.id} className="rounded-3xl border bg-card p-5 shadow-elegant flex justify-between items-center">
+            data.courses.map(course => (
+              <div
+                key={course.id}
+                className="rounded-3xl border bg-card p-5 shadow-elegant flex justify-between items-center"
+              >
                 <div>
                   <h3 className="font-serif text-lg">{course.title}</h3>
-                  <p className="text-sm text-muted-foreground"><T>Level</T> {course.level} · ${course.price}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${course.status === 'published' ? 'bg-emerald-500/10 text-emerald-600' : 'bg-amber-500/10 text-amber-600'}`}>
+                  <p className="text-sm text-muted-foreground">
+                    <T>Level</T> {course.level} · ${course.price}
+                  </p>
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      course.status === 'published'
+                        ? 'bg-emerald-500/10 text-emerald-600'
+                        : 'bg-amber-500/10 text-amber-600'
+                    }`}
+                  >
                     {course.status}
                   </span>
                   {course.recording_url && (
-                    <button onClick={() => window.open(course.recording_url, '_blank')} className="ml-2 text-xs text-emerald-600 hover:underline inline-flex items-center gap-1">
+                    <button
+                      onClick={() => window.open(course.recording_url, '_blank')}
+                      className="ml-2 text-xs text-emerald-600 hover:underline inline-flex items-center gap-1"
+                    >
                       <Play size={12} /> <T>View Recording</T>
                     </button>
                   )}
                 </div>
-                <Link href={`/dashboard/teacher/courses/${course.id}`} className="text-amber-600 text-sm font-semibold hover:underline">
+                <Link
+                  href={`/dashboard/teacher/courses/${course.id}`}
+                  className="text-amber-600 text-sm font-semibold hover:underline"
+                >
                   <T>Manage →</T>
                 </Link>
               </div>
@@ -333,12 +503,26 @@ export default function TeacherDashboard() {
         {/* Stats Sidebar */}
         <div className="stats-sidebar space-y-4">
           <div className="rounded-3xl border bg-card p-6 shadow-elegant">
-            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Stats</T></div>
+            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+              <T>Stats</T>
+            </div>
             <div className="mt-4 space-y-3">
-              <div className="flex justify-between"><span className="text-muted-foreground"><T>Students</T></span><span className="font-semibold">{data.students}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground"><T>Active Courses</T></span><span className="font-semibold">{data.activeCourses}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground"><T>Revenue</T></span><span className="font-semibold">${data.revenue}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground"><T>Commission</T></span><span className="font-semibold text-emerald-600">{commissionRate}%</span></div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground"><T>Students</T></span>
+                <span className="font-semibold">{data.students}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground"><T>Active Courses</T></span>
+                <span className="font-semibold">{data.activeCourses}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground"><T>Revenue</T></span>
+                <span className="font-semibold">${data.revenue}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground"><T>Commission</T></span>
+                <span className="font-semibold text-emerald-600">{commissionRate}%</span>
+              </div>
             </div>
           </div>
         </div>
@@ -347,30 +531,74 @@ export default function TeacherDashboard() {
       {/* New Course Modal */}
       <AnimatePresence>
         {showCourseModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-card rounded-3xl shadow-elegant max-w-md w-full p-6 space-y-6">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card rounded-3xl shadow-elegant max-w-md w-full p-6 space-y-6"
+            >
               <h2 className="font-serif text-2xl"><T>New Course</T></h2>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Course Title</T></label>
-                <input value={newCourseTitle} onChange={(e) => setNewCourseTitle(e.target.value)} placeholder="e.g. Arabic for Beginners" className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" />
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <T>Course Title</T>
+                </label>
+                <input
+                  value={newCourseTitle}
+                  onChange={(e) => setNewCourseTitle(e.target.value)}
+                  placeholder="e.g. Arabic for Beginners"
+                  className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+                />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Level</T></label>
-                  <select value={newCourseLevel} onChange={(e) => setNewCourseLevel(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1">
-                    <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option>
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <T>Level</T>
+                  </label>
+                  <select
+                    value={newCourseLevel}
+                    onChange={(e) => setNewCourseLevel(e.target.value)}
+                    className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1"
+                  >
+                    <option>A1</option><option>A2</option><option>B1</option>
+                    <option>B2</option><option>C1</option>
                   </select>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Price (USD)</T></label>
-                  <input type="number" value={newCoursePrice} onChange={(e) => setNewCoursePrice(parseInt(e.target.value))} className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1" />
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    <T>Price (USD)</T>
+                  </label>
+                  <input
+                    type="number"
+                    value={newCoursePrice}
+                    onChange={(e) => setNewCoursePrice(parseInt(e.target.value))}
+                    className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1"
+                  />
                 </div>
               </div>
               {courseError && <p className="text-sm text-destructive">{courseError}</p>}
               <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowCourseModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm"><T>Cancel</T></button>
-                <button onClick={handleSaveCourse} disabled={savingCourse} className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {savingCourse ? <Loader2 size={16} className="animate-spin mx-auto" /> : <T>Create Course</T>}
+                <button
+                  onClick={() => setShowCourseModal(false)}
+                  className="rounded-full border bg-background px-5 py-2.5 text-sm"
+                >
+                  <T>Cancel</T>
+                </button>
+                <button
+                  onClick={handleSaveCourse}
+                  disabled={savingCourse}
+                  className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {savingCourse ? (
+                    <Loader2 size={16} className="animate-spin mx-auto" />
+                  ) : (
+                    <T>Create Course</T>
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -381,53 +609,125 @@ export default function TeacherDashboard() {
       {/* New Lesson Modal */}
       <AnimatePresence>
         {showLessonModal && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto"
+            >
               <h2 className="font-serif text-2xl"><T>New Lesson</T></h2>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Select Course</T></label>
-                <select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 mt-1 text-sm">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <T>Select Course</T>
+                </label>
+                <select
+                  value={selectedCourse}
+                  onChange={(e) => setSelectedCourse(e.target.value)}
+                  className="w-full rounded-2xl border bg-background px-4 py-3 mt-1 text-sm"
+                >
                   <option value="">-- <T>Choose a course</T> --</option>
-                  {data.courses.filter(c => c.status === 'published').map(c => (
-                    <option key={c.id} value={c.id}>{c.title} (<T>Level</T> {c.level})</option>
-                  ))}
+                  {data.courses
+                    .filter(c => c.status === 'published')
+                    .map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.title} (<T>Level</T> {c.level})
+                      </option>
+                    ))}
                 </select>
-                <button type="button" onClick={() => { setShowLessonModal(false); setShowCourseModal(true); }} className="text-xs text-amber-600 hover:underline mt-1 inline-block">
+                <button
+                  type="button"
+                  onClick={() => { setShowLessonModal(false); setShowCourseModal(true); }}
+                  className="text-xs text-amber-600 hover:underline mt-1 inline-block"
+                >
                   + <T>Create a new course</T>
                 </button>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Lesson Type</T></label>
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <T>Lesson Type</T>
+                </label>
                 <div className="mt-2 grid grid-cols-2 gap-3">
-                  <button onClick={() => setLessonType("zoom")} className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${lessonType === "zoom" ? "bg-emerald-600 text-white border-emerald-600" : "bg-card hover:bg-accent"}`}>
+                  <button
+                    onClick={() => setLessonType("zoom")}
+                    className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${
+                      lessonType === "zoom"
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-card hover:bg-accent"
+                    }`}
+                  >
                     <Video size={16} /> <T>Live Zoom</T>
                   </button>
-                  <button onClick={() => setLessonType("recorded")} className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${lessonType === "recorded" ? "bg-emerald-600 text-white border-emerald-600" : "bg-card hover:bg-accent"}`}>
+                  <button
+                    onClick={() => setLessonType("recorded")}
+                    className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${
+                      lessonType === "recorded"
+                        ? "bg-emerald-600 text-white border-emerald-600"
+                        : "bg-card hover:bg-accent"
+                    }`}
+                  >
                     <FileText size={16} /> <T>Recorded</T>
                   </button>
                 </div>
               </div>
               <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"><T>Lesson Title</T></label>
-                <input value={lessonTitle} onChange={(e) => setLessonTitle(e.target.value)} placeholder="e.g. Introduction to Arabic Grammar" className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" />
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  <T>Lesson Title</T>
+                </label>
+                <input
+                  value={lessonTitle}
+                  onChange={(e) => setLessonTitle(e.target.value)}
+                  placeholder="e.g. Introduction to Arabic Grammar"
+                  className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+                />
               </div>
               {lessonType === "zoom" && (
                 <div className="space-y-4">
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2"><T>Session Date (min. 7 days ahead)</T></label>
-                    <CalendarPicker selected={sessionDate} onChange={setSessionDate} minDate={new Date(Date.now() + 7*24*60*60*1000)} />
+                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      <T>Session Date (min. 7 days ahead)</T>
+                    </label>
+                    <CalendarPicker
+                      selected={sessionDate}
+                      onChange={setSessionDate}
+                      minDate={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
+                    />
                   </div>
                   <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2"><T>Session Time</T></label>
-                    <TimeSlotPicker selected={sessionTime} onChange={setSessionTime} date={sessionDate} />
+                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                      <T>Session Time</T>
+                    </label>
+                    <TimeSlotPicker
+                      selected={sessionTime}
+                      onChange={setSessionTime}
+                      date={sessionDate}
+                    />
                   </div>
                 </div>
               )}
               {lessonError && <p className="text-sm text-destructive">{lessonError}</p>}
               <div className="flex gap-3 justify-end">
-                <button onClick={() => setShowLessonModal(false)} className="rounded-full border bg-background px-5 py-2.5 text-sm"><T>Cancel</T></button>
-                <button onClick={handleSaveLesson} disabled={savingLesson} className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50">
-                  {savingLesson ? <Loader2 size={16} className="animate-spin mx-auto" /> : <T>Submit for Review</T>}
+                <button
+                  onClick={() => setShowLessonModal(false)}
+                  className="rounded-full border bg-background px-5 py-2.5 text-sm"
+                >
+                  <T>Cancel</T>
+                </button>
+                <button
+                  onClick={handleSaveLesson}
+                  disabled={savingLesson}
+                  className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {savingLesson ? (
+                    <Loader2 size={16} className="animate-spin mx-auto" />
+                  ) : (
+                    <T>Submit for Review</T>
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -435,18 +735,18 @@ export default function TeacherDashboard() {
         )}
       </AnimatePresence>
 
-{/* Onboarding Tour */}
-{typeof window !== "undefined" && !localStorage.getItem("student_dashboard_tour") && (
-  <OnboardingTour
-    steps={[
-      { target: ".your-courses", title: "My Courses", content: "Here you can see all the courses you are enrolled in.", placement: "bottom" },
-      { target: ".live-sessions", title: "Live Sessions", content: "When it's time, click 'Join Now' to enter the Zoom meeting.", placement: "top", optional: true },
-      { target: ".placement-test", title: "Placement Test", content: "Take a test to determine your level.", placement: "left", optional: true },
-    ]}
-    tourKey="student_dashboard_tour"
-    onFinish={() => console.log("Tour finished")}
-  />
-)}
+      {/* Onboarding Tour */}
+      {typeof window !== "undefined" && !localStorage.getItem("teacher_dashboard_tour") && (
+        <OnboardingTour
+          steps={[
+            { target: ".your-courses", title: "My Courses", content: "Here you can see all the courses you are enrolled in.", placement: "bottom" },
+            { target: ".live-sessions", title: "Live Sessions", content: "When it's time, click 'Join Now' to enter the Zoom meeting.", placement: "top", optional: true },
+            { target: ".stats-sidebar", title: "Stats", content: "Here you can see your statistics.", placement: "left", optional: true },
+          ]}
+          tourKey="teacher_dashboard_tour"
+          onFinish={() => console.log("Tour finished")}
+        />
+      )}
     </div>
   );
 }

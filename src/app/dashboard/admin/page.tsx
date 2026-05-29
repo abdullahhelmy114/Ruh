@@ -47,11 +47,9 @@ export default function AdminDashboard() {
       });
   }, [user, router]);
 
-
-
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
-  if (user.email !== "abdullahhelmy114@gmail.com" && user.email !== "info@ruhulqudus.com") return  <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
+  if (user.email !== "abdullahhelmy114@gmail.com" && user.email !== "info@ruhulqudus.com") return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
@@ -216,7 +214,7 @@ function TeacherVerificationTab() {
   );
 }
 
-/* ─────────── Course Moderation Tab ─────────── */
+/* ─────────── Course Moderation Tab (Updated) ─────────── */
 function CourseModerationTab() {
   const [courses, setCourses] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
@@ -261,12 +259,21 @@ function CourseModerationTab() {
   };
 
   const handleLessonAction = async (id: string, status: string) => {
-    await fetch(`/api/lessons/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status }),
-    });
-    setLessons(prev => prev.filter(l => l.id !== id));
+    try {
+      const res = await fetch(`/api/lessons/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        alert(`Failed: ${err.error || 'Unknown error'}`);
+        return;
+      }
+      setLessons(prev => prev.filter(l => l.id !== id));
+    } catch (e: any) {
+      alert(`Network error: ${e.message}`);
+    }
   };
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>;
@@ -277,43 +284,84 @@ function CourseModerationTab() {
     <div>
       <h2 className="font-serif text-2xl mb-4"><T>Course & Lesson Moderation</T></h2>
       {totalPending === 0 ? (
-        <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground"><T>No pending courses or lessons</T></div>
+        <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground">
+          <T>No pending courses or lessons</T>
+        </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-8">
+          {/* Pending Courses */}
           {courses.length > 0 && (
             <div>
-              <h3 className="font-serif text-lg mb-3 flex items-center gap-2"><BookOpen className="h-5 w-5 text-amber-500" /> <T>Courses</T> ({courses.length})</h3>
-              {courses.map(c => (
-                <div key={c.id} className="rounded-2xl border bg-card p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div>
-                    <h4 className="font-medium">{c.title}</h4>
-                    <p className="text-xs text-muted-foreground"><T>by</T> {c.teacher_name} · <T>Level</T> {c.level} · ${c.price}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5"><T>Submitted</T> {new Date(c.created_at).toLocaleString()}</p>
+              <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
+                <BookOpen className="h-5 w-5 text-amber-500" /> <T>Courses</T> ({courses.length})
+              </h3>
+              <div className="space-y-3">
+                {courses.map(c => (
+                  <div key={c.id} className="rounded-2xl border bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="font-medium">{c.title}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        <T>by</T> {c.teacher_name} · <T>Level</T> {c.level} · ${c.price}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        <T>Submitted</T> {new Date(c.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleCourseAction(c.id, 'rejected')}
+                        className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"
+                      >
+                        <T>Reject</T>
+                      </button>
+                      <button
+                        onClick={() => handleCourseAction(c.id, 'published')}
+                        className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"
+                      >
+                        <T>Publish</T>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleCourseAction(c.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"><T>Reject</T></button>
-                    <button onClick={() => handleCourseAction(c.id, 'published')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"><T>Publish</T></button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
+
+          {/* Pending Lessons */}
           {lessons.length > 0 && (
             <div>
-              <h3 className="font-serif text-lg mb-3 flex items-center gap-2"><Video className="h-5 w-5 text-amber-500" /> <T>Lessons</T> ({lessons.length})</h3>
-              {lessons.map(l => (
-                <div key={l.id} className="rounded-2xl border bg-card p-4 mb-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div>
-                    <h4 className="font-medium">{l.title}</h4>
-                    <p className="text-xs text-muted-foreground"><T>Course</T>: {l.course_title} · <T>Type</T>: {l.type}</p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5"><T>Submitted</T> {new Date(l.created_at).toLocaleString()}</p>
+              <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
+                <Video className="h-5 w-5 text-amber-500" /> <T>Lessons</T> ({lessons.length})
+              </h3>
+              <div className="space-y-3">
+                {lessons.map(l => (
+                  <div key={l.id} className="rounded-2xl border bg-card p-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div>
+                      <h4 className="font-medium">{l.title}</h4>
+                      <p className="text-xs text-muted-foreground">
+                        <T>Course</T>: {l.course_title} · <T>Type</T>: {l.type}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        <T>Submitted</T> {new Date(l.created_at).toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleLessonAction(l.id, 'rejected')}
+                        className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"
+                      >
+                        <T>Reject</T>
+                      </button>
+                      <button
+                        onClick={() => handleLessonAction(l.id, 'approved')}
+                        className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"
+                      >
+                        <T>Approve</T>
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleLessonAction(l.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-xs"><T>Reject</T></button>
-                    <button onClick={() => handleLessonAction(l.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-xs"><T>Approve</T></button>
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
