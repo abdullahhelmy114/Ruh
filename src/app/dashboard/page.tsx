@@ -17,8 +17,8 @@ export default function DashboardRedirect() {
       return;
     }
 
-    // توجيه الأدمن
-    if (user.email === "abdullahhelmy114@gmail.com") {
+    // توجيه الأدمن (البريدين المخصصين)
+    if (user.email === "abdullahhelmy114@gmail.com" || user.email === "info@ruhulqudus.com") {
       router.push("/dashboard/admin");
       return;
     }

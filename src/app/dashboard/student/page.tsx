@@ -55,17 +55,7 @@ export default function StudentDashboard() {
       });
   }, [user, router]);
 
-  // فحص اكتمال الملف الشخصي (Onboarding)
-  useEffect(() => {
-    if (!user) return;
-    fetch(`/api/user?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.profile && !d.profile.profile_completed) {
-          router.push("/onboarding");
-        }
-      });
-  }, [user, router]);
+
 
   // جلب بيانات الداشبورد
   useEffect(() => {
@@ -288,16 +278,15 @@ export default function StudentDashboard() {
       )}
 
 {/* Onboarding Tour */}
-{typeof window !== "undefined" && !localStorage.getItem("onboarding_tour_seen") && (
+{typeof window !== "undefined" && !localStorage.getItem("student_dashboard_tour") && (
   <OnboardingTour
     steps={[
-      { target: "body", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
-      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات التي اشتركت بها." },
-      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'." },
-      { target: ".placement-test", title: "🧪 اختبار تحديد المستوى", content: "يمكنك إجراء اختبار لتحديد مستواك." },
-      { target: "body", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
+      { target: ".your-courses", title: "My Courses", content: "Here you can see all the courses you are enrolled in.", placement: "bottom" },
+      { target: ".live-sessions", title: "Live Sessions", content: "When it's time, click 'Join Now' to enter the Zoom meeting.", placement: "top", optional: true },
+      { target: ".placement-test", title: "Placement Test", content: "Take a test to determine your level.", placement: "left", optional: true },
     ]}
-    tourKey="onboarding_tour_seen"
+    tourKey="student_dashboard_tour"
+    onFinish={() => console.log("Tour finished")}
   />
 )}
     </div>

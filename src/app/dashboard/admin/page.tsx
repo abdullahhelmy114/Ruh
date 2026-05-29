@@ -47,21 +47,11 @@ export default function AdminDashboard() {
       });
   }, [user, router]);
 
-  // Profile completion check
-  useEffect(() => {
-    if (!user) return;
-    fetch(`/api/user?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d.profile && !d.profile.profile_completed) {
-          router.push("/onboarding");
-        }
-      });
-  }, [user, router]);
+
 
   if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
-  if (user.email !== "abdullahhelmy114@gmail.com") return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
+  if (user.email !== "abdullahhelmy114@gmail.com" && user.email !== "info@ruhulqudus.com") return  <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">

@@ -23,37 +23,26 @@ export default function LoginPage() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
-  const redirectAfterLogin = async (userEmail: string, uid: string) => {
-    // ✅ فحص اكتمال الملف الشخصي
-    try {
-      const res = await fetch(`/api/user?uid=${uid}`);
-      const data = await res.json();
-      if (data.profile && !data.profile.profile_completed) {
-        // مستخدم جديد غير مكتمل البروفايل -> Onboarding
-        router.push("/onboarding");
-        return;
-      }
-    } catch (err) {
-      console.error("Failed to check profile:", err);
+  const redirectAfterLogin = (userEmail: string) => {
+    // ✅ الأدمن: البريدين المخصصين
+    if (userEmail === "abdullahhelmy114@gmail.com" || userEmail === "info@ruhulqudus.com") {
+      router.push("/profile/admin");
+      return;
     }
 
-    // ✅ توجيه طبيعي حسب الدور
-    if (userEmail === "abdullahhelmy114@gmail.com") {
-      router.push("/profile/admin");
+    // باقي المستخدمين حسب الدور المخزن
+    const storedRole = localStorage.getItem("userRole");
+    if (storedRole === "teacher") {
+      router.push("/profile/teacher");
     } else {
-      const storedRole = localStorage.getItem("userRole");
-      if (storedRole === "teacher") {
-        router.push("/profile/teacher");
-      } else {
-        router.push("/profile/student");
-      }
+      router.push("/profile/student");
     }
   };
 
   const performLogin = async (captchaToken: string) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      await redirectAfterLogin(userCredential.user.email || "", userCredential.user.uid);
+      redirectAfterLogin(userCredential.user.email || "");
     } catch (err: any) {
       setError(err.message || "Login failed");
       setShowCaptcha(false);
@@ -70,7 +59,7 @@ export default function LoginPage() {
       return;
     }
     setLoading(true);
-    setShowCaptcha(true); // إظهار الكابتشا
+    setShowCaptcha(true);
   };
 
   const handleGoogleLogin = async () => {
@@ -79,7 +68,7 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await redirectAfterLogin(result.user.email || "", result.user.uid);
+      redirectAfterLogin(result.user.email || "");
     } catch (err: any) {
       setError(err.message || "Google login failed");
     } finally {
@@ -93,7 +82,7 @@ export default function LoginPage() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      await redirectAfterLogin(result.user.email || "", result.user.uid);
+      redirectAfterLogin(result.user.email || "");
     } catch (err: any) {
       setError(err.message || "Facebook login failed");
     } finally {
@@ -189,7 +178,6 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* الكابتشا تظهر فقط بعد الضغط على زر تسجيل الدخول */}
             {showCaptcha ? (
               <CustomCaptcha onVerify={(token) => { performLogin(token); }} />
             ) : (
