@@ -79,6 +79,7 @@ export default function VerifyEmailPage() {
           email: storedEmail,
           fullName: storedName,
           role: storedRole,
+          email_verified: true,
         }),
       });
 

@@ -26,9 +26,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ skipped: true });
     }
 
+    // ✅ نستقبل email_verified من body (إن وُجد)، وإلا false
+    const emailVerified = body.email_verified === true;
+
     await sql`
       INSERT INTO profiles (firebase_uid, email, full_name, role, email_verified)
-      VALUES (${uid}, ${email}, ${body.fullName || email.split('@')[0]}, ${body.role || 'student'}, false)
+      VALUES (${uid}, ${email}, ${body.fullName || email.split('@')[0]}, ${body.role || 'student'}, ${emailVerified})
       ON CONFLICT (firebase_uid) DO UPDATE SET email = ${email}
     `;
     return NextResponse.json({ success: true });
