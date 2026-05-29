@@ -287,15 +287,15 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* Onboarding Tour – تظهر مرة واحدة فقط */}
+{/* Onboarding Tour */}
 {typeof window !== "undefined" && !localStorage.getItem("onboarding_tour_seen") && (
   <OnboardingTour
     steps={[
-      { target: "body", placement: "center", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
-      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات المسجل بها.", placement: "bottom" },
-      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'.", placement: "top" },
-      { target: ".placement-test", title: "🧪 اختبار تحديد المستوى", content: "يمكنك إجراء اختبار لتحديد مستواك.", placement: "left" },
-      { target: "body", placement: "center", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
+      { target: "body", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
+      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات التي اشتركت بها." },
+      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'." },
+      { target: ".placement-test", title: "🧪 اختبار تحديد المستوى", content: "يمكنك إجراء اختبار لتحديد مستواك." },
+      { target: "body", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
     ]}
     tourKey="onboarding_tour_seen"
   />

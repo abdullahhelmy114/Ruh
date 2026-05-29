@@ -444,20 +444,18 @@ export default function TeacherDashboard() {
         )}
       </AnimatePresence>
 
-      {/* Onboarding Tour */}
-      {typeof window !== "undefined" && !localStorage.getItem("onboarding_tour_seen") && (
+{/* Onboarding Tour */}
+{typeof window !== "undefined" && !localStorage.getItem("onboarding_tour_seen") && (
   <OnboardingTour
     steps={[
-     { target: "body", placement: "center", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
-      { target: ".commission-card", title: "📊 عمولتك", content: "نسبة عمولتك تزيد مع تقدمك في التقييمات.", placement: "bottom" },
-      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'.", placement: "top" },
-      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات التي أنشأتها.", placement: "bottom" },
-      { target: ".stats-sidebar", title: "📈 إحصائياتك", content: "متابعة عدد طلابك وكورساتك النشطة.", placement: "left" },
-      { target: "body", placement: "center", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
+      { target: "body", title: "🎉 مرحباً بك!", content: "دعنا نلقي نظرة سريعة على لوحة التحكم." },
+      { target: ".your-courses", title: "📚 كورساتك", content: "هنا تظهر الكورسات التي اشتركت بها." },
+      { target: ".live-sessions", title: "🔴 الجلسات المباشرة", content: "عندما يحين موعد الجلسة، سيتفعّل زر 'Join Now'." },
+      { target: ".placement-test", title: "🧪 اختبار تحديد المستوى", content: "يمكنك إجراء اختبار لتحديد مستواك." },
+      { target: "body", title: "🚀 أنت جاهز!", content: "استخدم القائمة العلوية للتنقل." },
     ]}
     tourKey="onboarding_tour_seen"
   />
-
 )}
     </div>
   );
