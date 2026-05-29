@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { auth } from "@/lib/firebase/client";
-import { createUserWithEmailAndPassword, signOut } from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
 
@@ -35,7 +35,6 @@ export default function VerifyEmailPage() {
     setLoading(true);
     setError("");
 
-    // استرداد البيانات المخزنة مؤقتًا
     const storedEmail = sessionStorage.getItem("signup_email") || "";
     const storedPassword = sessionStorage.getItem("signup_password") || "";
     const storedName = sessionStorage.getItem("signup_name") || "";
@@ -63,11 +62,15 @@ export default function VerifyEmailPage() {
       return;
     }
 
-    // 2. الآن ننشئ حساب Firebase
+    // 2. إنشاء حساب Firebase (لأول مرة)
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, storedEmail, storedPassword);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        storedEmail,
+        storedPassword
+      );
 
-      // 3. ننشئ الملف الشخصي في Neon
+      // 3. إنشاء الملف الشخصي في Neon
       await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -85,16 +88,22 @@ export default function VerifyEmailPage() {
       sessionStorage.removeItem("signup_password");
       sessionStorage.removeItem("signup_role");
 
-      // 5. تسجيل الخروج فوراً وعدم بقاء المستخدم مسجلاً
-      await signOut(auth);
-
-      // 6. نجاح
+      // 5. توجيه مباشر إلى الداشبورد المناسب (بدون تسجيل خروج)
       setSuccess(true);
-      // نخزن الدور للمستقبل عند تسجيل الدخول الفعلي
       localStorage.setItem("userRole", storedRole);
+
       setTimeout(() => {
-        // التوجيه إلى صفحة تسجيل الدخول مع إشارة نجاح
-        router.push("/login?verified=1");
+        // تحديد لوحة التحكم حسب البريد أو الدور
+        if (
+          storedEmail === "abdullahhelmy114@gmail.com" ||
+          storedEmail === "info@ruhulqudus.com"
+        ) {
+          router.push("/dashboard/admin");
+        } else if (storedRole === "teacher") {
+          router.push("/dashboard/teacher");
+        } else {
+          router.push("/dashboard/student");
+        }
       }, 2000);
     } catch (err: any) {
       setError(err.message || "Failed to create account. Please try again.");
@@ -108,7 +117,9 @@ export default function VerifyEmailPage() {
     if (pastedData.length === 6) {
       const newCode = pastedData.split("");
       setCode(newCode);
-      newCode.forEach((_, i) => { if (inputRefs.current[i]) inputRefs.current[i]!.value = newCode[i]; });
+      newCode.forEach((_, i) => {
+        if (inputRefs.current[i]) inputRefs.current[i]!.value = newCode[i];
+      });
       inputRefs.current[5]?.focus();
     }
   };
@@ -121,20 +132,30 @@ export default function VerifyEmailPage() {
           {success ? (
             <>
               <ShieldCheck className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
-              <h1 className="font-serif text-2xl"><T>Email Verified!</T></h1>
-              <p className="mt-2 text-sm text-muted-foreground"><T>Redirecting to login page...</T></p>
+              <h1 className="font-serif text-2xl">
+                <T>Email Verified!</T>
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                <T>Redirecting to your dashboard...</T>
+              </p>
             </>
           ) : (
             <>
               <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-              <h1 className="font-serif text-2xl"><T>Enter Verification Code</T></h1>
-              <p className="mt-2 text-sm text-muted-foreground"><T>We sent a 6-digit code to your email.</T></p>
+              <h1 className="font-serif text-2xl">
+                <T>Enter Verification Code</T>
+              </h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                <T>We sent a 6-digit code to your email.</T>
+              </p>
 
               <div className="flex justify-center gap-3 mt-6" onPaste={handlePaste}>
                 {code.map((digit, idx) => (
                   <input
                     key={idx}
-                    ref={(el) => { inputRefs.current[idx] = el; }}
+                    ref={(el) => {
+                      inputRefs.current[idx] = el;
+                    }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -150,14 +171,23 @@ export default function VerifyEmailPage() {
 
               <button
                 onClick={handleSubmit}
-                disabled={loading || code.some(d => d === "")}
+                disabled={loading || code.some((d) => d === "")}
                 className="mt-6 w-full rounded-full bg-amber-500 py-3 text-sm font-semibold text-black shadow-lg hover:bg-amber-400 disabled:opacity-50"
               >
-                {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Verify</T>}
+                {loading ? (
+                  <Loader2 className="mx-auto h-4 w-4 animate-spin" />
+                ) : (
+                  <T>Verify</T>
+                )}
               </button>
 
-              <div className="mt-4"><ResendVerificationButton /></div>
-              <Link href="/login" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline">
+              <div className="mt-4">
+                <ResendVerificationButton />
+              </div>
+              <Link
+                href="/login"
+                className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline"
+              >
                 <ArrowLeft className="h-4 w-4" /> <T>Back to Sign In</T>
               </Link>
             </>
