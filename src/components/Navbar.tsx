@@ -5,7 +5,7 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Moon, Sun, BookOpen, User, LayoutDashboard, LogOut, ChevronDown,
+  Bell, BellOff, Mail, Moon, Sun, BookOpen, User, LayoutDashboard, LogOut, ChevronDown,
   Info, Phone, Package, Shield,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
@@ -34,6 +34,47 @@ export function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+
+  // تحديث عدد الرسائل غير المقروءة كل دقيقة + حالة الإشعارات
+  useEffect(() => {
+    if (!user) return;
+    const updateUnread = () =>
+      fetch(`/api/messages/unread-count?uid=${user.uid}`)
+        .then((r) => r.json())
+        .then((d) => setUnreadMessages(d.count || 0));
+    const checkFcm = () =>
+      fetch(`/api/user?uid=${user.uid}`)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d.profile?.fcm_token) setNotificationsEnabled(true);
+        });
+    updateUnread();
+    checkFcm();
+    const interval = setInterval(updateUnread, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const enableNotifications = async () => {
+    if (!("Notification" in window)) return;
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      const { getMessaging, getToken } = await import("firebase/messaging");
+      const messaging = getMessaging();
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY!,
+      });
+      if (token) {
+        await fetch("/api/notifications/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ uid: user!.uid, token }),
+        });
+        setNotificationsEnabled(true);
+      }
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -99,8 +140,6 @@ export function Navbar() {
               <T>{l.label}</T>
             </Link>
           ))}
-
-          {/* More dropdown */}
           <div className="relative">
             <button
               onClick={() => setMoreOpen(!moreOpen)}
@@ -135,8 +174,29 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          {/* ✅ زر تغيير اللغة عاد للظهور */}
           <LanguageSwitcher />
+
+          {user && !notificationsEnabled && (
+            <button
+              onClick={enableNotifications}
+              className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
+              title="Enable Notifications"
+            >
+              <BellOff className="h-4 w-4 text-muted-foreground" />
+            </button>
+          )}
+
+          <Link
+            href="/messages"
+            className="relative grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
+          >
+            <Mail className="h-4 w-4" />
+            {unreadMessages > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                {unreadMessages > 9 ? "9+" : unreadMessages}
+              </span>
+            )}
+          </Link>
 
           <button
             onClick={toggle}

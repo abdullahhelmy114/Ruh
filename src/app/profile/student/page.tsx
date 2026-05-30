@@ -12,7 +12,7 @@ export default function StudentProfilePage() {
   const { user, isLoading, role } = useAuth();
   const router = useRouter();
 
-  // الحماية: توجيه غير المسجلين أو الأدوار الأخرى
+  // الحماية: توجيه غير المسجلين أو الأدوار غير المسموحة
   useEffect(() => {
     if (!isLoading) {
       if (!user) {
@@ -20,8 +20,8 @@ export default function StudentProfilePage() {
         return;
       }
 
-      // السماح بالدخول فقط للطلاب والأدمن
-      if (role !== "student" && role !== "admin") {
+      // السماح بالدخول للطلاب، الأدمن، والمعلمين (لمشاهدة طلابهم)
+      if (role !== "student" && role !== "admin" && role !== "teacher") {
         router.push("/profile/teacher");
       }
     }
@@ -37,9 +37,12 @@ export default function StudentProfilePage() {
   }
 
   // عدم عرض أي شيء إذا كان الدور غير مسموح (يتجنب وميض المحتوى)
-  if (role !== "student" && role !== "admin") return null;
+  if (role !== "student" && role !== "admin" && role !== "teacher") return null;
 
-  // خطوات الجولة الإرشادية
+  // هل هذا المعلم يشاهد طالبًا؟ (إخفاء الجولة والحفظ)
+  const isTeacherView = role === "teacher";
+
+  // خطوات الجولة الإرشادية (للطالب فقط)
   const steps = [
     {
       target: ".profile-gender",
@@ -106,11 +109,12 @@ export default function StudentProfilePage() {
     <>
       {/* غلاف متجاوب يمنع التمدد الأفقي */}
       <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 overflow-x-hidden pb-20">
-        <StudentProfile />
+        {/* تمرير خاصية readOnly للمكون ليخفي أزرار الحفظ */}
+        <StudentProfile readOnly={isTeacherView} />
       </div>
 
-      {/* الجولة الإرشادية تظهر فقط على الشاشات الكبيرة */}
-      {!isMobile &&
+      {/* الجولة الإرشادية تظهر فقط للطالب على الشاشات الكبيرة */}
+      {!isMobile && !isTeacherView &&
         typeof window !== "undefined" &&
         !localStorage.getItem("profile_tour_student") && (
           <OnboardingTour

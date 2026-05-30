@@ -1,6 +1,6 @@
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, contactFormEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -12,11 +12,8 @@ export async function POST(request: Request) {
     // إرسال الإيميل للإدارة
     await sendEmail(
       'info@ruhulqudus.com',
-      `New Contact Message from ${name}`,
-      `<p><strong>Name:</strong> ${name}</p>
-       <p><strong>Email:</strong> ${email}</p>
-       <p><strong>Message:</strong></p>
-       <p>${message}</p>`
+      'New Contact Message',
+      contactFormEmail(name, email, message)
     );
 
     return NextResponse.json({ success: true });

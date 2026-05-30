@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
-  Plus, Upload, Loader2, Video, Clock, ArrowRight,
+  Users,Plus, Upload, Loader2, Video, Clock, ArrowRight,
   Star, BookOpen, FileText, Play, TrendingUp
 } from "lucide-react";
 import Link from "next/link";
@@ -93,7 +93,9 @@ export default function TeacherDashboard() {
   const [newCoursePrice, setNewCoursePrice] = useState(49);
   const [savingCourse, setSavingCourse] = useState(false);
   const [courseError, setCourseError] = useState('');
-
+  const [newCourseDescription, setNewCourseDescription] = useState('');
+  const [newCourseImage, setNewCourseImage] = useState('');
+  const [newCourseTrailer, setNewCourseTrailer] = useState('');
   // Fetch initial teacher data
   useEffect(() => {
     if (!user || !user.uid || role !== "teacher") return;
@@ -269,37 +271,45 @@ export default function TeacherDashboard() {
   };
 
   const handleSaveCourse = async () => {
-    if (!newCourseTitle.trim()) { setCourseError('Title is required'); return; }
-    setSavingCourse(true);
-    setCourseError('');
-    try {
-      const res = await fetch('/api/courses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: newCourseTitle,
-          level: newCourseLevel,
-          price: newCoursePrice,
-          teacherUid: user!.uid,
-        }),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setCourseError(err.error || 'Failed to create course');
-      } else {
-        const json = await res.json();
-        setData(prev => prev ? { ...prev, courses: [...prev.courses, json.course] } : prev);
-        setShowCourseModal(false);
-        setNewCourseTitle('');
-        setNewCourseLevel('A1');
-        setNewCoursePrice(49);
-      }
-    } catch (e: any) {
-      setCourseError(e.message);
-    } finally {
-      setSavingCourse(false);
+  if (!newCourseTitle.trim()) { setCourseError('Title is required'); return; }
+  if (!newCourseDescription.trim()) { setCourseError('Description is required'); return; }
+  setSavingCourse(true);
+  setCourseError('');
+  try {
+    const res = await fetch('/api/courses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: newCourseTitle,
+        description: newCourseDescription,
+        level: newCourseLevel,
+        price: newCoursePrice,
+        image_url: newCourseImage || null,
+        trailer_url: newCourseTrailer || null,
+        teacherUid: user!.uid,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      setCourseError(err.error || 'Failed to create course');
+    } else {
+      const json = await res.json();
+      setData(prev => prev ? { ...prev, courses: [...prev.courses, json.course] } : prev);
+      setShowCourseModal(false);
+      // إعادة تعيين الحقول
+      setNewCourseTitle('');
+      setNewCourseLevel('A1');
+      setNewCoursePrice(49);
+      setNewCourseDescription('');
+      setNewCourseImage('');
+      setNewCourseTrailer('');
     }
-  };
+  } catch (e: any) {
+    setCourseError(e.message);
+  } finally {
+    setSavingCourse(false);
+  }
+};
 
   return (
     <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 md:px-8 bg-background min-h-screen">
@@ -345,6 +355,12 @@ export default function TeacherDashboard() {
           >
             <Plus className="h-4 w-4" /> <T>New Lesson</T>
           </button>
+          <Link
+            href="/dashboard/teacher/students"
+            className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent"
+          >
+            <Users className="h-4 w-4 text-amber-500" /> <T>My Students</T>
+          </Link>
         </div>
       </div>
 
@@ -596,82 +612,124 @@ export default function TeacherDashboard() {
       </div>
 
       {/* New Course Modal */}
-      <AnimatePresence>
-        {showCourseModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card rounded-3xl shadow-elegant max-w-md w-full p-6 space-y-6"
+<AnimatePresence>
+  {showCourseModal && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto"
+      >
+        <h2 className="font-serif text-2xl"><T>New Course</T></h2>
+
+        {/* عنوان الكورس (إجباري) */}
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Course Title</T> *
+          </label>
+          <input
+            value={newCourseTitle}
+            onChange={(e) => setNewCourseTitle(e.target.value)}
+            placeholder="e.g. Arabic for Beginners"
+            className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+          />
+        </div>
+
+        {/* وصف الكورس (إجباري) */}
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Description</T> *
+          </label>
+          <textarea
+            value={newCourseDescription}
+            onChange={(e) => setNewCourseDescription(e.target.value)}
+            rows={4}
+            placeholder="Describe the course content, objectives, and target audience..."
+            className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold resize-none"
+          />
+        </div>
+
+        {/* المستوى والسعر */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <T>Level</T>
+            </label>
+            <select
+              value={newCourseLevel}
+              onChange={(e) => setNewCourseLevel(e.target.value)}
+              className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1"
             >
-              <h2 className="font-serif text-2xl"><T>New Course</T></h2>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <T>Course Title</T>
-                </label>
-                <input
-                  value={newCourseTitle}
-                  onChange={(e) => setNewCourseTitle(e.target.value)}
-                  placeholder="e.g. Arabic for Beginners"
-                  className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <T>Level</T>
-                  </label>
-                  <select
-                    value={newCourseLevel}
-                    onChange={(e) => setNewCourseLevel(e.target.value)}
-                    className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1"
-                  >
-                    <option>A1</option><option>A2</option><option>B1</option>
-                    <option>B2</option><option>C1</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <T>Price (USD)</T>
-                  </label>
-                  <input
-                    type="number"
-                    value={newCoursePrice}
-                    onChange={(e) => setNewCoursePrice(parseInt(e.target.value))}
-                    className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1"
-                  />
-                </div>
-              </div>
-              {courseError && <p className="text-sm text-destructive">{courseError}</p>}
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setShowCourseModal(false)}
-                  className="rounded-full border bg-background px-5 py-2.5 text-sm"
-                >
-                  <T>Cancel</T>
-                </button>
-                <button
-                  onClick={handleSaveCourse}
-                  disabled={savingCourse}
-                  className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {savingCourse ? (
-                    <Loader2 size={16} className="animate-spin mx-auto" />
-                  ) : (
-                    <T>Create Course</T>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              <option>A1</option><option>A2</option><option>B1</option>
+              <option>B2</option><option>C1</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <T>Price (USD)</T>
+            </label>
+            <input
+              type="number"
+              value={newCoursePrice}
+              onChange={(e) => setNewCoursePrice(parseInt(e.target.value))}
+              className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1"
+            />
+          </div>
+        </div>
+
+        {/* رابط الصورة (اختياري) */}
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Image URL</T> <span className="text-muted-foreground/50">(<T>optional</T>)</span>
+          </label>
+          <input
+            value={newCourseImage}
+            onChange={(e) => setNewCourseImage(e.target.value)}
+            placeholder="https://example.com/image.jpg"
+            className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+          />
+        </div>
+
+        {/* رابط الفيديو الدعائي (اختياري) */}
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Promo Video URL</T> <span className="text-muted-foreground/50">(<T>optional</T>)</span>
+          </label>
+          <input
+            value={newCourseTrailer}
+            onChange={(e) => setNewCourseTrailer(e.target.value)}
+            placeholder="https://youtube.com/watch?v=... or https://vimeo.com/..."
+            className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+          />
+        </div>
+
+        {courseError && <p className="text-sm text-destructive">{courseError}</p>}
+
+        <div className="flex gap-3 justify-end pt-2">
+          <button
+            onClick={() => setShowCourseModal(false)}
+            className="rounded-full border bg-background px-5 py-2.5 text-sm"
+          >
+            <T>Cancel</T>
+          </button>
+          <button
+            onClick={handleSaveCourse}
+            disabled={savingCourse}
+            className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {savingCourse ? <Loader2 size={16} className="animate-spin mx-auto" /> : <T>Create Course</T>}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* New Lesson Modal */}
       <AnimatePresence>

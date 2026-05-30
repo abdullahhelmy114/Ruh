@@ -14,7 +14,7 @@ import {
   Ticket, HelpCircle, BarChart3, Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-
+import { Megaphone } from "lucide-react";
 // ─── Types ─────────────────────────────────────────────
 type TabKey =
   | "overview"
@@ -27,7 +27,8 @@ type TabKey =
   | "messaging"
   | "notifications"
   | "ai"
-  | "settings";
+  | "settings"
+  | "marketing";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: TrendingUp },
@@ -41,7 +42,10 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "notifications", label: "Notifications", icon: Bell },
   { key: "ai", label: "AI Configuration", icon: Bot },
   { key: "settings", label: "Site Settings", icon: Settings2 },
+  { key: "marketing", label: "Marketing", icon: Megaphone },
 ];
+
+
 
 // ─── Main Component ────────────────────────────────────
 export default function AdminDashboard() {
@@ -150,6 +154,8 @@ export default function AdminDashboard() {
         {tab === "notifications" && <NotificationsTab />}
         {tab === "ai" && <AIConfigurationTab />}
         {tab === "settings" && <SiteSettingsTab />}
+        {tab === "marketing" && <MarketingTab />}
+
       </div>
     </div>
   );
@@ -476,6 +482,7 @@ function UserManagementTab() {
   const [showMessageModal, setShowMessageModal] = useState<any>(null);
   const [messageText, setMessageText] = useState("");
   const [sending, setSending] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     fetch('/api/admin/users')
@@ -557,16 +564,13 @@ function UserManagementTab() {
               <td>{new Date(u.created_at).toLocaleDateString()}</td>
               <td className="text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => {
-                      setSelectedUser(u);
-                      setShowProfile(true);
-                    }}
-                    className="p-1.5 rounded-full hover:bg-accent"
-                    title="View Profile"
-                  >
-                    <Eye className="h-4 w-4" />
-                  </button>
+              <button
+                onClick={() => router.push(`/dashboard/admin/user-profile?uid=${u.firebase_uid || u.id}`)}
+                className="p-1.5 rounded-full hover:bg-accent"
+                title="View Profile"
+              >
+                <Eye className="h-4 w-4" />
+              </button>
                   <button onClick={() => setShowMessageModal(u)} className="p-1.5 rounded-full hover:bg-accent" title="Send Message">
                     <Mail className="h-4 w-4" />
                   </button>
@@ -1037,4 +1041,77 @@ function SiteSettingsTab() {
       </div>
     </div>
   );
+}
+
+  function MarketingTab() {
+  const [students, setStudents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState("never-enrolled");
+  const [level, setLevel] = useState("B1");
+  const [exporting, setExporting] = useState(false);
+
+  const fetchData = async () => {
+    setLoading(true);
+    const params = new URLSearchParams({ filter });
+    if (filter === "certificate-level") params.append("level", level);
+    const res = await fetch(`/api/admin/marketing?${params.toString()}`);
+    const data = await res.json();
+    setStudents(data.students || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, [filter, level]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    const params = new URLSearchParams({ filter, export: "true" });
+    if (filter === "certificate-level") params.append("level", level);
+    const res = await fetch(`/api/admin/marketing?${params.toString()}`);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "admin-student-emails.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+    setExporting(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-serif text-2xl"><T>Marketing Tools (All Students)</T></h2>
+        <button onClick={handleExport} disabled={exporting || students.length === 0}
+          className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">
+          <Download size={16} /> {exporting ? "Exporting…" : "Export Emails"}
+        </button>
+      </div>
+      <div className="flex gap-2 mb-4">
+        {["never-enrolled","one-course","certificate-level","all"].map(f => (
+          <button key={f} onClick={() => setFilter(f)}
+            className={`rounded-full px-4 py-1.5 text-sm font-medium ${filter===f ? "bg-emerald-600 text-white" : "bg-card border hover:bg-accent"}`}>
+            <T>{f.replace("-"," ")}</T>
+          </button>
+        ))}
+        {filter === "certificate-level" && (
+          <select value={level} onChange={e => setLevel(e.target.value)} className="rounded-full border bg-card px-3 py-1.5 text-sm">
+            {["A1","A2","B1","B2","C1","C2"].map(l => <option key={l}>{l}</option>)}
+          </select>
+        )}
+      </div>
+      {loading ? <Loader2 className="animate-spin mx-auto" /> : students.length === 0 ? <T>No students found</T> :
+        <div className="space-y-2">
+          {students.map((s: any) => (
+            <div key={s.uid} className="glass rounded-2xl p-4 flex justify-between">
+              <div>
+                <p className="font-medium">{s.full_name}</p>
+                <p className="text-xs text-muted-foreground">{s.email}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      }
+    </div>
+  );
+
 }

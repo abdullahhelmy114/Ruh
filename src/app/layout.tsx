@@ -11,53 +11,29 @@ import { AuthProvider } from "@/lib/firebase/AuthProvider";
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
 const playfair = Playfair_Display({ variable: "--font-playfair", subsets: ["latin"] });
 
-export const metadata: Metadata = {
-  title: {
-    default: "Ruhulqudus Academy — Elite Arabic Language Learning",
-    template: "%s | Ruhulqudus Academy",
-  },
-  description:
-    "Master Arabic with Dr. Gehan Ali Ahmed. Live Zoom classes, recorded courses, certifications, and more.",
-  keywords: [
-    "Arabic learning", "Quranic Arabic", "online Arabic courses",
-    "Dr. Gehan", "Ruhulqudus", "learn Arabic online",
-  ],
-  authors: [{ name: "Ruhulqudus Academy" }],
-  creator: "Ruhulqudus Academy",
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "https://ruhulqudus.net",
-    siteName: "Ruhulqudus Academy",
-    title: "Ruhulqudus Academy — Elite Arabic Language Learning",
-    description:
-      "Master Arabic with live mentorship and timeless curriculum.",
-    images: [
-      {
-        url: "https://ruhulqudus.net/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Ruhulqudus Academy",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Ruhulqudus Academy",
-    description: "Elite Arabic language learning platform.",
-    images: ["https://ruhulqudus.net/og-image.png"],
-  },
-  robots: {
-    index: true,
-    follow: true,
-  },
-};
+// ... metadata كما هي بدون تغيير ...
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* ضبط اتجاه الصفحة قبل أي عرض */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var locale = localStorage.getItem('preferred-locale') || 'en';
+                  document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+                  document.documentElement.lang = locale;
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

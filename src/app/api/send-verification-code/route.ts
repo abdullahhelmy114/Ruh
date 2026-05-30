@@ -2,7 +2,7 @@ export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
-import { sendEmail } from '@/lib/email';
+import { sendEmail, verificationCodeEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   try {
@@ -19,20 +19,12 @@ export async function POST(request: Request) {
     // تخزين الكود الجديد
     await sql`INSERT INTO email_verifications (email, code, expires_at) VALUES (${email}, ${code}, ${expiresAt})`;
 
-    // إرسال الكود عبر البريد
-    await sendEmail(
-      email,
-      'Your Verification Code',
-      `<div style="text-align:center;font-family:sans-serif;">
-        <h2>Your verification code is</h2>
-        <h1 style="font-size:48px;letter-spacing:8px;color:#d4af37;">${code}</h1>
-        <p>This code expires in 15 minutes.</p>
-      </div>`
-    );
+    // إرسال الكود عبر البريد باستخدام القالب الجديد
+    await sendEmail(email, 'Your Verification Code', verificationCodeEmail(code));
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
-  console.error(error);
-  return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 });
-}
+    console.error(error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

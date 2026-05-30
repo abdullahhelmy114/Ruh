@@ -30,7 +30,7 @@ interface ProfileState {
 // مفتاح التخزين المحلي
 const STORAGE_KEY = "studentProfileData";
 
-export function StudentProfile() {
+export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
   const { user, isLoading: authLoading } = useAuth();
   const [s, setS] = React.useState<ProfileState | null>(null);
   const [errors, setErrors] = React.useState<Partial<Record<keyof ProfileState, string>>>({});
@@ -197,7 +197,7 @@ export function StudentProfile() {
             Profile completion: <span className="font-semibold text-emerald dark:text-gold">{completion}%</span>
           </p>
           <div className="profile-save-btn">
-            <SaveButton onClick={submit} state={save} />
+            {!readOnly && <SaveButton onClick={submit} state={save} />}
           </div>
         </div>
       </motion.div>

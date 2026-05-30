@@ -1,24 +1,21 @@
-export const runtime = 'edge';
-
+export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 
 export async function POST(request: Request) {
   try {
-    const { title, level, price, teacherUid } = await request.json();
-
-    if (!title || !teacherUid) {
-      return NextResponse.json({ error: 'Title and teacherUid are required' }, { status: 400 });
+    const { title, description, level, price, image_url, trailer_url, teacherUid } = await request.json();
+    if (!title || !description || !teacherUid) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const result = await sql`
-      INSERT INTO courses (teacher_uid, title, level, price, status)
-      VALUES (${teacherUid}, ${title}, ${level || 'A1'}, ${price || 0}, 'pending')
-      RETURNING id, title, level, price, status
+    const [course] = await sql`
+      INSERT INTO courses (title, description, level, price, image_url, trailer_url, teacher_uid, status)
+      VALUES (${title}, ${description}, ${level}, ${price}, ${image_url || null}, ${trailer_url || null}, ${teacherUid}, 'pending')
+      RETURNING id, title, status
     `;
-
-    return NextResponse.json({ course: result[0] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ course });
+  } catch (e: any) {
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
