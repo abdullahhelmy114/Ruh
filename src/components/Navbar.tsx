@@ -1,6 +1,7 @@
 "use client";
 
 import { T } from "@/components/TranslatedText";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -134,6 +135,9 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
+          {/* ✅ زر تغيير اللغة عاد للظهور */}
+          <LanguageSwitcher />
+
           <button
             onClick={toggle}
             aria-label="Toggle theme"

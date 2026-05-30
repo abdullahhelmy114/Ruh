@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Globe, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { defaultLocale } from "@/i18n/translations";
 
 const localeOptions = [
   { code: "en", label: "EN" },
@@ -11,13 +10,13 @@ const localeOptions = [
   { code: "tr", label: "TR" },
 ];
 
+const defaultLocale = "en";
+
 export function LanguageSwitcher() {
-  // ابدأ باللغة الافتراضية لتجنب Hydration Mismatch
   const [locale, setLocale] = useState(defaultLocale);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // بعد Hydration، اقرأ اللغة الحقيقية من localStorage
     const stored = localStorage.getItem("preferred-locale");
     if (stored) setLocale(stored);
 
@@ -53,7 +52,9 @@ export function LanguageSwitcher() {
               onClick={() => changeLocale(opt.code)}
               className={cn(
                 "flex items-center justify-between w-full rounded-full px-3 py-2 text-sm font-medium transition-colors",
-                locale === opt.code ? "bg-primary text-primary-foreground" : "hover:bg-accent text-muted-foreground"
+                locale === opt.code
+                  ? "bg-primary text-primary-foreground"
+                  : "hover:bg-accent text-muted-foreground"
               )}
             >
               {opt.label}

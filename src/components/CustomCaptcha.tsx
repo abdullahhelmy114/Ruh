@@ -10,7 +10,6 @@ interface CustomCaptchaProps {
   onVerify: (token: string) => void;
 }
 
-// توليد مسألة حسابية عشوائية
 function generateCaptcha() {
   const a = Math.floor(Math.random() * 10) + 1;
   const b = Math.floor(Math.random() * 10) + 1;
@@ -30,7 +29,6 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
   const [isVisible, setIsVisible] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // إظهار الكابتشا بعد 1.5 ثانية من تحميل الصفحة
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 1500);
     return () => clearTimeout(timer);
@@ -42,7 +40,6 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
       onVerify(`custom-captcha-${captcha.id}-verified`);
     } else {
       setStatus("error");
-      // إعادة توليد مسألة جديدة بعد خطأ
       setTimeout(() => {
         setCaptcha(generateCaptcha());
         setUserAnswer("");
@@ -82,7 +79,6 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
               : "border-border/50 bg-card/30 glass"
           )}
         >
-          {/* Background Glow */}
           <div className="pointer-events-none absolute inset-0 -z-10">
             <div
               className={cn(
@@ -112,7 +108,6 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
             </button>
           </div>
 
-          {/* Captcha Question */}
           <div className="mb-4 text-center select-none">
             <div className="inline-block rounded-xl bg-muted/50 px-6 py-3">
               <span className="text-2xl font-mono font-bold tracking-widest text-foreground select-none">
@@ -135,12 +130,14 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
             </div>
           </div>
 
-          {/* Input + Button */}
           <div className="flex items-center gap-2">
             <input
               ref={inputRef}
+              id="captcha-answer"
+              name="captcha-answer"
               type="text"
               inputMode="numeric"
+              autoComplete="off"
               value={userAnswer}
               onChange={(e) => {
                 setUserAnswer(e.target.value);
@@ -176,7 +173,6 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
             </button>
           </div>
 
-          {/* Status Message */}
           {status === "error" && (
             <p className="mt-2 text-xs text-red-500 text-center">
               <T>Incorrect answer. Try again!</T>

@@ -23,20 +23,23 @@ export default function LoginPage() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
+  // ✅ دالة التوجيه مع قيمة افتراضية إذا لم يتم العثور على الدور
   const redirectAfterLogin = (userEmail: string) => {
     if (userEmail === "abdullahhelmy114@gmail.com" || userEmail === "info@ruhulqudus.com") {
-      router.push("/profile/admin");
+      router.push("/dashboard/admin");  // أو profile/admin حسب رغبتك
       return;
     }
-    const storedRole = localStorage.getItem("userRole");
+
+    const storedRole = localStorage.getItem("userRole") || "student"; // ✅ افتراضي student
+
     if (storedRole === "teacher") {
-      router.push("/profile/teacher");
+      router.push("/dashboard/teacher");
     } else {
-      router.push("/profile/student");
+      router.push("/dashboard/student");
     }
   };
 
-  const performLogin = async (captchaToken: string) => {
+  const performLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       redirectAfterLogin(userCredential.user.email || "");
@@ -65,6 +68,7 @@ export default function LoginPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      localStorage.setItem("userRole", "student"); // ✅
       redirectAfterLogin(result.user.email || "");
     } catch (err: any) {
       setError(err.message || "Google login failed");
@@ -79,6 +83,7 @@ export default function LoginPage() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
+      localStorage.setItem("userRole", "student"); // ✅
       redirectAfterLogin(result.user.email || "");
     } catch (err: any) {
       setError(err.message || "Facebook login failed");
@@ -187,7 +192,7 @@ export default function LoginPage() {
             )}
 
             {showCaptcha ? (
-              <CustomCaptcha onVerify={(token) => { performLogin(token); }} />
+              <CustomCaptcha onVerify={() => { performLogin(); }} />
             ) : (
               <button
                 type="submit"
