@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Plus, Upload, Loader2, Video, Clock, ArrowRight,
-  Star, BookOpen, FileText, Play, CheckCircle, XCircle
+  Star, BookOpen, FileText, Play, TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -72,7 +72,9 @@ export default function TeacherDashboard() {
   const [ratingData, setRatingData] = useState<RatingData | null>(null);
   const [loading, setLoading] = useState(true);
   const [pendingLessons, setPendingLessons] = useState<PendingLesson[]>([]);
+  const [allLessons, setAllLessons] = useState<PendingLesson[]>([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
+  const [allLessonsLoading, setAllLessonsLoading] = useState(true);
 
   // New Lesson states
   const [showLessonModal, setShowLessonModal] = useState(false);
@@ -138,6 +140,25 @@ export default function TeacherDashboard() {
     fetchPendingLessons();
   }, [user]);
 
+  // Fetch all lessons (regardless of status)
+  useEffect(() => {
+    if (!user || !user.uid) return;
+    const fetchAllLessons = async () => {
+      try {
+        const res = await fetch(`/api/lessons?teacherUid=${user.uid}`);
+        if (res.ok) {
+          const json = await res.json();
+          setAllLessons(json.lessons || []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setAllLessonsLoading(false);
+      }
+    };
+    fetchAllLessons();
+  }, [user]);
+
   // Auth guard
   useEffect(() => {
     if (!isLoading && (!user || (role !== "teacher" && role !== "admin"))) router.push("/login");
@@ -179,6 +200,7 @@ export default function TeacherDashboard() {
       });
       if (res.ok) {
         setPendingLessons(prev => prev.filter(l => l.id !== lessonId));
+        setAllLessons(prev => prev.map(l => l.id === lessonId ? { ...l, status: newStatus } : l));
       }
     } catch (err) {
       console.error(err);
@@ -298,6 +320,13 @@ export default function TeacherDashboard() {
           </div>
         </div>
         <div className="flex w-full gap-3 md:w-auto">
+          <Link
+            href="/dashboard/teacher/analytics"
+            className="inline-flex items-center gap-2 rounded-full border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent"
+          >
+            <TrendingUp className="h-4 w-4 text-amber-500" />
+            <T>Analytics</T>
+          </Link>
           <button
             onClick={() => setShowCourseModal(true)}
             className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent"
@@ -402,7 +431,7 @@ export default function TeacherDashboard() {
         </motion.div>
       )}
 
-      {/* Pending Lessons (New) */}
+      {/* Pending Lessons */}
       {!lessonsLoading && pendingLessons.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -444,6 +473,44 @@ export default function TeacherDashboard() {
                   >
                     <T>Approve</T>
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* All Lessons */}
+      {!allLessonsLoading && allLessons.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass rounded-3xl p-6"
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <BookOpen className="h-5 w-5 text-amber-500" />
+            <h2 className="font-serif text-xl"><T>Your Lessons</T></h2>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {allLessons.map(lesson => (
+              <div
+                key={lesson.id}
+                className="flex items-center justify-between bg-background/50 rounded-2xl p-4 border"
+              >
+                <div>
+                  <h3 className="font-serif text-sm font-semibold">
+                    {lesson.title}
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    {lesson.course_title}
+                  </p>
+                  <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${
+                    lesson.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' :
+                    lesson.status === 'rejected' ? 'bg-red-500/10 text-red-600' :
+                    'bg-amber-500/10 text-amber-600'
+                  }`}>
+                    {lesson.status}
+                  </span>
                 </div>
               </div>
             ))}
@@ -744,7 +811,6 @@ export default function TeacherDashboard() {
             { target: ".stats-sidebar", title: "Stats", content: "Here you can see your statistics.", placement: "left", optional: true },
           ]}
           tourKey="teacher_dashboard_tour"
-          onFinish={() => console.log("Tour finished")}
         />
       )}
     </div>

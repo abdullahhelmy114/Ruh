@@ -10,7 +10,7 @@ const bundles = [
     price: 132,
     oldPrice: 147,
     discount: "-10%",
-    features: ["Lifetime access", "Live Q&A with Dr. Gehan", "Certificate of completion"],
+    features: ["Lifetime access", "Live Q&A with Dr. Jehan", "Certificate of completion"],
     isSpecial: false,
   },
   {
@@ -19,7 +19,7 @@ const bundles = [
     price: 255,
     oldPrice: 300,
     discount: "-15%",
-    features: ["Lifetime access", "Live Q&A with Dr. Gehan", "Certificate of completion"],
+    features: ["Lifetime access", "Live Q&A with Dr. Jehan", "Certificate of completion"],
     isSpecial: false,
   },
   {
@@ -28,7 +28,7 @@ const bundles = [
     price: 449,
     oldPrice: 600,
     discount: "-25%",
-    features: ["Lifetime access", "Live Q&A with Dr. Gehan", "Certificate of completion"],
+    features: ["Lifetime access", "Live Q&A with Dr. Jehan", "Certificate of completion"],
     isSpecial: true,
   },
 ];

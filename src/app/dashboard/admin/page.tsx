@@ -11,11 +11,23 @@ import {
   Sparkles, Settings2, Crown, AlertCircle, ArrowUpRight, MoreHorizontal,
   Filter, Download, Bot, Save, Loader2, Ban, UserCheck, ExternalLink, Video,
   MessageSquare, Bell, Trash2, Eye, Send, Mail, Edit3, UserX,
+  Ticket, HelpCircle, BarChart3, Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // ─── Types ─────────────────────────────────────────────
-type TabKey = "overview" | "teachers" | "courses" | "users" | "finance" | "ai" | "settings" | "messaging" | "notifications";
+type TabKey =
+  | "overview"
+  | "teachers"
+  | "courses"
+  | "users"
+  | "finance"
+  | "coupons"
+  | "quizzes"
+  | "messaging"
+  | "notifications"
+  | "ai"
+  | "settings";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: TrendingUp },
@@ -23,6 +35,8 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "courses", label: "Course Moderation", icon: BookOpen },
   { key: "users", label: "User Management", icon: Users },
   { key: "finance", label: "Financial Center", icon: Wallet },
+  { key: "coupons", label: "Coupons", icon: Ticket },
+  { key: "quizzes", label: "Quizzes", icon: HelpCircle },
   { key: "messaging", label: "Messaging", icon: MessageSquare },
   { key: "notifications", label: "Notifications", icon: Bell },
   { key: "ai", label: "AI Configuration", icon: Bot },
@@ -35,7 +49,6 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState<TabKey>("overview");
   const router = useRouter();
 
-  // Email verification check
   useEffect(() => {
     if (!user) return;
     fetch(`/api/user?uid=${user.uid}`)
@@ -47,11 +60,33 @@ export default function AdminDashboard() {
       });
   }, [user, router]);
 
-  if (authLoading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
-  if (!user) return <div className="flex min-h-screen items-center justify-center"><Link href="/login" className="text-amber-600"><T>تسجيل الدخول</T></Link></div>;
-  if (user.email !== "abdullahhelmy114@gmail.com" && user.email !== "info@ruhulqudus.com") {
-  return <div className="flex min-h-screen items-center justify-center"><h1 className="text-3xl text-red-600"><T>غير مصرح</T></h1></div>;
-}
+  if (authLoading)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+      </div>
+    );
+
+  if (!user)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Link href="/login" className="text-amber-600">
+          <T>تسجيل الدخول</T>
+        </Link>
+      </div>
+    );
+
+  if (
+    user.email !== "abdullahhelmy114@gmail.com" &&
+    user.email !== "info@ruhulqudus.com"
+  )
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <h1 className="text-3xl text-red-600">
+          <T>غير مصرح</T>
+        </h1>
+      </div>
+    );
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
@@ -62,14 +97,21 @@ export default function AdminDashboard() {
             <Crown className="h-6 w-6 text-white" />
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600"><T>Management Suite</T></div>
-            <h1 className="font-serif text-3xl"><T>Admin Control Panel</T></h1>
-            <p className="text-sm text-muted-foreground"><T>Oversee the entire Ruhulqudus Academy ecosystem.</T></p>
+            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+              <T>Management Suite</T>
+            </div>
+            <h1 className="font-serif text-3xl">
+              <T>Admin Control Panel</T>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              <T>Oversee the entire Ruhulqudus Academy ecosystem.</T>
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 font-medium text-emerald-600">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> <T>All systems operational</T>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />{" "}
+            <T>All systems operational</T>
           </span>
         </div>
       </div>
@@ -80,7 +122,16 @@ export default function AdminDashboard() {
           const Icon = t.icon;
           const active = tab === t.key;
           return (
-            <button key={t.key} onClick={() => setTab(t.key)} className={cn("inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all", active ? "bg-linear-to-r from-emerald-600 to-emerald-700 text-white shadow-elegant" : "text-muted-foreground hover:bg-accent hover:text-foreground")}>
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "inline-flex shrink-0 items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all",
+                active
+                  ? "bg-linear-to-r from-emerald-600 to-emerald-700 text-white shadow-elegant"
+                  : "text-muted-foreground hover:bg-accent hover:text-foreground"
+              )}
+            >
               <Icon className="h-4 w-4" /> <T>{t.label}</T>
             </button>
           );
@@ -93,6 +144,8 @@ export default function AdminDashboard() {
         {tab === "courses" && <CourseModerationTab />}
         {tab === "users" && <UserManagementTab />}
         {tab === "finance" && <FinancialCenterTab />}
+        {tab === "coupons" && <CouponsTab />}
+        {tab === "quizzes" && <QuizzesTab />}
         {tab === "messaging" && <MessagingTab />}
         {tab === "notifications" && <NotificationsTab />}
         {tab === "ai" && <AIConfigurationTab />}
@@ -108,10 +161,20 @@ function OverviewTab() {
   const [pending, setPending] = useState<any>(null);
 
   useEffect(() => {
-    fetch('/api/admin/stats').then(r => r.json()).then(d => { setStats(d.stats); setPending(d.pending); });
+    fetch('/api/admin/stats')
+      .then(r => r.json())
+      .then(d => {
+        setStats(d.stats);
+        setPending(d.pending);
+      });
   }, []);
 
-  if (!stats) return <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>;
+  if (!stats)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
 
   const statCards = [
     { label: "Total Students", value: stats.total_students.toLocaleString(), icon: Users, accent: "from-emerald-500/20" },
@@ -152,7 +215,9 @@ function OverviewTab() {
         <div className="rounded-3xl border bg-card p-6 shadow-elegant lg:col-span-2">
           <h3 className="font-serif text-xl"><T>Revenue Trend (last 30 days)</T></h3>
           <div className="mt-4 h-40 flex items-end gap-2">
-            {Array.from({length:12}).map((_,i)=> <div key={i} className="flex-1 rounded-t bg-linear-to-t from-primary to-amber-500/70" style={{height: `${Math.random()*100}%`}}/>)}
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="flex-1 rounded-t bg-linear-to-t from-primary to-amber-500/70" style={{ height: `${Math.random() * 100}%` }} />
+            ))}
           </div>
         </div>
         <div className="rounded-3xl border bg-card p-6 shadow-elegant">
@@ -162,7 +227,9 @@ function OverviewTab() {
               const Icon = item.icon;
               return (
                 <li key={item.label} className="flex items-center justify-between rounded-2xl border bg-background px-4 py-3">
-                  <div className="flex items-center gap-3"><Icon className="h-4 w-4 text-primary" /> <T>{item.label}</T></div>
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-4 w-4 text-primary" /> <T>{item.label}</T>
+                  </div>
                   <span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 text-xs font-bold text-amber-800">{item.count}</span>
                 </li>
               );
@@ -180,7 +247,12 @@ function TeacherVerificationTab() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/admin/teacher-applications').then(r => r.json()).then(d => { setApps(d.applications); setLoading(false); });
+    fetch('/api/admin/teacher-applications')
+      .then(r => r.json())
+      .then(d => {
+        setApps(d.applications);
+        setLoading(false);
+      });
   }, []);
 
   const handleAction = async (id: string, status: string) => {
@@ -192,31 +264,50 @@ function TeacherVerificationTab() {
     setApps(apps.filter(a => a.id !== id));
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
 
   return (
     <div className="space-y-4">
       <h2 className="font-serif text-2xl"><T>Pending Teacher Applications</T></h2>
-      {apps.length === 0 ? <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground"><T>No pending applications</T></div> :
+      {apps.length === 0 ? (
+        <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground">
+          <T>No pending applications</T>
+        </div>
+      ) : (
         apps.map(app => (
           <div key={app.id} className="rounded-3xl border bg-card p-5 shadow-elegant flex justify-between items-center">
             <div>
               <h3 className="font-serif text-lg">{app.full_name}</h3>
-              <p className="text-xs text-muted-foreground">{app.email} · {app.country} · {app.years_experience} <T>yrs</T> · {app.specialization}</p>
-              {app.cv_url && <a href={app.cv_url} target="_blank" className="text-xs text-amber-600 hover:underline inline-flex items-center gap-1 mt-1"><ExternalLink size={12} /> <T>View CV</T></a>}
+              <p className="text-xs text-muted-foreground">
+                {app.email} · {app.country} · {app.years_experience} <T>yrs</T> · {app.specialization}
+              </p>
+              {app.cv_url && (
+                <a href={app.cv_url} target="_blank" className="text-xs text-amber-600 hover:underline inline-flex items-center gap-1 mt-1">
+                  <ExternalLink size={12} /> <T>View CV</T>
+                </a>
+              )}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => handleAction(app.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-sm"><T>Reject</T></button>
-              <button onClick={() => handleAction(app.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-sm"><T>Approve</T></button>
+              <button onClick={() => handleAction(app.id, 'rejected')} className="px-3 py-1 rounded-full border border-red-500/30 text-red-600 text-sm">
+                <T>Reject</T>
+              </button>
+              <button onClick={() => handleAction(app.id, 'approved')} className="px-3 py-1 rounded-full bg-emerald-600 text-white text-sm">
+                <T>Approve</T>
+              </button>
             </div>
           </div>
         ))
-      }
+      )}
     </div>
   );
 }
 
-/* ─────────── Course Moderation Tab (Updated) ─────────── */
+/* ─────────── Course Moderation Tab ─────────── */
 function CourseModerationTab() {
   const [courses, setCourses] = useState<any[]>([]);
   const [lessons, setLessons] = useState<any[]>([]);
@@ -278,7 +369,12 @@ function CourseModerationTab() {
     }
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>;
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
 
   const totalPending = courses.length + lessons.length;
 
@@ -291,7 +387,6 @@ function CourseModerationTab() {
         </div>
       ) : (
         <div className="space-y-8">
-          {/* Pending Courses */}
           {courses.length > 0 && (
             <div>
               <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
@@ -329,7 +424,6 @@ function CourseModerationTab() {
             </div>
           )}
 
-          {/* Pending Lessons */}
           {lessons.length > 0 && (
             <div>
               <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
@@ -372,7 +466,7 @@ function CourseModerationTab() {
   );
 }
 
-/* ─────────── User Management Tab (Enhanced) ─────────── */
+/* ─────────── User Management Tab ─────────── */
 function UserManagementTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -384,7 +478,9 @@ function UserManagementTab() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    fetch('/api/admin/users').then(r => r.json()).then(d => setUsers(d.users));
+    fetch('/api/admin/users')
+      .then(r => r.json())
+      .then(d => setUsers(d.users));
   }, []);
 
   const toggleBan = async (id: string, currentStatus: string) => {
@@ -394,7 +490,7 @@ function UserManagementTab() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status: newStatus }),
     });
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, status: newStatus } : u));
+    setUsers(prev => prev.map(u => (u.id === id ? { ...u, status: newStatus } : u)));
   };
 
   const deleteUser = async (id: string) => {
@@ -417,9 +513,10 @@ function UserManagementTab() {
     alert("Message sent!");
   };
 
-  const filteredUsers = users.filter(u =>
-    (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = users.filter(
+    u =>
+      (u.full_name || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.email || "").toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -430,7 +527,7 @@ function UserManagementTab() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={e => setSearchTerm(e.target.value)}
             placeholder="Search users..."
             className="w-full rounded-full border bg-background pl-10 pr-4 py-2 text-sm outline-none"
           />
@@ -450,18 +547,42 @@ function UserManagementTab() {
         <tbody>
           {filteredUsers.map((u: any) => (
             <tr key={u.id} className="border-t hover:bg-accent/40">
-              <td className="px-5 py-4">{u.full_name}<br /><span className="text-xs text-muted-foreground">{u.email}</span></td>
+              <td className="px-5 py-4">
+                {u.full_name}
+                <br />
+                <span className="text-xs text-muted-foreground">{u.email}</span>
+              </td>
               <td>{u.role}</td>
               <td>{u.status}</td>
               <td>{new Date(u.created_at).toLocaleDateString()}</td>
               <td className="text-right">
                 <div className="flex items-center justify-end gap-1">
-                  <button onClick={() => { setSelectedUser(u); setShowProfile(true); }} className="p-1.5 rounded-full hover:bg-accent" title="View Profile"><Eye className="h-4 w-4" /></button>
-                  <button onClick={() => setShowMessageModal(u)} className="p-1.5 rounded-full hover:bg-accent" title="Send Message"><Mail className="h-4 w-4" /></button>
-                  <button onClick={() => toggleBan(u.id, u.status)} className={`px-2 py-1 rounded-full text-xs ${u.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                  <button
+                    onClick={() => {
+                      setSelectedUser(u);
+                      setShowProfile(true);
+                    }}
+                    className="p-1.5 rounded-full hover:bg-accent"
+                    title="View Profile"
+                  >
+                    <Eye className="h-4 w-4" />
+                  </button>
+                  <button onClick={() => setShowMessageModal(u)} className="p-1.5 rounded-full hover:bg-accent" title="Send Message">
+                    <Mail className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => toggleBan(u.id, u.status)}
+                    className={`px-2 py-1 rounded-full text-xs ${u.status === 'Active' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'}`}
+                  >
                     {u.status === 'Active' ? <T>Ban</T> : <T>Unban</T>}
                   </button>
-                  <button onClick={() => setShowDeleteConfirm(u.id)} className="p-1.5 rounded-full hover:bg-red-100 text-red-500" title="Delete"><Trash2 className="h-4 w-4" /></button>
+                  <button
+                    onClick={() => setShowDeleteConfirm(u.id)}
+                    className="p-1.5 rounded-full hover:bg-red-100 text-red-500"
+                    title="Delete"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               </td>
             </tr>
@@ -469,7 +590,7 @@ function UserManagementTab() {
         </tbody>
       </table>
 
-      {/* View Profile Modal */}
+      {/* Modals */}
       {showProfile && selectedUser && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl p-6 max-w-md w-full shadow-elegant space-y-3">
@@ -478,39 +599,45 @@ function UserManagementTab() {
             <p className="text-sm"><T>Role</T>: {selectedUser.role}</p>
             <p className="text-sm"><T>Status</T>: {selectedUser.status}</p>
             <p className="text-sm"><T>Joined</T>: {new Date(selectedUser.created_at).toLocaleDateString()}</p>
-            <button onClick={() => setShowProfile(false)} className="mt-4 rounded-full border px-4 py-2 text-sm"><T>Close</T></button>
+            <button onClick={() => setShowProfile(false)} className="mt-4 rounded-full border px-4 py-2 text-sm">
+              <T>Close</T>
+            </button>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl p-6 max-w-sm w-full shadow-elegant text-center space-y-4">
             <Trash2 className="mx-auto h-10 w-10 text-red-500" />
             <p className="font-medium"><T>Are you sure you want to delete this user?</T></p>
             <div className="flex gap-3 justify-center">
-              <button onClick={() => setShowDeleteConfirm(null)} className="rounded-full border px-4 py-2 text-sm"><T>Cancel</T></button>
-              <button onClick={() => deleteUser(showDeleteConfirm)} className="rounded-full bg-red-600 text-white px-4 py-2 text-sm"><T>Delete</T></button>
+              <button onClick={() => setShowDeleteConfirm(null)} className="rounded-full border px-4 py-2 text-sm">
+                <T>Cancel</T>
+              </button>
+              <button onClick={() => deleteUser(showDeleteConfirm)} className="rounded-full bg-red-600 text-white px-4 py-2 text-sm">
+                <T>Delete</T>
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Send Message Modal */}
       {showMessageModal && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl p-6 max-w-md w-full shadow-elegant space-y-4">
             <h3 className="font-serif text-xl"><T>Send Message to</T> {showMessageModal.full_name}</h3>
             <textarea
               value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
+              onChange={e => setMessageText(e.target.value)}
               rows={4}
               className="w-full rounded-2xl border bg-background p-4 text-sm"
               placeholder="Type your message..."
             />
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowMessageModal(null)} className="rounded-full border px-4 py-2 text-sm"><T>Cancel</T></button>
+              <button onClick={() => setShowMessageModal(null)} className="rounded-full border px-4 py-2 text-sm">
+                <T>Cancel</T>
+              </button>
               <button onClick={handleSendMessage} disabled={sending} className="rounded-full bg-emerald-600 text-white px-4 py-2 text-sm disabled:opacity-50">
                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4" /> <T>Send</T></>}
               </button>
@@ -522,15 +649,188 @@ function UserManagementTab() {
   );
 }
 
+/* ─────────── Coupons Tab ─────────── */
+function CouponsTab() {
+  const [coupons, setCoupons] = useState<any[]>([]);
+  const [code, setCode] = useState("");
+  const [discount, setDiscount] = useState(20);
+  const [maxUses, setMaxUses] = useState("");
+  const [validUntil, setValidUntil] = useState("");
+
+  const fetchCoupons = async () => {
+    const res = await fetch('/api/admin/coupons');
+    const data = await res.json();
+    setCoupons(data.coupons || []);
+  };
+
+  useEffect(() => { fetchCoupons(); }, []);
+
+  const handleCreate = async () => {
+    if (!code.trim()) return;
+    await fetch('/api/admin/coupons', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        discount_percent: discount,
+        max_uses: maxUses ? parseInt(maxUses) : null,
+        valid_until: validUntil || null,
+      }),
+    });
+    setCode("");
+    setDiscount(20);
+    setMaxUses("");
+    setValidUntil("");
+    fetchCoupons();
+  };
+
+  const handleDelete = async (id: string) => {
+    await fetch('/api/admin/coupons', { method: 'DELETE', body: JSON.stringify({ id }) });
+    fetchCoupons();
+  };
+
+  return (
+    <div>
+      <h2 className="font-serif text-2xl mb-4"><T>Coupon Management</T></h2>
+
+      <div className="glass rounded-2xl p-4 mb-6 grid grid-cols-2 md:grid-cols-5 gap-3">
+        <input value={code} onChange={e => setCode(e.target.value)} placeholder="Code" className="rounded-full border bg-background px-4 py-2 text-sm" />
+        <input type="number" value={discount} onChange={e => setDiscount(parseInt(e.target.value))} placeholder="Discount %" className="rounded-full border bg-background px-4 py-2 text-sm" />
+        <input value={maxUses} onChange={e => setMaxUses(e.target.value)} placeholder="Max Uses" className="rounded-full border bg-background px-4 py-2 text-sm" />
+        <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="rounded-full border bg-background px-4 py-2 text-sm" />
+        <button onClick={handleCreate} className="rounded-full bg-amber-500 px-4 py-2 text-sm font-semibold text-black">
+          <T>Create</T>
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {coupons.map(c => (
+          <div key={c.id} className="flex items-center justify-between glass rounded-2xl p-4">
+            <div>
+              <span className="font-bold text-amber-600">{c.code}</span>
+              <span className="ml-4 text-sm text-muted-foreground"><T>Discount</T>: {c.discount_percent}%</span>
+              <span className="ml-4 text-sm text-muted-foreground"><T>Used</T>: {c.current_uses}/{c.max_uses || '∞'}</span>
+              {c.valid_until && (
+                <span className="ml-4 text-sm text-muted-foreground"><T>Until</T>: {new Date(c.valid_until).toLocaleDateString()}</span>
+              )}
+            </div>
+            <button onClick={() => handleDelete(c.id)} className="text-red-500 text-sm"><T>Delete</T></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────── Quizzes Tab ─────────── */
+function QuizzesTab() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState("");
+  const [lessons, setLessons] = useState<any[]>([]);
+  const [selectedLesson, setSelectedLesson] = useState("");
+  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [question, setQuestion] = useState("");
+  const [options, setOptions] = useState(["", "", "", ""]);
+  const [correct, setCorrect] = useState(0);
+
+  useEffect(() => {
+    fetch('/api/marketplace').then(r => r.json()).then(d => setCourses(d.courses || []));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedCourse) return;
+    fetch(`/api/student/courses/${selectedCourse}?uid=admin`).then(r => r.json()).then(d => setLessons(d.lessons || []));
+  }, [selectedCourse]);
+
+  useEffect(() => {
+    if (!selectedLesson) return;
+    fetch(`/api/quizzes/${selectedLesson}`).then(r => r.json()).then(d => setQuizzes(d.quizzes || []));
+  }, [selectedLesson]);
+
+  const handleAdd = async () => {
+    if (!question.trim() || !selectedLesson) return;
+    await fetch('/api/admin/quizzes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lessonId: selectedLesson, question, options, correct }),
+    });
+    setQuestion("");
+    setOptions(["", "", "", ""]);
+    setCorrect(0);
+    // refresh
+    const res = await fetch(`/api/quizzes/${selectedLesson}`);
+    const data = await res.json();
+    setQuizzes(data.quizzes || []);
+  };
+
+  const handleDelete = async (id: string) => {
+    await fetch('/api/admin/quizzes', { method: 'DELETE', body: JSON.stringify({ id }) });
+    setQuizzes(prev => prev.filter(q => q.id !== id));
+  };
+
+  return (
+    <div>
+      <h2 className="font-serif text-2xl mb-4"><T>Quiz Management</T></h2>
+      <div className="grid md:grid-cols-3 gap-6">
+        <div>
+          <label className="text-sm font-medium"><T>Course</T></label>
+          <select value={selectedCourse} onChange={e => setSelectedCourse(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1">
+            <option value="">--</option>
+            {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="text-sm font-medium"><T>Lesson</T></label>
+          <select value={selectedLesson} onChange={e => setSelectedLesson(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-2.5 text-sm mt-1">
+            <option value="">--</option>
+            {lessons.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {selectedLesson && (
+        <div className="mt-6 glass rounded-2xl p-6 space-y-4">
+          <h3 className="font-serif text-lg"><T>Add Question</T></h3>
+          <input value={question} onChange={e => setQuestion(e.target.value)} placeholder="Question" className="w-full rounded-2xl border bg-background px-4 py-3 text-sm" />
+          {options.map((opt, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input value={opt} onChange={e => { const o = [...options]; o[i] = e.target.value; setOptions(o); }} placeholder={`Option ${i + 1}`} className="flex-1 rounded-2xl border bg-background px-4 py-3 text-sm" />
+              <input type="radio" name="correct" checked={correct === i} onChange={() => setCorrect(i)} />
+            </div>
+          ))}
+          <button onClick={handleAdd} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white">
+            <T>Add Question</T>
+          </button>
+        </div>
+      )}
+
+      <div className="mt-6 space-y-2">
+        {quizzes.map(q => (
+          <div key={q.id} className="flex items-center justify-between glass rounded-2xl p-4">
+            <div>
+              <p className="font-medium">{q.question}</p>
+              <p className="text-xs text-muted-foreground"><T>Correct</T>: {q.options[q.correct]}</p>
+            </div>
+            <button onClick={() => handleDelete(q.id)} className="text-red-500 text-sm"><T>Delete</T></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ─────────── Financial Center Tab ─────────── */
 function FinancialCenterTab() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any[]>([]);
+
   useEffect(() => {
     fetch('/api/admin/finance').then(r => r.json()).then(d => {
-      setTransactions(d.transactions); setPayouts(d.payouts);
+      setTransactions(d.transactions);
+      setPayouts(d.payouts);
     });
   }, []);
+
   return (
     <div>
       <h2 className="font-serif text-2xl mb-4"><T>Financial Center</T></h2>
@@ -558,7 +858,7 @@ function FinancialCenterTab() {
   );
 }
 
-/* ─────────── Messaging Tab (New) ─────────── */
+/* ─────────── Messaging Tab ─────────── */
 function MessagingTab() {
   const [users, setUsers] = useState<any[]>([]);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -606,7 +906,7 @@ function MessagingTab() {
               <h3 className="text-sm font-medium"><T>Message to</T>: {selectedUser.full_name}</h3>
               <textarea
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={e => setMessage(e.target.value)}
                 rows={6}
                 className="w-full rounded-2xl border bg-background p-4 text-sm"
                 placeholder="Type your message..."
@@ -624,7 +924,7 @@ function MessagingTab() {
   );
 }
 
-/* ─────────── Notifications Tab (New) ─────────── */
+/* ─────────── Notifications Tab ─────────── */
 function NotificationsTab() {
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -650,11 +950,11 @@ function NotificationsTab() {
       <div className="space-y-4">
         <div>
           <label className="text-sm font-medium"><T>Title</T></label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm mt-1" placeholder="Notification title" />
+          <input value={title} onChange={e => setTitle(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm mt-1" placeholder="Notification title" />
         </div>
         <div>
           <label className="text-sm font-medium"><T>Body</T></label>
-          <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={4} className="w-full rounded-2xl border bg-background p-4 text-sm mt-1" placeholder="Notification body..." />
+          <textarea value={body} onChange={e => setBody(e.target.value)} rows={4} className="w-full rounded-2xl border bg-background p-4 text-sm mt-1" placeholder="Notification body..." />
         </div>
         <button onClick={handleSend} disabled={sending} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white disabled:opacity-50">
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Bell className="h-4 w-4" /> <T>Send to All Users</T></>}
@@ -683,13 +983,11 @@ function AIConfigurationTab() {
       <div className="space-y-4 max-w-2xl">
         <div>
           <label className="block text-sm font-medium"><T>System Prompt</T></label>
-          <textarea rows={4} value={config.systemPrompt} onChange={e => setConfig({...config, systemPrompt: e.target.value})}
-            className="w-full rounded-2xl border bg-background p-4 text-sm mt-1" />
+          <textarea rows={4} value={config.systemPrompt} onChange={e => setConfig({ ...config, systemPrompt: e.target.value })} className="w-full rounded-2xl border bg-background p-4 text-sm mt-1" />
         </div>
         <div>
           <label className="block text-sm font-medium"><T>Model</T></label>
-          <select value={config.model} onChange={e => setConfig({...config, model: e.target.value})}
-            className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1">
+          <select value={config.model} onChange={e => setConfig({ ...config, model: e.target.value })} className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1">
             <option>gpt-5.2</option>
             <option>gpt-5.2-mini</option>
             <option>claude-sonnet-4.5</option>
@@ -698,13 +996,11 @@ function AIConfigurationTab() {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium"><T>Temperature</T></label>
-            <input type="number" step={0.1} value={config.temperature} onChange={e => setConfig({...config, temperature: parseFloat(e.target.value)})}
-              className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
+            <input type="number" step={0.1} value={config.temperature} onChange={e => setConfig({ ...config, temperature: parseFloat(e.target.value) })} className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
           </div>
           <div>
             <label className="block text-sm font-medium"><T>Max Tokens</T></label>
-            <input type="number" value={config.maxTokens} onChange={e => setConfig({...config, maxTokens: parseInt(e.target.value)})}
-              className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
+            <input type="number" value={config.maxTokens} onChange={e => setConfig({ ...config, maxTokens: parseInt(e.target.value) })} className="w-full rounded-2xl border bg-background px-4 py-2 text-sm mt-1" />
           </div>
         </div>
         <button onClick={handleSave} className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white"><T>Save Configuration</T></button>

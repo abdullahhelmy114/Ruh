@@ -49,11 +49,10 @@
   --gradient-emerald: linear-gradient(135deg, oklch(0.32 0.07 165), oklch(0.42 0.09 165));
   --gradient-gold: linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.86 0.12 90));
 
-  /* light mode — فاتح حتى النص الأسود يظهر */
   --gradient-hero: linear-gradient(135deg, oklch(0.88 0.06 165) 0%, oklch(0.94 0.03 120) 100%);
-  --hero-text: oklch(0.18 0.04 165);          /* أسود */
+  --hero-text: oklch(0.18 0.04 165);
   --hero-text-muted: oklch(0.18 0.04 165 / 70%);
-  --hero-accent: oklch(0.6 0.14 85);          /* amber داكن */
+  --hero-accent: oklch(0.6 0.14 85);
   --hero-row-bg: oklch(0 0 0 / 6%);
   --hero-border: oklch(0 0 0 / 12%);
 
@@ -75,15 +74,15 @@
   --glass-bg: color-mix(in oklab, oklch(0.2 0.03 165) 60%, transparent);
   --glass-border: color-mix(in oklab, white 12%, transparent);
 
-  /* dark mode — داكن حتى النص الأبيض يظهر */
   --gradient-hero: linear-gradient(135deg, oklch(0.32 0.07 165) 0%, oklch(0.22 0.05 165) 100%);
-  --hero-text: oklch(0.98 0.01 90);           /* أبيض */
+  --hero-text: oklch(0.98 0.01 90);
   --hero-text-muted: oklch(0.98 0.01 90 / 80%);
-  --hero-accent: oklch(0.82 0.14 85);         /* amber فاتح */
+  --hero-accent: oklch(0.82 0.14 85);
   --hero-row-bg: oklch(1 0 0 / 10%);
   --hero-border: oklch(1 0 0 / 12%);
 }
 
+/* ===== تحسين التباين في الوضع الداكن ===== */
 @layer base {
   * { border-color: var(--border); }
   body {
@@ -93,6 +92,27 @@
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
     letter-spacing: -0.01em;
+  }
+
+  /* أزرار hover في الوضع الداكن – نص أخضر غامق داكن بدلاً من الأبيض */
+  button:not([disabled]):hover,
+  a:not([disabled]):hover {
+    @apply transition-colors duration-200;
+  }
+
+  /* أي عنصر تفاعلي داخل .dark يستخدم bg-accent عند hover */
+  .dark .hover\:bg-accent:hover,
+  .dark button:hover,
+  .dark a:hover {
+    color: oklch(0.25 0.08 165) !important; /* أخضر غامق جدا */
+  }
+
+  /* استثناء: الأزرار ذات الخلفية الداكنة أصلاً (مثل emerald) تبقى نصوصها بيضاء */
+  .dark .bg-emerald-600:hover,
+  .dark .bg-emerald-700:hover,
+  .dark .gradient-emerald:hover,
+  .dark .bg-primary:hover {
+    color: white !important;
   }
 }
 
@@ -108,7 +128,6 @@
   .gradient-hero    { background: var(--gradient-hero); }
   .shadow-elegant   { box-shadow: var(--shadow-elegant); }
 
-  /* نصوص داخل gradient-hero — تتكيف تلقائياً */
   .hero-text         { color: var(--hero-text); }
   .hero-text-muted   { color: var(--hero-text-muted); }
   .hero-accent       { color: var(--hero-accent); }

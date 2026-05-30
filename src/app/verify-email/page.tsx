@@ -8,6 +8,7 @@ import { auth } from "@/lib/firebase/client";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
+import { sendEmail } from "@/lib/email";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -39,6 +40,7 @@ export default function VerifyEmailPage() {
     const storedPassword = sessionStorage.getItem("signup_password") || "";
     const storedName = sessionStorage.getItem("signup_name") || "";
     const storedRole = sessionStorage.getItem("signup_role") || "student";
+    const storedReferral = sessionStorage.getItem("referral_code") || null; // ✅
 
     if (!storedEmail || !storedPassword) {
       setError("Session expired. Please sign up again.");
@@ -70,7 +72,7 @@ export default function VerifyEmailPage() {
         storedPassword
       );
 
-      // 3. إنشاء الملف الشخصي في Neon
+      // 3. إنشاء الملف الشخصي في Neon (مع الإحالة)
       await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -80,21 +82,29 @@ export default function VerifyEmailPage() {
           fullName: storedName,
           role: storedRole,
           email_verified: true,
+          referred_by: storedReferral, // ✅
         }),
       });
 
-      // 4. تنظيف sessionStorage
+      // 4. إرسال بريد ترحيب
+      await sendEmail(
+        storedEmail,
+        'Welcome to Ruhulqudus Academy',
+        `<p>Dear ${storedName},</p><p>Your account has been created successfully. Start your Arabic journey now!</p>`
+      );
+
+      // 5. تنظيف sessionStorage
       sessionStorage.removeItem("signup_name");
       sessionStorage.removeItem("signup_email");
       sessionStorage.removeItem("signup_password");
       sessionStorage.removeItem("signup_role");
+      sessionStorage.removeItem("referral_code"); // ✅
 
-      // 5. توجيه مباشر إلى الداشبورد المناسب (بدون تسجيل خروج)
+      // 6. توجيه مباشر إلى الداشبورد
       setSuccess(true);
       localStorage.setItem("userRole", storedRole);
 
       setTimeout(() => {
-        // تحديد لوحة التحكم حسب البريد أو الدور
         if (
           storedEmail === "abdullahhelmy114@gmail.com" ||
           storedEmail === "info@ruhulqudus.com"
@@ -154,9 +164,7 @@ export default function VerifyEmailPage() {
                 {code.map((digit, idx) => (
                   <input
                     key={idx}
-                    ref={(el) => {
-                      inputRefs.current[idx] = el;
-                    }}
+                    ref={(el) => { inputRefs.current[idx] = el; }}
                     type="text"
                     inputMode="numeric"
                     maxLength={1}
@@ -175,20 +183,13 @@ export default function VerifyEmailPage() {
                 disabled={loading || code.some((d) => d === "")}
                 className="mt-6 w-full rounded-full bg-amber-500 py-3 text-sm font-semibold text-black shadow-lg hover:bg-amber-400 disabled:opacity-50"
               >
-                {loading ? (
-                  <Loader2 className="mx-auto h-4 w-4 animate-spin" />
-                ) : (
-                  <T>Verify</T>
-                )}
+                {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Verify</T>}
               </button>
 
               <div className="mt-4">
                 <ResendVerificationButton />
               </div>
-              <Link
-                href="/login"
-                className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline"
-              >
+              <Link href="/login" className="mt-4 inline-flex items-center gap-2 text-sm text-muted-foreground hover:underline">
                 <ArrowLeft className="h-4 w-4" /> <T>Back to Sign In</T>
               </Link>
             </>

@@ -189,6 +189,11 @@ export default function LoginPage() {
                 {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Sign In</T>}
               </button>
             )}
+            <p className="text-center text-xs text-muted-foreground">
+              <Link href="/forgot-password" className="hover:underline">
+                <T>Forgot password?</T>
+              </Link>
+            </p>
 
             <p className="text-center text-xs text-muted-foreground">
               <T>Don't have an account?</T>{" "}

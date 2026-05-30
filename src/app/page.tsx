@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Ruhulqudus Academy | أرقى منصة لتعلم العربية",
-  description: "An elite digital institution for the Arabic language, founded by Dr. Gehan Ali Ahmed.",
+  description: "An elite digital institution for the Arabic language, founded by Dr. Jehan Ali Ahmed.",
   openGraph: {
     title: "Ruhulqudus Academy",
     description: "Master Arabic with the best instructors",
