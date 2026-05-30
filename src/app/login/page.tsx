@@ -31,13 +31,21 @@ export default function LoginPage() {
         ? "/dashboard/teacher"
         : "/dashboard/student";
 
-    // ✅ استخدام window.location لتجنب مشاكل router.push
     window.location.href = targetPath;
   };
 
   const performLogin = async () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const idToken = await userCredential.user.getIdToken();
+
+      // إنشاء جلسة الخادم
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
       redirectAfterLogin(userCredential.user.email || "");
     } catch (err: any) {
       setError(err.message || "Login failed");
@@ -58,11 +66,21 @@ export default function LoginPage() {
     setShowCaptcha(true);
   };
 
+  // ✅ دوال Google و Facebook معدلة لإنشاء جلسة الخادم
   const handleSocialLogin = async (providerInstance: any) => {
     setLoading(true);
     setError("");
     try {
       const result = await signInWithPopup(auth, providerInstance);
+      const idToken = await result.user.getIdToken();
+
+      // إنشاء جلسة الخادم
+      await fetch("/api/auth/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ idToken }),
+      });
+
       localStorage.setItem("userRole", "student");
       redirectAfterLogin(result.user.email || "");
     } catch (err: any) {
