@@ -31,10 +31,8 @@ export default function LoginPage() {
         ? "/dashboard/teacher"
         : "/dashboard/student";
 
-    // تأخير بسيط للسماح بتحديث حالة المصادقة
-    setTimeout(() => {
-      router.push(targetPath);
-    }, 100);
+    // ✅ استخدام window.location لتجنب مشاكل router.push
+    window.location.href = targetPath;
   };
 
   const performLogin = async () => {
