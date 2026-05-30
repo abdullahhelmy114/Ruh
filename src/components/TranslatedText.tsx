@@ -1,29 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { translations, defaultLocale } from "@/i18n/translations";
+import React from "react";
 
-function getStoredLocale(): string {
-  if (typeof window === "undefined") return defaultLocale;
-  return localStorage.getItem("preferred-locale") || defaultLocale;
+interface TProps {
+  children: string;
 }
 
-export function T({ children: key }: { children: string }) {
-  // 🟢 ابدأ دائماً باللغة الافتراضية لتجنب Hydration Mismatch
-  const [locale, setLocale] = useState(defaultLocale);
-
-  useEffect(() => {
-    // بعد Hydration، حدث اللغة إلى المفضلة
-    setLocale(getStoredLocale());
-
-    const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      setLocale(customEvent.detail);
-    };
-    window.addEventListener("locale-change", handler);
-    return () => window.removeEventListener("locale-change", handler);
-  }, []);
-
-  const translated = translations[locale]?.[key] || key;
-  return <>{translated}</>;
+// مكون بسيط: النص الإنجليزي هو المفتاح، والترجمة تُجلب من ملفات JSON (أو يبقى كما هو)
+// هذا يحل محل i18n/translations القديم
+export function T({ children }: TProps) {
+  // يمكنك لاحقاً توصيله بـ next-intl إذا أردت
+  // حاليًا يعرض النص كما هو (الترجمة ستُضاف لاحقاً)
+  return React.createElement(React.Fragment, null, children);
 }
+
+// تصدير افتراضي للتوافق
+export default T;

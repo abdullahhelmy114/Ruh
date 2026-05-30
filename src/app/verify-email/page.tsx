@@ -8,7 +8,6 @@ import { auth } from "@/lib/firebase/client";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
-import { sendEmail } from "@/lib/email";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -40,7 +39,7 @@ export default function VerifyEmailPage() {
     const storedPassword = sessionStorage.getItem("signup_password") || "";
     const storedName = sessionStorage.getItem("signup_name") || "";
     const storedRole = sessionStorage.getItem("signup_role") || "student";
-    const storedReferral = sessionStorage.getItem("referral_code") || null; // ✅
+    const storedReferral = sessionStorage.getItem("referral_code") || null;
 
     if (!storedEmail || !storedPassword) {
       setError("Session expired. Please sign up again.");
@@ -82,25 +81,18 @@ export default function VerifyEmailPage() {
           fullName: storedName,
           role: storedRole,
           email_verified: true,
-          referred_by: storedReferral, // ✅
+          referred_by: storedReferral,
         }),
       });
 
-      // 4. إرسال بريد ترحيب
-      await sendEmail(
-        storedEmail,
-        'Welcome to Ruhulqudus Academy',
-        `<p>Dear ${storedName},</p><p>Your account has been created successfully. Start your Arabic journey now!</p>`
-      );
-
-      // 5. تنظيف sessionStorage
+      // 4. تنظيف sessionStorage
       sessionStorage.removeItem("signup_name");
       sessionStorage.removeItem("signup_email");
       sessionStorage.removeItem("signup_password");
       sessionStorage.removeItem("signup_role");
-      sessionStorage.removeItem("referral_code"); // ✅
+      sessionStorage.removeItem("referral_code");
 
-      // 6. توجيه مباشر إلى الداشبورد
+      // 5. توجيه مباشر إلى الداشبورد
       setSuccess(true);
       localStorage.setItem("userRole", storedRole);
 
