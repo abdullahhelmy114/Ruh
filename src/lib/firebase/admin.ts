@@ -1,8 +1,6 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 
-const serviceAccount = JSON.parse(
-  process.env.FIREBASE_ADMIN_KEY || "{}"
-);
+const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY || "{}");
 
 export function getAdminApp() {
   if (!getApps().length) {

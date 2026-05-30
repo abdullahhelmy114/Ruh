@@ -4,7 +4,6 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get("__session")?.value;
 
-  // إذا لم تكن هناك كوكيز جلسة، نمنع الوصول للمسارات الحساسة
   const isProtected =
     request.nextUrl.pathname.startsWith("/dashboard") ||
     request.nextUrl.pathname.startsWith("/profile") ||
