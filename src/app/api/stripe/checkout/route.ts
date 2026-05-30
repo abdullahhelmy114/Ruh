@@ -1,11 +1,15 @@
-export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
-import Stripe from 'stripe';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function POST(request: Request) {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 });
+  }
+
   try {
     const { courseId, courseName, price, userId } = await request.json();
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [{
@@ -21,6 +25,7 @@ export async function POST(request: Request) {
       cancel_url: `${process.env.COOLIFY_URL}/marketplace`,
       metadata: { courseId, userId },
     });
+
     return NextResponse.json({ url: session.url });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
