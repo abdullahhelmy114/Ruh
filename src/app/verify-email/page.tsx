@@ -85,6 +85,13 @@ export default function VerifyEmailPage() {
         }),
       });
 
+      // إرسال بريد ترحيب (استدعاء api/signup)
+      await fetch("/api/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: storedEmail, name: storedName }),
+      });
+
       // 4. تنظيف sessionStorage
       sessionStorage.removeItem("signup_name");
       sessionStorage.removeItem("signup_email");

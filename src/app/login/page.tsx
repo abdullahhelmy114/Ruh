@@ -24,13 +24,10 @@ export default function LoginPage() {
   const router = useRouter();
 
   const redirectAfterLogin = (userEmail: string) => {
-    // ✅ الأدمن: البريدين المخصصين
     if (userEmail === "abdullahhelmy114@gmail.com" || userEmail === "info@ruhulqudus.com") {
       router.push("/profile/admin");
       return;
     }
-
-    // باقي المستخدمين حسب الدور المخزن
     const storedRole = localStorage.getItem("userRole");
     if (storedRole === "teacher") {
       router.push("/profile/teacher");
@@ -154,10 +151,16 @@ export default function LoginPage() {
                 <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
               <input
-                id="login-email" name="email" type="email" required
-                value={email} onChange={(e) => setEmail(e.target.value)}
+                id="login-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                dir="ltr" placeholder="you@example.com"
+                dir="ltr"
+                placeholder="you@example.com"
               />
             </div>
             <div>
@@ -165,8 +168,13 @@ export default function LoginPage() {
                 <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
               <input
-                id="login-password" name="password" type="password" required
-                value={password} onChange={(e) => setPassword(e.target.value)}
+                id="login-password"
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
                 placeholder="••••••••"
               />
@@ -189,6 +197,7 @@ export default function LoginPage() {
                 {loading ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <T>Sign In</T>}
               </button>
             )}
+
             <p className="text-center text-xs text-muted-foreground">
               <Link href="/forgot-password" className="hover:underline">
                 <T>Forgot password?</T>

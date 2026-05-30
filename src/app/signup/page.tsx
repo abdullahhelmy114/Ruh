@@ -24,7 +24,6 @@ export default function SignupPage() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
-  // قراءة كود الإحالة من localStorage
   const referralCode =
     typeof window !== "undefined" ? localStorage.getItem("referral_code") : null;
 
@@ -47,12 +46,7 @@ export default function SignupPage() {
           sessionStorage.setItem("referral_code", referralCode);
         }
 
-        // إرسال بريد ترحيب (اختياري)
-        await fetch("/api/signup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, name, captchaToken: token }),
-        });
+        // ❌ إزالة استدعاء /api/signup المسبب للخطأ 400
 
         router.push(`/verify-email?email=${encodeURIComponent(email)}`);
       } catch (err: any) {
@@ -89,7 +83,6 @@ export default function SignupPage() {
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-
       await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,7 +94,6 @@ export default function SignupPage() {
           referred_by: referralCode,
         }),
       });
-
       localStorage.setItem("userRole", "student");
       router.push("/dashboard/student");
     } catch (err: any) {
@@ -117,7 +109,6 @@ export default function SignupPage() {
     try {
       const provider = new FacebookAuthProvider();
       const result = await signInWithPopup(auth, provider);
-
       await fetch("/api/user", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -129,7 +120,6 @@ export default function SignupPage() {
           referred_by: referralCode,
         }),
       });
-
       localStorage.setItem("userRole", "student");
       router.push("/dashboard/student");
     } catch (err: any) {
@@ -226,25 +216,50 @@ export default function SignupPage() {
               <label htmlFor="signup-name" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <User className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Full Name</T>
               </label>
-              <input id="signup-name" name="name" type="text" required value={name} onChange={(e) => setName(e.target.value)}
+              <input
+                id="signup-name"
+                name="name"
+                type="text"
+                required
+                autoComplete="name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                placeholder="Your full name" />
+                placeholder="Your full name"
+              />
             </div>
             <div>
               <label htmlFor="signup-email" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Mail className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Email</T>
               </label>
-              <input id="signup-email" name="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
+              <input
+                id="signup-email"
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                dir="ltr" placeholder="you@example.com" />
+                dir="ltr"
+                placeholder="you@example.com"
+              />
             </div>
             <div>
               <label htmlFor="signup-password" className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-muted-foreground">
                 <Lock className="mr-1 inline h-3.5 w-3.5 text-gold" /> <T>Password</T>
               </label>
-              <input id="signup-password" name="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
+              <input
+                id="signup-password"
+                name="password"
+                type="password"
+                required
+                autoComplete="new-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none ring-ring/30 transition focus:ring-2 focus:ring-gold"
-                placeholder="••••••••" />
+                placeholder="••••••••"
+              />
             </div>
 
             {error && (
@@ -256,15 +271,24 @@ export default function SignupPage() {
             {showCaptcha ? (
               <CustomCaptcha onVerify={handleCustomCaptcha} />
             ) : (
-              <button type="submit" disabled={loading}
-                className="mt-2 w-full rounded-full bg-linear-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-elegant transition-transform hover:scale-[1.01] disabled:opacity-50">
-                {role === "teacher" ? <><T>Create</T> <T>Teacher</T> <T>Account</T></> : <><T>Create</T> <T>Student</T> <T>Account</T></>}
+              <button
+                type="submit"
+                disabled={loading}
+                className="mt-2 w-full rounded-full bg-linear-to-r from-amber-500 to-amber-600 py-3.5 text-sm font-semibold tracking-wide text-white shadow-elegant transition-transform hover:scale-[1.01] disabled:opacity-50"
+              >
+                {role === "teacher" ? (
+                  <><T>Create</T> <T>Teacher</T> <T>Account</T></>
+                ) : (
+                  <><T>Create</T> <T>Student</T> <T>Account</T></>
+                )}
               </button>
             )}
 
             <p className="text-center text-xs text-muted-foreground">
               <T>Already enrolled?</T>{" "}
-              <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline"><T>Sign in</T></Link>
+              <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
+                <T>Sign in</T>
+              </Link>
             </p>
           </form>
         </motion.div>
