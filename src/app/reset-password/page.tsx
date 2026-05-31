@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { confirmPasswordReset, verifyPasswordResetCode } from "firebase/auth";
 import { auth } from "@/lib/firebase/client";
 import { T } from "@/components/TranslatedText";
 import { Lock, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 
-export default function ResetPasswordPage() {
+// مكون فرعي يستخدم useSearchParams – يجب تغليفه بـ Suspense
+function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -85,9 +86,7 @@ export default function ResetPasswordPage() {
         <div className="glass rounded-3xl p-8 md:p-10 shadow-elegant text-center">
           <Lock className="mx-auto h-12 w-12 text-amber-500 mb-4" />
           <h1 className="font-serif text-2xl"><T>New Password</T></h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            <T>Enter your new password below.</T>
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground"><T>Enter your new password below.</T></p>
           <form onSubmit={handleReset} className="mt-6 space-y-5">
             <input
               type="password"
@@ -110,5 +109,14 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// الصفحة الأساسية – تغليف المكون بـ Suspense
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="grid min-h-[calc(100vh-4rem)] place-items-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>}>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
