@@ -1,11 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { T } from "@/components/TranslatedText";
 import { CustomCaptcha } from "@/components/CustomCaptcha";
 import { Mail, User, MessageSquare, Send, Loader2, MapPin, Phone } from "lucide-react";
+import Link from "next/link";
+import { useAuth } from "@/lib/firebase/AuthProvider";
 
 export default function ContactPage() {
+  const { user } = useAuth();
+  const [page, setPage] = useState<any>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -13,6 +17,16 @@ export default function ContactPage() {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
   const [showCaptcha, setShowCaptcha] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/pages/contact')
+      .then(r => r.json())
+      .then(d => setPage(d.page))
+      .catch(() => setPage({
+        title: "Contact Us",
+        content: "We'd love to hear from you. Address: Istanbul, Turkey. Email: info@ruhulqudus.com. Phone: +90 555 123 4567."
+      }));
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,21 +67,25 @@ export default function ContactPage() {
           <Send className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
           <h1 className="font-serif text-2xl"><T>Message Sent!</T></h1>
           <p className="mt-2 text-muted-foreground"><T>We'll get back to you shortly.</T></p>
+          <Link href="/" className="mt-6 inline-flex items-center gap-2 text-amber-600 hover:underline">
+            <T>Back to Home</T>
+          </Link>
         </div>
       </div>
     );
   }
 
+  if (!page) return null;
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
       <div className="text-center mb-10">
         <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-        <h1 className="font-serif text-4xl"><T>Contact Us</T></h1>
-        <p className="mt-2 text-muted-foreground"><T>We'd love to hear from you.</T></p>
+        <h1 className="font-serif text-4xl">{page.title}</h1>
+        <p className="mt-2 text-muted-foreground">{page.content}</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        {/* Info */}
         <div className="glass rounded-3xl p-6 space-y-6 self-start">
           <div className="flex items-start gap-3">
             <MapPin className="h-5 w-5 text-amber-500 mt-0.5" />
@@ -90,9 +108,21 @@ export default function ContactPage() {
               <p className="text-sm text-muted-foreground">+90 555 123 4567</p>
             </div>
           </div>
+          {!user && (
+            <div className="pt-4 border-t border-border">
+              <p className="text-sm text-muted-foreground mb-3"><T>Ready to join us?</T></p>
+              <div className="flex gap-2">
+                <Link href="/signup?role=student" className="rounded-full bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700">
+                  <T>Join as Student</T>
+                </Link>
+                <Link href="/signup?role=teacher" className="rounded-full bg-amber-500 px-4 py-2 text-xs font-semibold text-black hover:bg-amber-400">
+                  <T>Join as Teacher</T>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Form */}
         <div className="glass rounded-3xl p-6 md:p-8">
           {showCaptcha ? (
             <CustomCaptcha onVerify={handleCaptchaVerify} />
@@ -102,43 +132,22 @@ export default function ContactPage() {
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-1.5">
                   <User size={14} /> <T>Name</T>
                 </label>
-                <input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
-                  placeholder="Your name"
-                />
+                <input value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" placeholder="Your name" />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-1.5">
                   <Mail size={14} /> <T>Email</T>
                 </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
-                  dir="ltr"
-                  placeholder="you@example.com"
-                />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold" dir="ltr" placeholder="you@example.com" />
               </div>
               <div>
                 <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1 mb-1.5">
                   <MessageSquare size={14} /> <T>Message</T>
                 </label>
-                <textarea
-                  rows={5}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold resize-none"
-                  placeholder="How can we help?"
-                />
+                <textarea rows={5} value={message} onChange={(e) => setMessage(e.target.value)} className="w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold resize-none" placeholder="How can we help?" />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <button
-                type="submit"
-                className="w-full rounded-full bg-amber-500 py-3 text-sm font-semibold text-black hover:bg-amber-400 inline-flex items-center justify-center gap-2"
-              >
+              <button type="submit" className="w-full rounded-full bg-amber-500 py-3 text-sm font-semibold text-black hover:bg-amber-400 inline-flex items-center justify-center gap-2">
                 <Send size={16} /> <T>Send Message</T>
               </button>
             </form>

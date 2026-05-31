@@ -28,6 +28,7 @@ type TabKey =
   | "notifications"
   | "ai"
   | "settings"
+  | "pages"
   | "marketing";
 
 const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
@@ -43,6 +44,7 @@ const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "ai", label: "AI Configuration", icon: Bot },
   { key: "settings", label: "Site Settings", icon: Settings2 },
   { key: "marketing", label: "Marketing", icon: Megaphone },
+  { key: "pages", label: "Pages", icon: FileText },
 ];
 
 
@@ -155,7 +157,7 @@ export default function AdminDashboard() {
         {tab === "ai" && <AIConfigurationTab />}
         {tab === "settings" && <SiteSettingsTab />}
         {tab === "marketing" && <MarketingTab />}
-
+        {tab === "pages" && <PagesTab />}
       </div>
     </div>
   );
@@ -1043,7 +1045,7 @@ function SiteSettingsTab() {
   );
 }
 
-  function MarketingTab() {
+function MarketingTab() {
   const [students, setStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("never-enrolled");
@@ -1113,5 +1115,94 @@ function SiteSettingsTab() {
       }
     </div>
   );
+} // ✅ إغلاق MarketingTab بشكل صحيح
 
+function PagesTab() {
+  const [pages, setPages] = useState<any[]>([]);
+  const [selectedSlug, setSelectedSlug] = useState("");
+  const [title, setTitle] = useState("");
+  const [content, setContent] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/admin/pages')
+      .then(r => r.json())
+      .then(d => setPages(d.pages || []));
+  }, []);
+
+  useEffect(() => {
+    if (!selectedSlug) return;
+    fetch(`/api/admin/pages?slug=${selectedSlug}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.page) {
+          setTitle(d.page.title);
+          setContent(d.page.content);
+        }
+      });
+  }, [selectedSlug]);
+
+  const handleSave = async () => {
+    if (!selectedSlug || !title.trim() || !content.trim()) return;
+    setSaving(true);
+    await fetch('/api/admin/pages', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: selectedSlug, title, content }),
+    });
+    setSaving(false);
+    alert('Page updated!');
+  };
+
+  return (
+    <div>
+      <h2 className="font-serif text-2xl mb-4"><T>Page Management</T></h2>
+      <div className="grid md:grid-cols-4 gap-6">
+        <div>
+          <label className="text-sm font-medium mb-2 block"><T>Select Page</T></label>
+          <div className="space-y-2">
+            {pages.map(p => (
+              <button
+                key={p.slug}
+                onClick={() => setSelectedSlug(p.slug)}
+                className={`w-full text-left rounded-xl px-4 py-2.5 text-sm transition ${
+                  selectedSlug === p.slug ? 'bg-emerald-600 text-white' : 'hover:bg-accent'
+                }`}
+              >
+                {p.slug}
+              </button>
+            ))}
+          </div>
+        </div>
+        {selectedSlug && (
+          <div className="md:col-span-3 space-y-4">
+            <div>
+              <label className="text-sm font-medium"><T>Title</T></label>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="w-full rounded-2xl border bg-background px-4 py-3 text-sm mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium"><T>Content</T></label>
+              <textarea
+                value={content}
+                onChange={e => setContent(e.target.value)}
+                rows={10}
+                className="w-full rounded-2xl border bg-background p-4 text-sm mt-1"
+              />
+            </div>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-full bg-emerald-600 px-6 py-2 text-sm font-semibold text-white"
+            >
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <T>Save Changes</T>}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

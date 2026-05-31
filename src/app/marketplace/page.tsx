@@ -7,7 +7,8 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Loader2, BookOpen, CreditCard, Tag, Search, Filter, X,
-  User, ArrowRight, Sparkles,
+  User, ArrowRight, Sparkles, Star,
+  ShoppingCart, Heart,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { T } from "@/components/TranslatedText";
@@ -43,6 +44,9 @@ export default function MarketplacePage() {
   const [discountPercent, setDiscountPercent] = useState(0);
   const [couponError, setCouponError] = useState("");
 
+  // تقييمات
+  const [ratings, setRatings] = useState<Record<string, { avg: number; count: number }>>({});
+
   const fetchCourses = async () => {
     setLoading(true);
     const params = new URLSearchParams();
@@ -66,6 +70,16 @@ export default function MarketplacePage() {
     fetchCourses();
   }, []);
 
+  // جلب التقييمات لكل الكورسات
+  useEffect(() => {
+    if (courses.length === 0) return;
+    courses.forEach(async (c) => {
+      const res = await fetch(`/api/reviews?courseId=${c.id}`);
+      const data = await res.json();
+      setRatings(prev => ({ ...prev, [c.id]: { avg: data.average, count: data.count } }));
+    });
+  }, [courses]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchCourses();
@@ -76,7 +90,6 @@ export default function MarketplacePage() {
     setSelectedLevel("");
     setMinPrice("");
     setMaxPrice("");
-    // إعادة تحميل بدون فلترة
     setTimeout(fetchCourses, 100);
   };
 
@@ -299,6 +312,7 @@ export default function MarketplacePage() {
               0
             );
             const hasDiscount = discountPercent > 0;
+            const rating = ratings[course.id];
 
             return (
               <motion.div
@@ -319,7 +333,6 @@ export default function MarketplacePage() {
                     ) : (
                       <BookOpen className="h-20 w-20 text-white/20" />
                     )}
-                    {/* شارات المستوى والسعر */}
                     <span className="absolute top-3 right-3 rounded-full bg-black/30 backdrop-blur-md px-3 py-1 text-xs font-bold text-white">
                       {course.level}
                     </span>
@@ -338,6 +351,15 @@ export default function MarketplacePage() {
                       {course.title}
                     </h3>
                   </Link>
+
+                  {/* تقييم النجوم */}
+                  {rating && rating.count > 0 && (
+                    <div className="flex items-center gap-1 text-xs text-amber-500 mt-1">
+                      <Star size={12} className="fill-amber-400 text-amber-400" />
+                      <span>{rating.avg} ({rating.count})</span>
+                    </div>
+                  )}
+
                   <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1">
                     <User size={14} /> <T>by</T> {course.teacher_name}
                   </p>
@@ -347,7 +369,7 @@ export default function MarketplacePage() {
                     </p>
                   )}
 
-                  {/* السعر وزر التسجيل */}
+                  {/* السعر وأزرار الإجراءات */}
                   <div className="mt-auto flex items-center justify-between pt-3 border-t border-border/50">
                     <div className="flex items-baseline gap-1">
                       {hasDiscount ? (
@@ -365,6 +387,39 @@ export default function MarketplacePage() {
                         </span>
                       )}
                     </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={async () => {
+                          if (!user) return router.push("/login");
+                          await fetch("/api/wishlist", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ uid: user.uid, courseId: course.id }),
+                          });
+                          setMessage("Added to wishlist!");
+                        }}
+                        className="rounded-full border bg-background p-2 text-sm hover:bg-accent"
+                      >
+                        <Heart size={16} className="text-red-500" />
+                      </button>
+
+                      <button
+                        onClick={async () => {
+                          if (!user) return router.push("/login");
+                          await fetch("/api/cart", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ uid: user.uid, courseId: course.id }),
+                          });
+                          setMessage("Added to cart!");
+                        }}
+                        className="rounded-full border bg-background p-2 text-sm hover:bg-accent"
+                      >
+                        <ShoppingCart size={16} />
+                      </button>
+                    </div>
+
                     <button
                       onClick={() => handleEnroll(course)}
                       disabled={enrolling === course.id}

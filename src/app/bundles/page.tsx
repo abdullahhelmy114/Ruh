@@ -1,6 +1,10 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { T } from "@/components/TranslatedText";
-import { Package, Check, Sparkles } from "lucide-react";
+import { Package, Check, Sparkles, ArrowRight, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/firebase/AuthProvider";
 
 const bundles = [
   { title: "Foundations Bundle", levels: "A1 + A2 + B1", price: 127, original: 147, discount: 15 },
@@ -9,12 +13,24 @@ const bundles = [
 ];
 
 export default function BundlesPage() {
+  const { user } = useAuth();
+  const [page, setPage] = useState<any>(null);
+
+  useEffect(() => {
+    fetch('/api/pages/bundles')
+      .then(r => r.json())
+      .then(d => setPage(d.page))
+      .catch(() => setPage({ title: "Course Bundles", content: "Save up to 33% with our carefully curated bundles." }));
+  }, []);
+
+  if (!page) return null;
+
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-8">
       <div className="text-center mb-10">
         <Package className="mx-auto h-12 w-12 text-amber-500 mb-4" />
-        <h1 className="font-serif text-4xl"><T>Course Bundles</T></h1>
-        <p className="mt-2 text-muted-foreground"><T>Save up to 33% with our carefully curated bundles.</T></p>
+        <h1 className="font-serif text-4xl">{page.title}</h1>
+        <p className="mt-2 text-muted-foreground">{page.content}</p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-6">
@@ -43,6 +59,24 @@ export default function BundlesPage() {
           </div>
         ))}
       </div>
+
+      {!user && (
+        <div className="mt-12 text-center">
+          <div className="glass rounded-3xl p-8 inline-block">
+            <UserPlus className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+            <h2 className="font-serif text-2xl mb-2"><T>Ready to save?</T></h2>
+            <p className="text-muted-foreground mb-6"><T>Join now and get access to exclusive bundles.</T></p>
+            <div className="flex justify-center gap-3">
+              <Link href="/signup?role=student" className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 inline-flex items-center gap-2">
+                <T>Join as Student</T> <ArrowRight size={16} />
+              </Link>
+              <Link href="/signup?role=teacher" className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 inline-flex items-center gap-2">
+                <T>Join as Teacher</T> <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

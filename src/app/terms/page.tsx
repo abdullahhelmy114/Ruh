@@ -1,8 +1,13 @@
+"use client";
+
 import { T } from "@/components/TranslatedText";
-import { FileText, AlertTriangle } from "lucide-react";
+import { FileText, AlertTriangle, ArrowRight, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { useAuth } from "@/lib/firebase/AuthProvider";
 
 export default function TermsPage() {
+  const { user } = useAuth();
+
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 md:px-8">
       <div className="text-center mb-10">
@@ -55,6 +60,25 @@ export default function TermsPage() {
           </p>
         </section>
       </div>
+
+      {/* أزرار الانضمام لغير المسجلين */}
+      {!user && (
+        <div className="mt-12 text-center">
+          <div className="glass rounded-3xl p-8 inline-block">
+            <UserPlus className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+            <h2 className="font-serif text-2xl mb-2"><T>Ready to join our community?</T></h2>
+            <p className="text-muted-foreground mb-6"><T>Create an account and start your Arabic journey today.</T></p>
+            <div className="flex justify-center gap-3">
+              <Link href="/signup?role=student" className="rounded-full bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 inline-flex items-center gap-2">
+                <T>Join as Student</T> <ArrowRight size={16} />
+              </Link>
+              <Link href="/signup?role=teacher" className="rounded-full bg-amber-500 px-5 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 inline-flex items-center gap-2">
+                <T>Join as Teacher</T> <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="text-center mt-8">
         <Link href="/" className="text-sm text-muted-foreground hover:text-amber-600 underline">
