@@ -5,12 +5,12 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import {
   Loader2, Play, FileText, Download, CheckCircle,
-  BookOpen, ArrowLeft, HelpCircle,
+  BookOpen, ArrowLeft, HelpCircle, Award,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { T } from "@/components/TranslatedText";
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
-import { QuizPlayer } from "@/components/QuizPlayer";      // ✅ أضف هذا
+import { QuizPlayer } from "@/components/QuizPlayer";
 import Link from "next/link";
 import { CertificateButton } from "@/components/CertificateButton";
 
@@ -28,32 +28,116 @@ interface CourseData {
   lessons: Lesson[];
 }
 
-// ─── مكون الاختبارات (يُوضع بعد الملفات) ───
+/* ─────────────────────────────────────────────
+   مكون الشهادة / الاختبار النهائي للكورس
+   (يُعرض بعد إكمال جميع الدروس)
+   ───────────────────────────────────────────── */
+function CourseCompletionSection({
+  courseId,
+  courseTitle,
+  teacherName,
+  studentName,
+  user,
+}: {
+  courseId: string;
+  courseTitle: string;
+  teacherName: string;
+  studentName: string;
+  user: any;
+}) {
+  const [quizzes, setQuizzes] = useState<any[]>([]);
+  const [quizCompleted, setQuizCompleted] = useState(false);
+  const [loadingQuiz, setLoadingQuiz] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/quizzes/course/${courseId}`)
+      .then(r => r.json())
+      .then(d => setQuizzes(d.quizzes || []))
+      .finally(() => setLoadingQuiz(false));
+  }, [courseId]);
+
+  // أثناء تحميل الاختبار
+  if (loadingQuiz) {
+    return (
+      <div className="glass rounded-2xl p-6 text-center">
+        <Loader2 className="animate-spin mx-auto h-6 w-6" />
+      </div>
+    );
+  }
+
+  // لا يوجد اختبار → شهادة مباشرة
+  if (quizzes.length === 0) {
+    return (
+      <div className="glass rounded-2xl p-6 text-center space-y-4">
+        <CheckCircle className="mx-auto h-10 w-10 text-emerald-500" />
+        <h3 className="font-serif text-xl"><T>Congratulations!</T></h3>
+        <p className="text-muted-foreground"><T>You have completed all lessons.</T></p>
+        <CertificateButton
+          studentName={studentName}
+          courseName={courseTitle}
+          teacherName={teacherName}
+        />
+      </div>
+    );
+  }
+
+  // يوجد اختبار
+  if (quizCompleted) {
+    return (
+      <div className="glass rounded-2xl p-6 text-center space-y-4">
+        <Award className="mx-auto h-10 w-10 text-emerald-500" />
+        <h3 className="font-serif text-xl"><T>Quiz Completed!</T></h3>
+        <CertificateButton
+          studentName={studentName}
+          courseName={courseTitle}
+          teacherName={teacherName}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="glass rounded-2xl p-6 space-y-4">
+      <h3 className="font-serif text-xl flex items-center gap-2">
+        <HelpCircle className="h-5 w-5 text-amber-500" />
+        <T>Final Quiz</T>
+      </h3>
+      <QuizPlayer quizzes={quizzes} onComplete={() => setQuizCompleted(true)} />
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   مكون الاختبار للدرس الواحد (QuizSection)
+   ───────────────────────────────────────────── */
 function QuizSection({ lessonId }: { lessonId: string }) {
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch(`/api/quizzes/${lessonId}`)
-      .then((r) => r.json())
-      .then((d) => setQuizzes(d.quizzes || []))
+      .then(r => r.json())
+      .then(d => setQuizzes(d.quizzes || []))
       .finally(() => setLoading(false));
   }, [lessonId]);
 
-  if (loading) return null; // أو سبينر صغير
-  if (quizzes.length === 0) return null; // بدون اختبار
+  if (loading) return null;
+  if (quizzes.length === 0) return null;
 
   return (
     <div className="glass rounded-2xl p-5 space-y-3">
       <h3 className="font-serif text-lg flex items-center gap-2">
         <HelpCircle className="h-5 w-5 text-amber-500" />
-        <T>Quiz</T>
+        <T>Lesson Quiz</T>
       </h3>
       <QuizPlayer quizzes={quizzes} />
     </div>
   );
 }
 
+/* ─────────────────────────────────────────────
+   الصفحة الرئيسية
+   ───────────────────────────────────────────── */
 export default function CoursePlayerPage() {
   const { courseId } = useParams<{ courseId: string }>();
   const { user } = useAuth();
@@ -62,6 +146,9 @@ export default function CoursePlayerPage() {
   const [currentLesson, setCurrentLesson] = useState<Lesson | null>(null);
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
+
+  // هل جميع الدروس مكتملة؟
+  const allCompleted = data?.lessons?.every(l => l.completed) ?? false;
 
   useEffect(() => {
     if (!user) return;
@@ -158,13 +245,6 @@ export default function CoursePlayerPage() {
                   <><Play size={18} /> <T>Mark as Complete</T></>
                 )}
               </button>
-              {currentLesson.completed && (
-                <CertificateButton
-                  studentName={user?.displayName || user?.email?.split("@")[0] || "Student"}
-                  courseName={data.course.title}
-                  teacherName={data.course.teacher_name || "Instructor"}
-                />
-              )}
             </div>
 
             {/* Files */}
@@ -189,12 +269,25 @@ export default function CoursePlayerPage() {
                 </div>
               </div>
             )}
+
+            {/* اختبار الدرس */}
             <QuizSection lessonId={currentLesson.id} />
           </motion.div>
         ) : (
           <div className="flex items-center justify-center h-64 text-muted-foreground">
             <T>Select a lesson to start learning</T>
           </div>
+        )}
+
+        {/* ✅ اختبار الكورس + الشهادة (يظهر بعد اكتمال جميع الدروس) */}
+        {allCompleted && (
+          <CourseCompletionSection
+            courseId={courseId}
+            courseTitle={data.course.title}
+            teacherName={data.course.teacher_name || "Instructor"}
+            studentName={user?.displayName || user?.email?.split("@")[0] || "Student"}
+            user={user}
+          />
         )}
       </main>
     </div>

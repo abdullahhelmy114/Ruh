@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 import { getAdminApp } from '@/lib/firebase/admin';
 import { getMessaging } from 'firebase-admin/messaging';
+import { createNotification } from '@/lib/notifications'; // ✅
 
 // POST: إرسال رسالة جديدة
 export async function POST(request: Request) {
@@ -17,7 +18,16 @@ export async function POST(request: Request) {
       VALUES (${senderUid}, ${receiverUid}, ${message})
     `;
 
-    // إرسال إشعار للمستقبل
+    // ✅ إشعار داخلي للمستقبل
+    const [sender] = await sql`SELECT full_name FROM profiles WHERE firebase_uid = ${senderUid}`;
+    const senderName = sender?.full_name || 'Someone';
+    await createNotification(
+      receiverUid,
+      `New message from ${senderName}`,
+      '/messages'
+    );
+
+    // إرسال Web Push (إن أمكن)
     const [receiver] = await sql`SELECT fcm_token FROM profiles WHERE firebase_uid = ${receiverUid}`;
     if (receiver?.fcm_token) {
       try {
@@ -29,7 +39,7 @@ export async function POST(request: Request) {
           },
         });
       } catch (e) {
-        // قد يكون الرمز منتهي الصلاحية – نتجاهل
+        // تجاهل
       }
     }
 

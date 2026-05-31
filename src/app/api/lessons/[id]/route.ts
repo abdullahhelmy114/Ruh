@@ -3,6 +3,7 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 import { sendEmail } from '@/lib/email';
+import { createNotification } from '@/lib/notifications'; // ✅ أضف هذا
 
 // ─── دوال Zoom ──────────────────────────────────────────────
 async function getZoomAccessToken(): Promise<string> {
@@ -37,7 +38,7 @@ async function createZoomMeeting(topic: string, startTime: string): Promise<{ me
 
   const body = {
     topic,
-    type: 2, // اجتماع مجدول
+    type: 2,
     start_time: startTime,
     duration: 60,
     timezone: 'UTC',
@@ -85,12 +86,10 @@ export async function PUT(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
     }
 
-    // في حالة الموافقة، أنشئ اجتماع Zoom تلقائيًا
     let finalMeetingUrl = meetingUrl || null;
     let finalMeetingId = meetingId || null;
 
     if (status === 'approved') {
-      // جلب تفاصيل الدرس لاستخدامها في إنشاء الاجتماع
       const [lesson] = await sql`
         SELECT title, scheduled_at FROM lessons WHERE id = ${lessonId}
       `;
@@ -106,19 +105,6 @@ export async function PUT(
       }
     }
 
-    if (status === 'approved') {
-  const [teacher] = await sql`SELECT email, full_name FROM profiles WHERE firebase_uid = (SELECT teacher_uid FROM lessons WHERE id = ${lessonId})`;
-  if (teacher?.email) {
-    await sendEmail(
-      teacher.email,
-      'Your lesson has been approved!',
-      `<h1>Lesson Approved!</h1>
-       <p>Your lesson has been approved and is now live.</p>
-       <p><a href="https://ruhulqudus.net/live/${lessonId}">View Lesson</a></p>`
-    );
-  }
-}
-
     // تحديث الدرس في قاعدة البيانات
     const result = await sql`
       UPDATE lessons
@@ -133,6 +119,36 @@ export async function PUT(
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
+    }
+
+    // ✅ إرسال إيميل وإشعار للمعلم عند الموافقة
+    if (status === 'approved') {
+      const [lessonInfo] = await sql`
+        SELECT l.teacher_uid, l.title, l.course_id, p.email, p.full_name
+        FROM lessons l
+        JOIN profiles p ON l.teacher_uid = p.firebase_uid
+        WHERE l.id = ${lessonId}
+      `;
+
+      if (lessonInfo) {
+        // إيميل
+        if (lessonInfo.email) {
+          await sendEmail(
+            lessonInfo.email,
+            'Your lesson has been approved!',
+            `<h1>Lesson Approved!</h1>
+             <p>Your lesson "<strong>${lessonInfo.title}</strong>" has been approved and is now live.</p>
+             <p><a href="https://ruhulqudus.net/live/${lessonId}">View Lesson</a></p>`
+          );
+        }
+
+        // إشعار داخلي
+        await createNotification(
+          lessonInfo.teacher_uid,
+          `Your lesson "${lessonInfo.title}" has been approved!`,
+          `/dashboard/teacher/courses/${lessonInfo.course_id}`
+        );
+      }
     }
 
     return NextResponse.json({ lesson: result[0] });

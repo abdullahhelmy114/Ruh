@@ -85,6 +85,8 @@ export default function TeacherDashboard() {
   const [sessionTime, setSessionTime] = useState<string | null>(null);
   const [savingLesson, setSavingLesson] = useState(false);
   const [lessonError, setLessonError] = useState("");
+  const [lessonVideoUrl, setLessonVideoUrl] = useState("");
+  const [lessonDescription, setLessonDescription] = useState("");
 
   // New Course states
   const [showCourseModal, setShowCourseModal] = useState(false);
@@ -226,49 +228,62 @@ export default function TeacherDashboard() {
            n <= new Date(t.getTime() + 60 * 60 * 1000);
   };
 
-  const handleSaveLesson = async () => {
-    if (!selectedCourse) { setLessonError("Please select a course"); return; }
-    if (!lessonTitle.trim()) { setLessonError("Lesson title is required"); return; }
-    if (lessonType === "zoom") {
-      if (!sessionDate || !sessionTime) { setLessonError("Please pick date and time"); return; }
-      const minDate = new Date();
-      minDate.setDate(minDate.getDate() + 7);
-      if (sessionDate < minDate) { setLessonError("Date must be at least 7 days from now"); return; }
-    }
-    setSavingLesson(true);
-    setLessonError("");
+const handleSaveLesson = async () => {
+  if (!selectedCourse) { setLessonError("Please select a course"); return; }
+  if (!lessonTitle.trim()) { setLessonError("Lesson title is required"); return; }
+  if (lessonType === "recorded") {
+    if (!lessonVideoUrl.trim()) { setLessonError("Video URL is required for recorded lessons"); return; }
+    if (!lessonDescription.trim()) { setLessonError("Description is required for recorded lessons"); return; }
+  }
+  if (lessonType === "zoom") {
+    if (!sessionDate || !sessionTime) { setLessonError("Please pick date and time"); return; }
+    const minDate = new Date();
+    minDate.setDate(minDate.getDate() + 7);
+    if (sessionDate < minDate) { setLessonError("Date must be at least 7 days from now"); return; }
+  }
 
-    const payload: any = {
-      courseId: selectedCourse,
-      title: lessonTitle,
-      type: lessonType,
-      teacherUid: user!.uid,
-    };
-    if (lessonType === "zoom" && sessionDate && sessionTime) {
-      payload.scheduledAt = new Date(
-        `${sessionDate.toDateString()} ${sessionTime}`
-      ).toISOString();
-    }
+  setSavingLesson(true);
+  setLessonError("");
 
-    try {
-      const res = await fetch("/api/lessons", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json();
-        setLessonError(err.error || "Failed to create lesson");
-      } else {
-        setShowLessonModal(false);
-        alert("Lesson submitted for review!");
-      }
-    } catch (e: any) {
-      setLessonError(e.message);
-    } finally {
-      setSavingLesson(false);
-    }
+  const payload: any = {
+    courseId: selectedCourse,
+    title: lessonTitle,
+    type: lessonType,
+    teacherUid: user!.uid,
   };
+
+  if (lessonType === "zoom" && sessionDate && sessionTime) {
+    payload.scheduledAt = new Date(`${sessionDate.toDateString()} ${sessionTime}`).toISOString();
+  }
+
+  if (lessonType === "recorded") {
+    payload.videoUrl = lessonVideoUrl;
+    payload.description = lessonDescription;
+  }
+
+  try {
+    const res = await fetch("/api/lessons", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      setLessonError(err.error || "Failed to create lesson");
+    } else {
+      setShowLessonModal(false);
+      alert("Lesson submitted for review!");
+      // إعادة تعيين الحقول
+      setLessonTitle("");
+      setLessonVideoUrl("");
+      setLessonDescription("");
+    }
+  } catch (e: any) {
+    setLessonError(e.message);
+  } finally {
+    setSavingLesson(false);
+  }
+};
 
   const handleSaveCourse = async () => {
   if (!newCourseTitle.trim()) { setCourseError('Title is required'); return; }
@@ -731,134 +746,164 @@ export default function TeacherDashboard() {
   )}
 </AnimatePresence>
 
-      {/* New Lesson Modal */}
-      <AnimatePresence>
-        {showLessonModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+{/* New Lesson Modal */}
+<AnimatePresence>
+  {showLessonModal && (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+    >
+      <motion.div
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
+        className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto"
+      >
+        <h2 className="font-serif text-2xl"><T>New Lesson</T></h2>
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Select Course</T>
+          </label>
+          <select
+            value={selectedCourse}
+            onChange={(e) => setSelectedCourse(e.target.value)}
+            className="w-full rounded-2xl border bg-background px-4 py-3 mt-1 text-sm"
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-card rounded-3xl shadow-elegant max-w-lg w-full p-6 space-y-6 max-h-[90vh] overflow-y-auto"
+            <option value="">-- <T>Choose a course</T> --</option>
+            {data.courses
+              .filter(c => c.status === 'published')
+              .map(c => (
+                <option key={c.id} value={c.id}>
+                  {c.title} (<T>Level</T> {c.level})
+                </option>
+              ))}
+          </select>
+          <button
+            type="button"
+            onClick={() => { setShowLessonModal(false); setShowCourseModal(true); }}
+            className="text-xs text-amber-600 hover:underline mt-1 inline-block"
+          >
+            + <T>Create a new course</T>
+          </button>
+        </div>
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Lesson Type</T>
+          </label>
+          <div className="mt-2 grid grid-cols-2 gap-3">
+            <button
+              onClick={() => setLessonType("zoom")}
+              className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${
+                lessonType === "zoom"
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-card hover:bg-accent"
+              }`}
             >
-              <h2 className="font-serif text-2xl"><T>New Lesson</T></h2>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <T>Select Course</T>
-                </label>
-                <select
-                  value={selectedCourse}
-                  onChange={(e) => setSelectedCourse(e.target.value)}
-                  className="w-full rounded-2xl border bg-background px-4 py-3 mt-1 text-sm"
-                >
-                  <option value="">-- <T>Choose a course</T> --</option>
-                  {data.courses
-                    .filter(c => c.status === 'published')
-                    .map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.title} (<T>Level</T> {c.level})
-                      </option>
-                    ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => { setShowLessonModal(false); setShowCourseModal(true); }}
-                  className="text-xs text-amber-600 hover:underline mt-1 inline-block"
-                >
-                  + <T>Create a new course</T>
-                </button>
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <T>Lesson Type</T>
-                </label>
-                <div className="mt-2 grid grid-cols-2 gap-3">
-                  <button
-                    onClick={() => setLessonType("zoom")}
-                    className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${
-                      lessonType === "zoom"
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-card hover:bg-accent"
-                    }`}
-                  >
-                    <Video size={16} /> <T>Live Zoom</T>
-                  </button>
-                  <button
-                    onClick={() => setLessonType("recorded")}
-                    className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${
-                      lessonType === "recorded"
-                        ? "bg-emerald-600 text-white border-emerald-600"
-                        : "bg-card hover:bg-accent"
-                    }`}
-                  >
-                    <FileText size={16} /> <T>Recorded</T>
-                  </button>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  <T>Lesson Title</T>
-                </label>
-                <input
-                  value={lessonTitle}
-                  onChange={(e) => setLessonTitle(e.target.value)}
-                  placeholder="e.g. Introduction to Arabic Grammar"
-                  className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
-                />
-              </div>
-              {lessonType === "zoom" && (
-                <div className="space-y-4">
-                  <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      <T>Session Date (min. 7 days ahead)</T>
-                    </label>
-                    <CalendarPicker
-                      selected={sessionDate}
-                      onChange={setSessionDate}
-                      minDate={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
-                    />
-                  </div>
-                  <div>
-                    <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                      <T>Session Time</T>
-                    </label>
-                    <TimeSlotPicker
-                      selected={sessionTime}
-                      onChange={setSessionTime}
-                      date={sessionDate}
-                    />
-                  </div>
-                </div>
-              )}
-              {lessonError && <p className="text-sm text-destructive">{lessonError}</p>}
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => setShowLessonModal(false)}
-                  className="rounded-full border bg-background px-5 py-2.5 text-sm"
-                >
-                  <T>Cancel</T>
-                </button>
-                <button
-                  onClick={handleSaveLesson}
-                  disabled={savingLesson}
-                  className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
-                >
-                  {savingLesson ? (
-                    <Loader2 size={16} className="animate-spin mx-auto" />
-                  ) : (
-                    <T>Submit for Review</T>
-                  )}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
+              <Video size={16} /> <T>Live Zoom</T>
+            </button>
+            <button
+              onClick={() => setLessonType("recorded")}
+              className={`flex items-center gap-2 justify-center rounded-2xl border p-3 text-sm font-medium transition ${
+                lessonType === "recorded"
+                  ? "bg-emerald-600 text-white border-emerald-600"
+                  : "bg-card hover:bg-accent"
+              }`}
+            >
+              <FileText size={16} /> <T>Recorded</T>
+            </button>
+          </div>
+        </div>
+        <div>
+          <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <T>Lesson Title</T>
+          </label>
+          <input
+            value={lessonTitle}
+            onChange={(e) => setLessonTitle(e.target.value)}
+            placeholder="e.g. Introduction to Arabic Grammar"
+            className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+          />
+        </div>
+
+        {/* ✅ حقول إضافية للدرس المسجل */}
+        {lessonType === "recorded" && (
+          <>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <T>Video URL (YouTube)</T> *
+              </label>
+              <input
+                value={lessonVideoUrl}
+                onChange={(e) => setLessonVideoUrl(e.target.value)}
+                placeholder="https://youtube.com/watch?v=..."
+                className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <T>Description</T> *
+              </label>
+              <textarea
+                value={lessonDescription}
+                onChange={(e) => setLessonDescription(e.target.value)}
+                rows={3}
+                placeholder="Describe the lesson content..."
+                className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold resize-none"
+              />
+            </div>
+          </>
         )}
-      </AnimatePresence>
+
+        {lessonType === "zoom" && (
+          <div className="space-y-4">
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                <T>Session Date (min. 7 days ahead)</T>
+              </label>
+              <CalendarPicker
+                selected={sessionDate}
+                onChange={setSessionDate}
+                minDate={new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)}
+              />
+            </div>
+            <div>
+              <label className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                <T>Session Time</T>
+              </label>
+              <TimeSlotPicker
+                selected={sessionTime}
+                onChange={setSessionTime}
+                date={sessionDate}
+              />
+            </div>
+          </div>
+        )}
+        {lessonError && <p className="text-sm text-destructive">{lessonError}</p>}
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={() => setShowLessonModal(false)}
+            className="rounded-full border bg-background px-5 py-2.5 text-sm"
+          >
+            <T>Cancel</T>
+          </button>
+          <button
+            onClick={handleSaveLesson}
+            disabled={savingLesson}
+            className="rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 px-6 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+          >
+            {savingLesson ? (
+              <Loader2 size={16} className="animate-spin mx-auto" />
+            ) : (
+              <T>Submit for Review</T>
+            )}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
 
       {/* Onboarding Tour */}
       {typeof window !== "undefined" && !localStorage.getItem("teacher_dashboard_tour") && (

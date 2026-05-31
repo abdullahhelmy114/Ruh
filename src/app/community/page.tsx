@@ -1,108 +1,72 @@
 "use client";
 
-import { useState } from "react";
-import { MessageCircle, Heart, Pin, Plus, Send, User, UserPlus, ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { MessageCircle, Heart, Plus, Send, X, MoreVertical, Trash2 } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import Link from "next/link";
 
 interface Thread {
   id: string;
-  author: string;
-  role: string;
+  author_name: string;
+  author_uid: string;
   title: string;
   content: string;
-  replies: number;
   likes: number;
-  pinned?: boolean;
-  time: string;
-  liked?: boolean;
+  created_at: string;
 }
 
-const initialThreads: Thread[] = [
-  {
-    id: "1",
-    author: "Dr. Jehan",
-    role: "Instructor",
-    title: "Weekly Conversation Challenge — Travel Vocabulary",
-    content: "Share your favorite Arabic travel phrases and practice them with fellow learners!",
-    replies: 42,
-    likes: 128,
-    pinned: true,
-    time: "2h",
-  },
-  {
-    id: "2",
-    author: "Yusuf",
-    role: "Student",
-    title: "Help understanding the difference between إنّ and أنّ",
-    content: "I keep confusing these two particles. Can someone explain with examples?",
-    replies: 18,
-    likes: 36,
-    time: "4h",
-  },
-  {
-    id: "3",
-    author: "Aisha",
-    role: "Student",
-    title: "Best resources for memorizing 100 verbs?",
-    content: "Looking for effective methods to memorize common Arabic verbs quickly.",
-    replies: 27,
-    likes: 54,
-    time: "1d",
-  },
-  {
-    id: "4",
-    author: "Ustadh Khalid",
-    role: "Teacher",
-    title: "Sharing my curriculum for B1 conversational fluency",
-    content: "I've developed a 12-week curriculum focused on speaking. Happy to share!",
-    replies: 12,
-    likes: 88,
-    time: "2d",
-  },
-];
-
 export default function CommunityPage() {
-  const { user } = useAuth();
-  const [threads, setThreads] = useState<Thread[]>(initialThreads);
-  const [filter, setFilter] = useState("All");
+  const { user, role } = useAuth();
+  const [threads, setThreads] = useState<Thread[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showNewThread, setShowNewThread] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
+  const [filter, setFilter] = useState("All");
+  const [menuOpen, setMenuOpen] = useState<string | null>(null);
 
-  const filters = ["All", "Grammar", "Vocabulary", "Conversation", "Quranic", "Resources"];
-
-  const filteredThreads =
-    filter === "All" ? threads : threads.filter((t) => t.title.toLowerCase().includes(filter.toLowerCase()));
-
-  const handleLike = (id: string) => {
-    setThreads((prev) =>
-      prev.map((t) =>
-        t.id === id
-          ? { ...t, likes: t.liked ? t.likes - 1 : t.likes + 1, liked: !t.liked }
-          : t
-      )
-    );
+  const fetchThreads = () => {
+    setLoading(true);
+    fetch('/api/community/threads')
+      .then(r => r.json())
+      .then(d => setThreads(d.threads || []))
+      .finally(() => setLoading(false));
   };
 
-  const handleCreateThread = () => {
-    if (!newTitle.trim() || !newContent.trim()) return;
-    const newThread: Thread = {
-      id: Date.now().toString(),
-      author: user?.email?.split("@")[0] || "Anonymous",
-      role: "Student",
-      title: newTitle,
-      content: newContent,
-      replies: 0,
-      likes: 0,
-      time: "Just now",
-    };
-    setThreads([newThread, ...threads]);
+  useEffect(() => { fetchThreads(); }, []);
+
+  const handleCreateThread = async () => {
+    if (!user || !newTitle.trim() || !newContent.trim()) return;
+    await fetch('/api/community/threads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ authorUid: user.uid, title: newTitle, content: newContent }),
+    });
     setNewTitle("");
     setNewContent("");
     setShowNewThread(false);
+    fetchThreads();
   };
+
+  const handleDelete = async (threadId: string) => {
+    if (!user) return;
+    await fetch('/api/community/threads', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ threadId, userUid: user.uid, isAdmin: role === 'admin' }),
+    });
+    setMenuOpen(null);
+    fetchThreads();
+  };
+
+  const canDelete = (authorUid: string) => {
+    return role === 'admin' || user?.uid === authorUid;
+  };
+
+  const filteredThreads = filter === "All"
+    ? threads
+    : threads.filter(t => t.title.toLowerCase().includes(filter.toLowerCase()));
 
   return (
     <div className="mx-auto max-w-6xl min-h-screen space-y-8 px-4 py-12 md:px-8">
@@ -128,17 +92,11 @@ export default function CommunityPage() {
             </button>
           ) : (
             <div className="mt-8 flex gap-3">
-              <Link
-                href="/signup?role=student"
-                className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
-              >
-                <T>Join as Student</T> <ArrowRight size={16} />
+              <Link href="/signup?role=student" className="inline-flex items-center gap-2 rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white hover:bg-emerald-700">
+                <T>Join as Student</T>
               </Link>
-              <Link
-                href="/signup?role=teacher"
-                className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-black hover:bg-amber-400"
-              >
-                <T>Join as Teacher</T> <ArrowRight size={16} />
+              <Link href="/signup?role=teacher" className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-black hover:bg-amber-400">
+                <T>Join as Teacher</T>
               </Link>
             </div>
           )}
@@ -150,26 +108,11 @@ export default function CommunityPage() {
         <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
           <div className="bg-card rounded-3xl p-6 max-w-lg w-full shadow-elegant space-y-4">
             <h2 className="font-serif text-2xl"><T>New Thread</T></h2>
-            <input
-              value={newTitle}
-              onChange={(e) => setNewTitle(e.target.value)}
-              placeholder="Thread title"
-              className="w-full rounded-2xl border bg-background px-4 py-3 text-sm"
-            />
-            <textarea
-              value={newContent}
-              onChange={(e) => setNewContent(e.target.value)}
-              rows={4}
-              placeholder="Share your thoughts..."
-              className="w-full rounded-2xl border bg-background px-4 py-3 text-sm"
-            />
+            <input value={newTitle} onChange={e => setNewTitle(e.target.value)} placeholder="Thread title" className="w-full rounded-2xl border bg-background px-4 py-3 text-sm" />
+            <textarea value={newContent} onChange={e => setNewContent(e.target.value)} rows={4} placeholder="Share your thoughts..." className="w-full rounded-2xl border bg-background px-4 py-3 text-sm" />
             <div className="flex gap-3 justify-end">
-              <button onClick={() => setShowNewThread(false)} className="rounded-full border px-4 py-2 text-sm">
-                <T>Cancel</T>
-              </button>
-              <button onClick={handleCreateThread} className="rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-black">
-                <T>Post</T>
-              </button>
+              <button onClick={() => setShowNewThread(false)} className="rounded-full border px-4 py-2 text-sm"><T>Cancel</T></button>
+              <button onClick={handleCreateThread} className="rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-black"><T>Post</T></button>
             </div>
           </div>
         </div>
@@ -177,7 +120,7 @@ export default function CommunityPage() {
 
       {/* Filter Chips */}
       <div className="flex flex-wrap gap-3">
-        {filters.map((t, i) => (
+        {["All", "Grammar", "Vocabulary", "Conversation", "Quranic", "Resources"].map((t, i) => (
           <button
             key={t}
             onClick={() => setFilter(t)}
@@ -193,53 +136,67 @@ export default function CommunityPage() {
       </div>
 
       {/* Threads List */}
-      <div className="space-y-4">
-        {filteredThreads.map((t) => (
-          <article
-            key={t.id}
-            className="group flex gap-4 rounded-3xl border bg-card p-6 shadow-elegant transition-all hover:border-gold/40 hover:shadow-lg"
-          >
-            <div className="grid h-14 w-14 flex-none place-items-center rounded-2xl gradient-emerald font-serif text-xl text-white shadow-inner">
-              {t.author[0]}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-bold text-foreground">{t.author}</span>
-                <span
-                  className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
-                    t.role === "Instructor" || t.role === "Teacher"
-                      ? "border border-gold/20 bg-gold/10 text-gold"
-                      : "bg-accent text-muted-foreground"
-                  }`}
-                >
-                  <T>{t.role}</T>
-                </span>
-                <span>· {t.time}</span>
-                {t.pinned && (
-                  <span className="inline-flex items-center gap-1 font-bold text-gold">
-                    <Pin className="h-3 w-3" /> <T>Pinned</T>
-                  </span>
-                )}
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+        </div>
+      ) : filteredThreads.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <MessageCircle className="mx-auto h-12 w-12 mb-4 text-amber-500/50" />
+          <p><T>No threads yet. Start the conversation!</T></p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredThreads.map((t) => (
+            <article
+              key={t.id}
+              className="group flex gap-4 rounded-3xl border bg-card p-6 shadow-elegant transition-all hover:border-gold/40 hover:shadow-lg relative"
+            >
+              <div className="grid h-14 w-14 flex-none place-items-center rounded-2xl gradient-emerald font-serif text-xl text-white shadow-inner">
+                {t.author_name?.charAt(0) || "?"}
               </div>
-              <h3 className="font-serif text-xl leading-snug text-foreground">{t.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{t.content}</p>
-              <div className="mt-4 flex items-center gap-6 text-xs text-muted-foreground">
-                <button className="inline-flex items-center gap-1.5 transition-colors hover:text-primary">
-                  <MessageCircle className="h-4 w-4" /> {t.replies}
-                </button>
-                <button
-                  onClick={() => handleLike(t.id)}
-                  className={`inline-flex items-center gap-1.5 transition-colors ${
-                    t.liked ? "text-red-500" : "hover:text-red-500"
-                  }`}
-                >
-                  <Heart className={`h-4 w-4 ${t.liked ? "fill-current" : ""}`} /> {t.likes}
-                </button>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  <span className="font-bold text-foreground">{t.author_name}</span>
+                  <span>· {new Date(t.created_at).toLocaleString()}</span>
+                </div>
+                <h3 className="font-serif text-xl leading-snug text-foreground">{t.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{t.content}</p>
+                <div className="mt-4 flex items-center gap-6 text-xs text-muted-foreground">
+                  <button className="inline-flex items-center gap-1.5 transition-colors hover:text-primary">
+                    <MessageCircle className="h-4 w-4" /> 0
+                  </button>
+                  <button className="inline-flex items-center gap-1.5 transition-colors hover:text-red-500">
+                    <Heart className="h-4 w-4" /> {t.likes}
+                  </button>
+                </div>
               </div>
-            </div>
-          </article>
-        ))}
-      </div>
+
+              {/* قائمة النقاط الثلاث */}
+              {canDelete(t.author_uid) && (
+                <div className="absolute top-4 right-4">
+                  <button
+                    onClick={() => setMenuOpen(menuOpen === t.id ? null : t.id)}
+                    className="p-1 rounded-full hover:bg-accent"
+                  >
+                    <MoreVertical size={16} />
+                  </button>
+                  {menuOpen === t.id && (
+                    <div className="absolute right-0 mt-1 w-32 rounded-xl border bg-card shadow-elegant z-10">
+                      <button
+                        onClick={() => handleDelete(t.id)}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-500 hover:bg-red-50 rounded-lg"
+                      >
+                        <Trash2 size={14} /> <T>Delete</T>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

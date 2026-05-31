@@ -8,6 +8,7 @@ import { auth } from "@/lib/firebase/client";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
+import { createNotification } from '@/lib/notifications';
 
 export default function VerifyEmailPage() {
   const router = useRouter();
@@ -91,6 +92,12 @@ export default function VerifyEmailPage() {
           referred_by: storedReferral,
         }),
       });
+
+      await createNotification(
+        userCredential.user.uid,
+        'Welcome to Ruhulqudus Academy! Start exploring courses.',
+        '/marketplace'
+      );
 
       // 4. تنظيف sessionStorage
       sessionStorage.removeItem("signup_name");

@@ -3,7 +3,12 @@ import { useState } from "react";
 import { T } from "@/components/TranslatedText";
 import { CheckCircle, XCircle } from "lucide-react";
 
-export function QuizPlayer({ quizzes }: { quizzes: any[] }) {
+interface QuizPlayerProps {
+  quizzes: any[];
+  onComplete?: () => void;          // ✅
+}
+
+export function QuizPlayer({ quizzes, onComplete }: QuizPlayerProps) {
   const [current, setCurrent] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
@@ -22,6 +27,7 @@ export function QuizPlayer({ quizzes }: { quizzes: any[] }) {
         setSelected(null);
       } else {
         setFinished(true);
+        onComplete?.();            // ✅ أُضيف
       }
     }, 1000);
   };
