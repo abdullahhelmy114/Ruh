@@ -18,7 +18,7 @@ import { signOut, getAuth } from "firebase/auth";
 const baseLinks = [
   { to: "/", label: "Home" },
   { to: "/marketplace", label: "Marketplace" },
-  { to: "/community", label: "Community" },
+  { to: "/blog", label: "Blog" },
 ];
 
 // روابط خاصة بالطلاب (تظهر للطلاب وغير المسجلين)
