@@ -85,29 +85,31 @@
 /* ===== تحسين التباين في الوضع الداكن ===== */
 @layer base {
   * { border-color: var(--border); }
-  body {
+  
+  /* ✅ منع التمرير الأفقي على جميع الأجهزة */
+  html, body {
     background-color: var(--background);
     color: var(--foreground);
+    max-width: 100vw;
+    overflow-x: hidden;
   }
+
   h1, h2, h3, .font-serif {
     font-family: var(--font-serif);
     letter-spacing: -0.01em;
   }
 
-  /* أزرار hover في الوضع الداكن – نص أخضر غامق داكن بدلاً من الأبيض */
   button:not([disabled]):hover,
   a:not([disabled]):hover {
     @apply transition-colors duration-200;
   }
 
-  /* أي عنصر تفاعلي داخل .dark يستخدم bg-accent عند hover */
   .dark .hover\:bg-accent:hover,
   .dark button:hover,
   .dark a:hover {
-    color: oklch(0.25 0.08 165) !important; /* أخضر غامق جدا */
+    color: oklch(0.25 0.08 165) !important;
   }
 
-  /* استثناء: الأزرار ذات الخلفية الداكنة أصلاً (مثل emerald) تبقى نصوصها بيضاء */
   .dark .bg-emerald-600:hover,
   .dark .bg-emerald-700:hover,
   .dark .gradient-emerald:hover,
@@ -144,4 +146,15 @@
   }
   .ornament::before { margin-inline-end: 0.75rem; }
   .ornament::after  { margin-inline-start: 0.75rem; }
+
+  /* ✅ حركة انزلاق قائمة الهاتف */
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+}
+
+/* ✅ إطارات الحركة */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
 }

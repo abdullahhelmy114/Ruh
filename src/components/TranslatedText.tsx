@@ -1,13 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 
-// استيراد كل ملفات الترجمة دفعة واحدة (آمنة للحجم)
-import en from "@/messages/en.json";
-import ar from "@/messages/ar.json";
-import tr from "@/messages/tr.json";
+// استيراد جميع ملفات الترجمة
+import enMessages from "@/messages/en.json";
+import arMessages from "@/messages/ar.json";
+import trMessages from "@/messages/tr.json";
 
-const dictionaries: Record<string, Record<string, string>> = { en, ar, tr };
+type Messages = Record<string, string>;
+const dictionaries: Record<string, Messages> = {
+  en: enMessages as Messages,
+  ar: arMessages as Messages,
+  tr: trMessages as Messages,
+};
 
 interface TProps {
   children: string;
@@ -16,18 +21,17 @@ interface TProps {
 export function T({ children }: TProps) {
   const [locale, setLocale] = useState("en");
 
+  const handleLocaleChange = useCallback((e: Event) => {
+    const customEvent = e as CustomEvent<string>;
+    setLocale(customEvent.detail);
+  }, []);
+
   useEffect(() => {
-    // قراءة اللغة المخزّنة
     const stored = localStorage.getItem("preferred-locale") || "en";
     setLocale(stored);
-
-    const handler = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      setLocale(customEvent.detail);
-    };
-    window.addEventListener("locale-change", handler);
-    return () => window.removeEventListener("locale-change", handler);
-  }, []);
+    window.addEventListener("locale-change", handleLocaleChange);
+    return () => window.removeEventListener("locale-change", handleLocaleChange);
+  }, [handleLocaleChange]);
 
   const dict = dictionaries[locale] || dictionaries.en;
   const translated = dict[children] || children;

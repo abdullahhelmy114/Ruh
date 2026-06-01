@@ -87,7 +87,7 @@ export default function TeacherDashboard() {
   const [lessonError, setLessonError] = useState("");
   const [lessonVideoUrl, setLessonVideoUrl] = useState("");
   const [lessonDescription, setLessonDescription] = useState("");
-
+  const [lessonH5pUrl, setLessonH5pUrl] = useState("");
   // New Course states
   const [showCourseModal, setShowCourseModal] = useState(false);
   const [newCourseTitle, setNewCourseTitle] = useState('');
@@ -259,6 +259,7 @@ const handleSaveLesson = async () => {
   if (lessonType === "recorded") {
     payload.videoUrl = lessonVideoUrl;
     payload.description = lessonDescription;
+    if (lessonH5pUrl) payload.h5pUrl = lessonH5pUrl; // ✅ هنا مكانه الصحيح
   }
 
   try {
@@ -273,10 +274,10 @@ const handleSaveLesson = async () => {
     } else {
       setShowLessonModal(false);
       alert("Lesson submitted for review!");
-      // إعادة تعيين الحقول
       setLessonTitle("");
       setLessonVideoUrl("");
       setLessonDescription("");
+      setLessonH5pUrl(""); // ✅ تفريغ حقل H5P بعد الحفظ
     }
   } catch (e: any) {
     setLessonError(e.message);
@@ -851,6 +852,17 @@ const handleSaveLesson = async () => {
                 rows={3}
                 placeholder="Describe the lesson content..."
                 className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold resize-none"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <T>H5P Exercise URL</T> <span className="text-muted-foreground/50">(<T>optional</T>)</span>
+              </label>
+              <input
+              value={lessonH5pUrl}
+              onChange={(e) => setLessonH5pUrl(e.target.value)}
+              placeholder="https://example.com/exercise.h5p"
+              className="mt-1 w-full rounded-2xl border bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-gold"
               />
             </div>
           </>

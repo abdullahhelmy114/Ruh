@@ -30,7 +30,6 @@ export function LanguageSwitcher() {
 
   const changeLocale = (newLocale: string) => {
     localStorage.setItem("preferred-locale", newLocale);
-    // تفعيل RTL للعربية
     document.documentElement.dir = newLocale === "ar" ? "rtl" : "ltr";
     document.documentElement.lang = newLocale;
     setLocale(newLocale);

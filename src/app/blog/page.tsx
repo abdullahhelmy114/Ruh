@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { T } from "@/components/TranslatedText";
 import {
-  Loader2, Heart, MessageCircle, Send, Image as ImageIcon, Trash2,
+  Loader2, Heart, MessageCircle, Send, Trash2,
   Plus, X, ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
@@ -19,14 +19,13 @@ interface Post {
   comments_count: number;
   likes_count: number;
   liked_by: string | null;
-}
-
-interface Comment {
-  id: string;
-  user_name: string;
-  user_uid: string;
-  comment: string;
-  created_at: string;
+  comments: {
+    id: string;
+    user_name: string;
+    user_uid: string;
+    comment: string;
+    created_at: string;
+  }[];
 }
 
 export default function BlogPage() {
@@ -37,7 +36,6 @@ export default function BlogPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newContent, setNewContent] = useState("");
   const [newImageUrl, setNewImageUrl] = useState("");
-  const [expandedComments, setExpandedComments] = useState<Record<string, Comment[]>>({});
   const [commentText, setCommentText] = useState<Record<string, string>>({});
   const [submittingComment, setSubmittingComment] = useState(false);
 
@@ -52,12 +50,6 @@ export default function BlogPage() {
   };
 
   useEffect(() => { fetchPosts(); }, []);
-
-  const fetchComments = (postId: string) => {
-    fetch(`/api/blog/comments?postId=${postId}`)
-      .then(r => r.json())
-      .then(d => setExpandedComments(prev => ({ ...prev, [postId]: d.comments || [] })));
-  };
 
   const handleCreatePost = async () => {
     if (!newTitle.trim() || !newContent.trim()) return;
@@ -95,7 +87,7 @@ export default function BlogPage() {
     });
     setCommentText(prev => ({ ...prev, [postId]: "" }));
     setSubmittingComment(false);
-    fetchComments(postId);
+    fetchPosts(); // إعادة تحميل البوستات لتظهر التعليق الجديد
   };
 
   const handleToggleLike = async (postId: string) => {
@@ -189,6 +181,19 @@ export default function BlogPage() {
             <p className="text-muted-foreground leading-relaxed">{post.content}</p>
             <p className="text-xs text-muted-foreground">{new Date(post.created_at).toLocaleString()}</p>
 
+            {/* ✅ التعليقات تظهر دائماً */}
+            {post.comments && post.comments.length > 0 && (
+              <div className="space-y-3 pt-2 border-t border-border/50">
+                {post.comments.map(c => (
+                  <div key={c.id} className="flex items-start gap-2 text-sm">
+                    <span className="font-medium text-amber-600">{c.user_name}</span>
+                    <span className="text-muted-foreground">{c.comment}</span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{new Date(c.created_at).toLocaleDateString()}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* الإعجاب والتعليقات */}
             <div className="flex items-center gap-6 pt-3 border-t border-border">
               <button
@@ -198,29 +203,11 @@ export default function BlogPage() {
                 <Heart size={18} className={isLikedByUser(post) ? 'fill-current' : ''} />
                 {post.likes_count}
               </button>
-              <button
-                onClick={() => {
-                  if (!expandedComments[post.id]) fetchComments(post.id);
-                  else setExpandedComments(prev => ({ ...prev, [post.id]: [] }));
-                }}
-                className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-primary"
-              >
+              <div className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
                 <MessageCircle size={18} />
                 {post.comments_count}
-              </button>
-            </div>
-
-            {/* التعليقات */}
-            {expandedComments[post.id] && expandedComments[post.id].length > 0 && (
-              <div className="space-y-3 pt-2 border-t border-border/50">
-                {expandedComments[post.id].map(c => (
-                  <div key={c.id} className="flex items-start gap-2 text-sm">
-                    <span className="font-medium text-amber-600">{c.user_name}</span>
-                    <span className="text-muted-foreground">{c.comment}</span>
-                  </div>
-                ))}
               </div>
-            )}
+            </div>
 
             {/* إضافة تعليق */}
             {user && (

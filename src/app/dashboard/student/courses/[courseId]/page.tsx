@@ -30,7 +30,6 @@ interface CourseData {
 
 /* ─────────────────────────────────────────────
    مكون الشهادة / الاختبار النهائي للكورس
-   (يُعرض بعد إكمال جميع الدروس)
    ───────────────────────────────────────────── */
 function CourseCompletionSection({
   courseId,
@@ -45,19 +44,17 @@ function CourseCompletionSection({
   studentName: string;
   user: any;
 }) {
-  const [quizzes, setQuizzes] = useState<any[]>([]);
-  const [quizCompleted, setQuizCompleted] = useState(false);
-  const [loadingQuiz, setLoadingQuiz] = useState(true);
+  const [hasExam, setHasExam] = useState(false);
+  const [loadingExam, setLoadingExam] = useState(true);
 
   useEffect(() => {
-    fetch(`/api/quizzes/course/${courseId}`)
+    fetch(`/api/exam/${courseId}/questions`)
       .then(r => r.json())
-      .then(d => setQuizzes(d.quizzes || []))
-      .finally(() => setLoadingQuiz(false));
+      .then(d => setHasExam(d.questions && d.questions.length > 0))
+      .finally(() => setLoadingExam(false));
   }, [courseId]);
 
-  // أثناء تحميل الاختبار
-  if (loadingQuiz) {
+  if (loadingExam) {
     return (
       <div className="glass rounded-2xl p-6 text-center">
         <Loader2 className="animate-spin mx-auto h-6 w-6" />
@@ -65,44 +62,34 @@ function CourseCompletionSection({
     );
   }
 
-  // لا يوجد اختبار → شهادة مباشرة
-  if (quizzes.length === 0) {
+  // إذا كان هناك امتحان، اعرض زر "Take Final Exam"
+  if (hasExam) {
     return (
       <div className="glass rounded-2xl p-6 text-center space-y-4">
-        <CheckCircle className="mx-auto h-10 w-10 text-emerald-500" />
-        <h3 className="font-serif text-xl"><T>Congratulations!</T></h3>
-        <p className="text-muted-foreground"><T>You have completed all lessons.</T></p>
-        <CertificateButton
-          studentName={studentName}
-          courseName={courseTitle}
-          teacherName={teacherName}
-        />
+        <HelpCircle className="mx-auto h-10 w-10 text-amber-500" />
+        <h3 className="font-serif text-xl"><T>Final Exam Required</T></h3>
+        <p className="text-muted-foreground"><T>You must pass the final exam to earn your certificate.</T></p>
+        <Link
+          href={`/dashboard/student/exam/${courseId}`}
+          className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-6 py-3 text-sm font-semibold text-black hover:bg-amber-400"
+        >
+          <T>Take Final Exam</T>
+        </Link>
       </div>
     );
   }
 
-  // يوجد اختبار
-  if (quizCompleted) {
-    return (
-      <div className="glass rounded-2xl p-6 text-center space-y-4">
-        <Award className="mx-auto h-10 w-10 text-emerald-500" />
-        <h3 className="font-serif text-xl"><T>Quiz Completed!</T></h3>
-        <CertificateButton
-          studentName={studentName}
-          courseName={courseTitle}
-          teacherName={teacherName}
-        />
-      </div>
-    );
-  }
-
+  // لا يوجد امتحان → شهادة مباشرة
   return (
-    <div className="glass rounded-2xl p-6 space-y-4">
-      <h3 className="font-serif text-xl flex items-center gap-2">
-        <HelpCircle className="h-5 w-5 text-amber-500" />
-        <T>Final Quiz</T>
-      </h3>
-      <QuizPlayer quizzes={quizzes} onComplete={() => setQuizCompleted(true)} />
+    <div className="glass rounded-2xl p-6 text-center space-y-4">
+      <CheckCircle className="mx-auto h-10 w-10 text-emerald-500" />
+      <h3 className="font-serif text-xl"><T>Congratulations!</T></h3>
+      <p className="text-muted-foreground"><T>You have completed all lessons.</T></p>
+      <CertificateButton
+        studentName={studentName}
+        courseName={courseTitle}
+        teacherName={teacherName}
+      />
     </div>
   );
 }
@@ -147,7 +134,6 @@ export default function CoursePlayerPage() {
   const [loading, setLoading] = useState(true);
   const [completing, setCompleting] = useState(false);
 
-  // هل جميع الدروس مكتملة؟
   const allCompleted = data?.lessons?.every(l => l.completed) ?? false;
 
   useEffect(() => {
@@ -209,20 +195,39 @@ export default function CoursePlayerPage() {
             </button>
           ))}
         </div>
+
+        {/* ✅ Final Exam – داخل الشريط الجانبي */}
+        <div className="mt-4 pt-4 border-t border-border/50">
+          {allCompleted ? (
+            <Link
+              href={`/dashboard/student/exam/${courseId}`}
+              className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition w-full"
+            >
+              <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-xs text-black font-bold">?</span>
+              <span className="text-sm font-medium text-amber-600"><T>Final Exam</T></span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => alert("Please complete all lessons before taking the exam.")}
+              className="flex items-center gap-3 p-3 rounded-xl bg-muted/50 border border-border/50 opacity-60 cursor-not-allowed w-full"
+            >
+              <span className="shrink-0 w-6 h-6 rounded-full border flex items-center justify-center text-xs">!</span>
+              <span className="text-sm text-muted-foreground"><T>Final Exam</T></span>
+              <span className="ml-auto text-[10px] text-muted-foreground"><T>Locked</T></span>
+            </button>
+          )}
+        </div>
       </aside>
 
       {/* Main Player */}
       <main className="flex-1 space-y-6">
         {currentLesson ? (
           <motion.div key={currentLesson.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-            {/* Video */}
             {currentLesson.recording_url && (
               <div className="rounded-3xl overflow-hidden shadow-elegant">
                 <YouTubeEmbed url={currentLesson.recording_url} title={currentLesson.title} />
               </div>
             )}
-
-            {/* Title & Complete Button */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="font-serif text-2xl md:text-3xl">{currentLesson.title}</h1>
@@ -234,20 +239,12 @@ export default function CoursePlayerPage() {
                 onClick={handleComplete}
                 disabled={currentLesson.completed || completing}
                 className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition ${
-                  currentLesson.completed
-                    ? "bg-emerald-100 text-emerald-600 cursor-default"
-                    : "bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
+                  currentLesson.completed ? "bg-emerald-100 text-emerald-600 cursor-default" : "bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-50"
                 }`}
               >
-                {currentLesson.completed ? (
-                  <><CheckCircle size={18} /> <T>Completed</T></>
-                ) : (
-                  <><Play size={18} /> <T>Mark as Complete</T></>
-                )}
+                {currentLesson.completed ? <><CheckCircle size={18} /> <T>Completed</T></> : <><Play size={18} /> <T>Mark as Complete</T></>}
               </button>
             </div>
-
-            {/* Files */}
             {currentLesson.files && currentLesson.files.length > 0 && (
               <div className="glass rounded-2xl p-5">
                 <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
@@ -255,13 +252,7 @@ export default function CoursePlayerPage() {
                 </h3>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {currentLesson.files.map((file, i) => (
-                    <a
-                      key={i}
-                      href={file.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between rounded-xl border bg-background p-3 hover:bg-accent transition"
-                    >
+                    <a key={i} href={file.file_url} target="_blank" rel="noopener noreferrer" className="flex items-center justify-between rounded-xl border bg-background p-3 hover:bg-accent transition">
                       <span className="text-sm truncate">{file.file_name}</span>
                       <Download size={16} className="text-muted-foreground shrink-0 ml-2" />
                     </a>
@@ -269,8 +260,6 @@ export default function CoursePlayerPage() {
                 </div>
               </div>
             )}
-
-            {/* اختبار الدرس */}
             <QuizSection lessonId={currentLesson.id} />
           </motion.div>
         ) : (
@@ -278,8 +267,6 @@ export default function CoursePlayerPage() {
             <T>Select a lesson to start learning</T>
           </div>
         )}
-
-        {/* ✅ اختبار الكورس + الشهادة (يظهر بعد اكتمال جميع الدروس) */}
         {allCompleted && (
           <CourseCompletionSection
             courseId={courseId}

@@ -18,22 +18,22 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* ضبط اتجاه الصفحة قبل أي عرض */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var locale = localStorage.getItem('preferred-locale') || 'en';
-                  document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
-                  document.documentElement.lang = locale;
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
-      </head>
+  <head>
+    {/* ضبط اتجاه الصفحة قبل أي عرض */}
+    <script
+      dangerouslySetInnerHTML={{
+        __html: `
+          (function() {
+            try {
+              var locale = localStorage.getItem('preferred-locale') || 'en';
+              document.documentElement.dir = locale === 'ar' ? 'rtl' : 'ltr';
+              document.documentElement.lang = locale;
+            } catch (e) {}
+          })();
+        `,
+      }}
+    />
+  </head>
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased min-h-screen bg-background text-foreground`}>
         <AuthProvider>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

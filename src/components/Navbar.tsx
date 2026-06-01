@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   Bell, BellOff, Mail, Moon, Sun, BookOpen, User, LayoutDashboard, LogOut, ChevronDown,
-  Info, Phone, Shield, ShoppingCart, Heart,
+  Info, Phone, Shield, ShoppingCart, Heart, Menu, X,
 } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
 import { cn } from "@/lib/utils";
@@ -45,6 +45,7 @@ export function Navbar() {
   const { user, isLoading, role } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [cartCount, setCartCount] = useState(0);
@@ -133,6 +134,7 @@ export function Navbar() {
   const handleLogout = async () => {
     await signOut(getAuth());
     setMenuOpen(false);
+    setMobileOpen(false);
   };
 
   const dashboardLink =
@@ -154,23 +156,33 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 glass border-b">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-8">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-3">
-          <div className="grid h-10 w-10 place-items-center rounded-full gradient-emerald shadow-elegant">
-            <BookOpen className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <div className="leading-tight">
-            <div className="font-serif text-lg font-semibold text-foreground">
-              <T>Ruhulqudus</T>
+        {/* Logo + Hamburger */}
+        <div className="flex items-center gap-3">
+          {/* زر الهمبرغر للهاتف */}
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden grid h-10 w-10 place-items-center rounded-full border border-border bg-card transition-colors hover:bg-accent"
+          >
+            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+
+          <Link href="/" className="flex items-center gap-3">
+            <div className="grid h-10 w-10 place-items-center rounded-full gradient-emerald shadow-elegant">
+              <BookOpen className="h-5 w-5 text-primary-foreground" />
             </div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-gold">
-              <T>Academy</T>
+            <div className="leading-tight">
+              <div className="font-serif text-lg font-semibold text-foreground">
+                <T>Ruhulqudus</T>
+              </div>
+              <div className="text-[10px] uppercase tracking-[0.2em] text-gold">
+                <T>Academy</T>
+              </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
 
         {/* Nav links (desktop) */}
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden md:flex items-center gap-1">
           {links.map((l) => (
             <Link
               key={l.to}
@@ -215,8 +227,8 @@ export function Navbar() {
           </div>
         </nav>
 
-        {/* Right side */}
-        <div className="flex items-center gap-2">
+        {/* Right side (desktop) */}
+        <div className="hidden md:flex items-center gap-2">
           <LanguageSwitcher />
 
           {/* زر تفعيل إشعارات المتصفح */}
@@ -356,7 +368,89 @@ export function Navbar() {
             </>
           )}
         </div>
+
+        {/* Mobile right side (icons) */}
+        <div className="flex md:hidden items-center gap-1">
+          <LanguageSwitcher />
+          <button
+            onClick={toggle}
+            className="grid h-10 w-10 place-items-center rounded-full border border-border bg-card"
+          >
+            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          </button>
+          {user ? (
+            <div className="grid h-8 w-8 place-items-center rounded-full gradient-emerald text-sm font-bold text-primary-foreground">
+              {initial}
+            </div>
+          ) : (
+            <Link href="/login" className="rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">
+              <T>Sign in</T>
+            </Link>
+          )}
+        </div>
       </div>
+
+      {/* Mobile Drawer */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <div className="absolute right-0 top-0 h-full w-72 max-w-[85vw] bg-card shadow-2xl p-6 overflow-y-auto animate-slide-in-right">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-serif text-xl"><T>Menu</T></h3>
+              <button onClick={() => setMobileOpen(false)} className="p-2 rounded-full hover:bg-accent">
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Links */}
+            <nav className="space-y-2">
+              {links.map(l => (
+                <Link key={l.to} href={l.to} onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-base font-medium hover:bg-accent">
+                  <T>{l.label}</T>
+                </Link>
+              ))}
+              {moreLinks.map(l => (
+                <Link key={l.to} href={l.to} onClick={() => setMobileOpen(false)} className="block rounded-xl px-4 py-3 text-base font-medium hover:bg-accent">
+                  <T>{l.label}</T>
+                </Link>
+              ))}
+            </nav>
+
+            <hr className="my-4" />
+
+            {/* User section */}
+            {user ? (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground px-4">{user.email}</p>
+                <Link href={dashboardLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-4 py-3 hover:bg-accent">
+                  <LayoutDashboard className="h-5 w-5" /> <T>Dashboard</T>
+                </Link>
+                <Link href={profileLink} onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-4 py-3 hover:bg-accent">
+                  <User className="h-5 w-5" /> <T>Profile</T>
+                </Link>
+                <Link href="/wishlist" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-4 py-3 hover:bg-accent">
+                  <Heart className="h-5 w-5" /> <T>Wishlist</T>
+                </Link>
+                <Link href="/cart" onClick={() => setMobileOpen(false)} className="flex items-center gap-2 rounded-xl px-4 py-3 hover:bg-accent">
+                  <ShoppingCart className="h-5 w-5" /> <T>Cart</T>
+                </Link>
+                <button onClick={handleLogout} className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-red-500 hover:bg-red-50">
+                  <LogOut className="h-5 w-5" /> <T>Sign out</T>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 px-4">
+                <Link href="/login" onClick={() => setMobileOpen(false)} className="block w-full rounded-full bg-primary px-4 py-2.5 text-center text-sm font-medium text-primary-foreground">
+                  <T>Sign in</T>
+                </Link>
+                <Link href="/signup" onClick={() => setMobileOpen(false)} className="block w-full rounded-full border px-4 py-2.5 text-center text-sm font-medium">
+                  <T>Sign up</T>
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
