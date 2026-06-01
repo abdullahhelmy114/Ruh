@@ -19,6 +19,7 @@ const baseLinks = [
   { to: "/", label: "Home" },
   { to: "/marketplace", label: "Marketplace" },
   { to: "/blog", label: "Blog" },
+  { to: "/quran", label: "Quran" },
 ];
 
 // روابط خاصة بالطلاب (تظهر للطلاب وغير المسجلين)
