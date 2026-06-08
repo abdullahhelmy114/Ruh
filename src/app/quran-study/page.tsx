@@ -70,6 +70,8 @@ interface AyahAnalysis {
   rhetoric: string;
   tafsir: string;
   words: WordAnalysis[];
+  ayahTranslationEn: string; // <-- جديد
+  ayahTranslationTr: string; // <-- جديد
 }
 
 // ============== دوال مساعدة ==============
@@ -204,6 +206,7 @@ export default function QuranStudyPage() {
           };
         });
 
+        // توزيع ترجمة الجملة على الكلمات (تقريبي)
         if (translationEn) {
           const enWords = translationEn.split(/\s+/);
           wordAnalyses.forEach((wa, i) => { wa.translation.en = enWords[i] || ""; });
@@ -219,6 +222,8 @@ export default function QuranStudyPage() {
           rhetoric: "",
           tafsir: tafsirText,
           words: wordAnalyses,
+          ayahTranslationEn: translationEn,  // <-- تخزين الترجمة الكاملة
+          ayahTranslationTr: translationTr,
         };
       });
 
@@ -294,28 +299,34 @@ export default function QuranStudyPage() {
     }
   };
 
-  // تشغيل صوت الآية (موجود)
+  // تشغيل صوت الآية (مع إصلاح)
   const playAyahAudio = useCallback((ayahNumber: number) => {
     if (!selectedSurah) return;
     const url = `https://cdn.islamicnetwork.com/quran/audio/64/ar.alhudhaifi/${String(selectedSurah).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`;
     if (audioRef.current) {
       audioRef.current.src = url;
-      audioRef.current.play().catch(console.error);
+      audioRef.current.load(); // إعادة تحميل
+      audioRef.current.play().catch(() => {
+        alert(t("quran-study.audioNotAvailable"));
+      });
     }
-  }, [selectedSurah]);
+  }, [selectedSurah, t]);
 
-  // تشغيل صوت الكلمة من audio.quranwbw.com
+  // تشغيل صوت الكلمة (مع إصلاح)
   const playWordAudio = useCallback((word: string, ayahNumber: number, wordIndex: number) => {
     if (!selectedSurah) return;
-    // الموقع يستخدم صيغة: السورة_الآية_رقم الكلمة (يبدأ من 1)
     const url = `https://audio.quranwbw.com/audio/${selectedSurah}_${ayahNumber}_${wordIndex + 1}.mp3`;
     if (audioRef.current) {
       audioRef.current.src = url;
+      audioRef.current.load();
       audioRef.current.play().catch(() => {
         alert(t("quran-study.wordAudioComingSoon"));
       });
     }
   }, [selectedSurah, t]);
+
+  // ... بقية الدوال (مع تعديلات طفيفة) ...
+  // أضف المفتاح "audioNotAvailable" في ملفات الترجمة.
 
   const handleSurahSelect = useCallback((number: number) => {
     if (selectedSurah === number) return;
@@ -328,17 +339,33 @@ export default function QuranStudyPage() {
 
   const writingChunks = useMemo(() => {
     if (!selectedSurah || ayahs.length === 0) return [];
-    const allChunks: { ayahNumber: number; words: WordAnalysis[] }[] = [];
+    const allChunks: {
+      ayahNumber: number;
+      words: WordAnalysis[];
+      ayahText: string;        // نص المجموعة
+      ayahTranslation: string; // ترجمة المجموعة (باللغة المختارة)
+    }[] = [];
     ayahs.forEach((ayah) => {
       const analysis = analyses[ayah.numberInSurah];
       if (!analysis) return;
       const words = analysis.words;
+      // تقسيم الكلمات مع النص والترجمة لكل قطعة
       for (let i = 0; i < words.length; i += wordsPerChunk) {
-        allChunks.push({ ayahNumber: ayah.numberInSurah, words: words.slice(i, i + wordsPerChunk) });
+        const chunkWords = words.slice(i, i + wordsPerChunk);
+        const chunkText = chunkWords.map(w => w.word).join(" ");
+        const chunkTranslation = translationLang === "en"
+          ? analysis.ayahTranslationEn
+          : analysis.ayahTranslationTr;
+        allChunks.push({
+          ayahNumber: ayah.numberInSurah,
+          words: chunkWords,
+          ayahText: chunkText,
+          ayahTranslation: chunkTranslation,
+        });
       }
     });
     return allChunks;
-  }, [selectedSurah, ayahs, analyses]);
+  }, [selectedSurah, ayahs, analyses, translationLang]);
 
   const totalWritingPages = Math.ceil(writingChunks.length / 2);
   const currentPageChunks = writingChunks.slice(writingPage * 2, writingPage * 2 + 2);
@@ -379,7 +406,6 @@ export default function QuranStudyPage() {
     setDownloadDialogOpen(false);
   };
 
-  // مكون WordItem مع دعم تشغيل الصوت
   const WordItem = ({ wordAnalysis, ayahNum, wordIndex, onPlayWord }: {
     wordAnalysis: WordAnalysis;
     ayahNum: number;
@@ -490,13 +516,7 @@ export default function QuranStudyPage() {
               <div className="flex-1">
                 <div className="flex flex-wrap justify-end gap-x-4 gap-y-2 text-2xl md:text-3xl font-arabic leading-loose">
                   {analysis.words.map((word, idx) => (
-                    <WordItem
-                      key={`${ayah.numberInSurah}-${idx}`}
-                      wordAnalysis={word}
-                      ayahNum={ayah.numberInSurah}
-                      wordIndex={idx}
-                      onPlayWord={playWordAudio}
-                    />
+                    <WordItem key={`${ayah.numberInSurah}-${idx}`} wordAnalysis={word} ayahNum={ayah.numberInSurah} wordIndex={idx} onPlayWord={playWordAudio} />
                   ))}
                 </div>
 
@@ -529,8 +549,13 @@ export default function QuranStudyPage() {
     <div ref={printRef} className="space-y-8 print:space-y-4">
       {currentPageChunks.map((chunk, chunkIdx) => (
         <div key={`${chunk.ayahNumber}-${chunkIdx}`} className="bg-card border rounded-lg p-4 print:border-2 print:border-black print:bg-white">
-          <div className="text-sm mb-2 text-muted-foreground print:text-black">
-            {t("quran-study.ayah")} {chunk.ayahNumber}
+          {/* عرض الجملة كاملة */}
+          <div className="mb-2 text-right font-arabic text-xl md:text-2xl leading-relaxed" dir="rtl">
+            {chunk.ayahText}
+          </div>
+          {/* ترجمة الجملة */}
+          <div className="mb-4 text-sm text-muted-foreground print:text-black">
+            {chunk.ayahTranslation || t("quran-study.noTranslation")}
           </div>
           <table className="w-full border-collapse">
             <tbody>
@@ -688,7 +713,7 @@ export default function QuranStudyPage() {
                   </div>
                 ) : (
                   <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-full">
-                    <TabsList className="mb-4 no-print">
+                    <TabsList className="mb-4 no-print mx-auto w-fit flex justify-center"> {/* توسيط */}
                       <TabsTrigger value="study">{t("quran-study.studyMode")}</TabsTrigger>
                       <TabsTrigger value="writing">{t("quran-study.writingMode")}</TabsTrigger>
                     </TabsList>
