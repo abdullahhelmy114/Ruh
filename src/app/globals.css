@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@source "../src";
+
+@theme {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-gold: var(--gold);
+  --color-gold-foreground: var(--gold-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+
+  --font-serif: "Cormorant Garamond", "Playfair Display", Georgia, serif;
+  --font-arabic: "Amiri", "Noto Naskh Arabic", serif;
+
+  --background-image-gradient-emerald: var(--gradient-emerald);
+  --background-image-gradient-gold: var(--gradient-gold);
+  --background-image-gradient-hero: var(--gradient-hero);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.985 0.005 95);
+  --foreground: oklch(0.18 0.04 165);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.04 165);
+  --primary: oklch(0.32 0.07 165);
+  --primary-foreground: oklch(0.98 0.01 90);
+  --accent: oklch(0.92 0.04 90);
+  --accent-foreground: oklch(0.25 0.05 165);
+  --gold: oklch(0.78 0.14 85);
+  --gold-foreground: oklch(0.2 0.04 165);
+  --border: oklch(0.9 0.01 90);
+  --ring: oklch(0.32 0.07 165);
+
+  --gradient-emerald: linear-gradient(135deg, oklch(0.32 0.07 165), oklch(0.42 0.09 165));
+  --gradient-gold: linear-gradient(135deg, oklch(0.78 0.14 85), oklch(0.86 0.12 90));
+
+  --gradient-hero: linear-gradient(135deg, oklch(0.88 0.06 165) 0%, oklch(0.94 0.03 120) 100%);
+  --hero-text: oklch(0.18 0.04 165);
+  --hero-text-muted: oklch(0.18 0.04 165 / 70%);
+  --hero-accent: oklch(0.6 0.14 85);
+  --hero-row-bg: oklch(0 0 0 / 6%);
+  --hero-border: oklch(0 0 0 / 12%);
+
+  --shadow-elegant: 0 20px 60px -20px color-mix(in oklab, oklch(0.32 0.07 165) 30%, transparent);
+  --glass-bg: color-mix(in oklab, white 60%, transparent);
+  --glass-border: color-mix(in oklab, white 40%, transparent);
+}
+
+.dark {
+  --background: oklch(0.15 0.025 165);
+  --foreground: oklch(0.96 0.01 90);
+  --card: oklch(0.2 0.03 165);
+  --card-foreground: oklch(0.96 0.01 90);
+  --primary: oklch(0.55 0.12 165);
+  --primary-foreground: oklch(0.12 0.02 165);
+  --gold: oklch(0.82 0.14 85);
+  --border: oklch(1 0 0 / 10%);
+  --ring: oklch(0.78 0.14 85);
+  --glass-bg: color-mix(in oklab, oklch(0.2 0.03 165) 60%, transparent);
+  --glass-border: color-mix(in oklab, white 12%, transparent);
+
+  --gradient-hero: linear-gradient(135deg, oklch(0.32 0.07 165) 0%, oklch(0.22 0.05 165) 100%);
+  --hero-text: oklch(0.98 0.01 90);
+  --hero-text-muted: oklch(0.98 0.01 90 / 80%);
+  --hero-accent: oklch(0.82 0.14 85);
+  --hero-row-bg: oklch(1 0 0 / 10%);
+  --hero-border: oklch(1 0 0 / 12%);
+}
+
+/* ===== تحسين التباين في الوضع الداكن ===== */
+@layer base {
+  * { border-color: var(--border); }
+  
+  /* ✅ منع التمرير الأفقي على جميع الأجهزة */
+  html, body {
+    background-color: var(--background);
+    color: var(--foreground);
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  h1, h2, h3, .font-serif {
+    font-family: var(--font-serif);
+    letter-spacing: -0.01em;
+  }
+
+  button:not([disabled]):hover,
+  a:not([disabled]):hover {
+    @apply transition-colors duration-200;
+  }
+
+  .dark .hover\:bg-accent:hover,
+  .dark button:hover,
+  .dark a:hover {
+    color: oklch(0.25 0.08 165) !important;
+  }
+
+  .dark .bg-emerald-600:hover,
+  .dark .bg-emerald-700:hover,
+  .dark .gradient-emerald:hover,
+  .dark .bg-primary:hover {
+    color: white !important;
+  }
+}
+
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    border: 1px solid var(--glass-border);
+  }
+  .gradient-emerald { background: var(--gradient-emerald); }
+  .gradient-gold    { background: var(--gradient-gold); }
+  .gradient-hero    { background: var(--gradient-hero); }
+  .shadow-elegant   { box-shadow: var(--shadow-elegant); }
+
+  .hero-text         { color: var(--hero-text); }
+  .hero-text-muted   { color: var(--hero-text-muted); }
+  .hero-accent       { color: var(--hero-accent); }
+  .hero-row-bg       { background: var(--hero-row-bg); }
+  .border-hero-border { border-color: var(--hero-border); }
+
+  .ornament::before, .ornament::after {
+    content: "";
+    display: inline-block;
+    width: 2.5rem;
+    height: 1px;
+    background: var(--gold);
+    vertical-align: middle;
+  }
+  .ornament::before { margin-inline-end: 0.75rem; }
+  .ornament::after  { margin-inline-start: 0.75rem; }
+
+  /* ✅ حركة انزلاق قائمة الهاتف */
+  .animate-slide-in-right {
+    animation: slideInRight 0.3s ease-out;
+  }
+}
+
+/* ✅ إطارات الحركة */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
