@@ -158,3 +158,13 @@
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
+
+@media print {
+  .no-print, .no-print * { display: none !important; }
+  body { background: white !important; color: black !important; }
+  .print-area { display: block !important; }
+  table { page-break-inside: auto; }
+  tr { page-break-inside: avoid; page-break-after: auto; }
+  td { border: 1px solid #000 !important; color: black !important; background: white !important; }
+  .font-arabic { font-family: 'Amiri', serif !important; }
+}
