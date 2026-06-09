@@ -169,11 +169,3 @@
   from { transform: translateX(100%); }
   to { transform: translateX(0); }
 }
-
-@media print {
-  .no-print, .no-print * { display: none !important; }
-  body { background: white !important; color: black !important; }
-  table { border-collapse: collapse; width: 100%; }
-  td { border: 1px solid #000 !important; color: black !important; background: white !important; }
-  .font-arabic { font-family: 'Amiri', serif !important; }
-}
