@@ -30,9 +30,14 @@ import {
 import {
   Menu, Download, BookOpen, Play, Volume2, Languages,
   BookText, ListTree, PenLine, Printer, ChevronLeft, ChevronRight,
-  ChevronDown, Sparkles,
+  ChevronDown, Sparkles, Loader2,
 } from "lucide-react";
-import { getWordMorphology, getTranslationFromAlquranCloud, getTafsir } from "@/lib/quran-ai";
+import {
+  getWordMorphology,
+  getTranslationFromAlquranCloud,
+  getTafsir,
+  getWordByWordTranslation,
+} from "@/lib/quran-ai";
 
 import arMessages from "@/messages/ar.json";
 import enMessages from "@/messages/en.json";
@@ -53,7 +58,7 @@ interface SurahInfo {
 interface Ayah {
   numberInSurah: number;
   text: string;
-  editionKey: number;
+  editionKey: number; // الرقم العالمي للآية
 }
 
 interface WordAnalysis {
@@ -130,6 +135,7 @@ export default function QuranStudyPage() {
   const [translationLang, setTranslationLang] = useState<"en" | "tr">("en");
 
   const [analyses, setAnalyses] = useState<Record<number, AyahAnalysis>>({});
+  const [aiLoading, setAiLoading] = useState(false);
   const [writingPage, setWritingPage] = useState(0);
   const wordsPerChunk = 8;
 
@@ -154,7 +160,7 @@ export default function QuranStudyPage() {
       .finally(() => setLoadingSurahs(false));
   }, []);
 
-  // جلب الآيات مع ترجمة موثوقة وتفسير وتحليل AI
+  // جلب الآيات مع ترجمة كلمة كلمة وتفسير وتحليل AI
   const fetchAyahs = useCallback(async (number: number) => {
     setError(null);
     setLoadingAyahs(true);
@@ -170,7 +176,7 @@ export default function QuranStudyPage() {
       const ayahsData: Ayah[] = data.data.ayahs.map((a: any) => ({
         numberInSurah: a.numberInSurah,
         text: a.text,
-        editionKey: a.number,
+        editionKey: a.number, // الرقم العالمي للآية
       }));
       setAyahs(ayahsData);
 
@@ -179,31 +185,50 @@ export default function QuranStudyPage() {
         const words = tokenizeArabic(ayah.text);
         const colors = words.map((w) => getWordColor(w));
 
-        const [translationEn, translationTr] = await Promise.all([
+        // ترجمة الجملة كاملة
+        const [transEn, transTr] = await Promise.all([
           getTranslationFromAlquranCloud(ayah.editionKey, "en.asad").catch(() => ""),
           getTranslationFromAlquranCloud(ayah.editionKey, "tr.diyanet").catch(() => ""),
         ]);
 
+        // ترجمة كلمة كلمة من api.quran.com
+        const verseKey = `${number}:${ayah.numberInSurah}`;
+        const [wordTransEn, wordTransTr] = await Promise.all([
+          getWordByWordTranslation(verseKey, "en").catch(() => []),
+          getWordByWordTranslation(verseKey, "tr").catch(() => []),
+        ]);
+
+        // دمج ترجمة الكلمات
+        const wordAnalyses: WordAnalysis[] = words.map((word, idx) => {
+          const enEntry = wordTransEn.find((w: any) => w.word === word);
+          const trEntry = wordTransTr.find((w: any) => w.word === word);
+          return {
+            word,
+            translation: {
+              en: enEntry?.translation || "",
+              tr: trEntry?.translation || "",
+            },
+            morphology: "",
+            color: colors[idx],
+          };
+        });
+
+        // تحليل صرفي وتفسير (من quran.ai)
         let morphologyList: any[] = [];
+        let tafsirText = "";
         try {
           morphologyList = await getWordMorphology(number, ayah.numberInSurah);
         } catch {}
-
-        let tafsirText = "";
         try {
           tafsirText = await getTafsir(number, ayah.numberInSurah, "ar-tafsir-al-jalalayn");
         } catch {}
 
-        const wordAnalyses: WordAnalysis[] = words.map((word, idx) => {
-          const morph = Array.isArray(morphologyList)
-            ? morphologyList.find((m: any) => m.word === word) || {}
-            : {};
-          return {
-            word,
-            translation: { en: "", tr: "" },
-            morphology: morph.features || morph.pos || "",
-            color: colors[idx],
-          };
+        // دمج الصرف مع الكلمات
+        wordAnalyses.forEach((wa) => {
+          const morph = morphologyList.find((m: any) => m.word === wa.word);
+          if (morph) {
+            wa.morphology = morph.features || morph.pos || "";
+          }
         });
 
         analysesMap[ayah.numberInSurah] = {
@@ -212,14 +237,15 @@ export default function QuranStudyPage() {
           rhetoric: "",
           tafsir: tafsirText,
           words: wordAnalyses,
-          ayahTranslationEn: translationEn,
-          ayahTranslationTr: translationTr,
+          ayahTranslationEn: transEn,
+          ayahTranslationTr: transTr,
         };
       });
 
       await Promise.all(promises);
       setAnalyses(analysesMap);
 
+      // بدء تحليل AI (نحو، إعراب، بلاغة)
       fetchAIAnalysis(number, ayahsData, analysesMap);
     } catch {
       setError("quran-study.errorLoadingAyahs");
@@ -229,14 +255,15 @@ export default function QuranStudyPage() {
     }
   }, []);
 
+  // تحليل AI
   const fetchAIAnalysis = async (
     surahNumber: number,
     ayahsData: Ayah[],
     currentAnalyses: Record<number, AyahAnalysis>
   ) => {
-    const ayahTexts = ayahsData.map(a => `[${a.numberInSurah}] ${a.text}`).join("\n");
-    const prompt = `
-أنت عالم في النحو العربي والبلاغة القرآنية. حلل كل آية من السورة التالية وأعطني JSON بهذا الشكل (فقط JSON بدون أي نص آخر):
+    setAiLoading(true);
+    const ayahTexts = ayahsData.map((a) => `[${a.numberInSurah}] ${a.text}`).join("\n");
+    const prompt = `أنت عالم في النحو العربي والبلاغة القرآنية. حلل كل آية من السورة التالية وأعطني JSON بهذا الشكل (فقط JSON بدون أي نص آخر):
 {
   "ayahs": [
     {
@@ -261,7 +288,7 @@ export default function QuranStudyPage() {
         if (jsonMatch) {
           const aiData = JSON.parse(jsonMatch[0]);
           if (aiData.ayahs) {
-            setAnalyses(prev => {
+            setAnalyses((prev) => {
               const updated = { ...prev };
               aiData.ayahs.forEach((aiAyah: any) => {
                 if (updated[aiAyah.number]) {
@@ -277,52 +304,64 @@ export default function QuranStudyPage() {
       }
     } catch (err) {
       console.error("AI analysis failed:", err);
+    } finally {
+      setAiLoading(false);
     }
   };
 
-  const playAyahAudio = useCallback((ayahNumber: number) => {
-    if (!selectedSurah) return;
-    const ayah = ayahs.find(a => a.numberInSurah === ayahNumber);
-    if (!ayah) return;
-    const globalAyah = ayah.editionKey;
-    const sources = [
-      `https://everyayah.com/data/Hudhaifi_64kbps/${String(globalAyah).padStart(3, '0')}.mp3`,
-      `https://cdn.islamicnetwork.com/quran/audio/64/ar.alhudhaifi/${String(selectedSurah).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`,
-    ];
-    const tryPlay = (index: number) => {
-      if (index >= sources.length) {
-        alert(t("quran-study.audioNotAvailable"));
-        return;
-      }
+  // الصوت
+  const playAyahAudio = useCallback(
+    (ayahNumber: number) => {
+      if (!selectedSurah) return;
+      const ayah = ayahs.find((a) => a.numberInSurah === ayahNumber);
+      if (!ayah) return;
+      const globalAyah = ayah.editionKey;
+      const sources = [
+        `https://everyayah.com/data/Hudhaifi_64kbps/${String(globalAyah).padStart(3, "0")}.mp3`,
+        `https://cdn.islamicnetwork.com/quran/audio/64/ar.alhudhaifi/${String(selectedSurah).padStart(3, "0")}${String(ayahNumber).padStart(3, "0")}.mp3`,
+      ];
+      const tryPlay = (index: number) => {
+        if (index >= sources.length) {
+          alert(t("quran-study.audioNotAvailable"));
+          return;
+        }
+        if (audioRef.current) {
+          audioRef.current.src = sources[index];
+          audioRef.current.load();
+          audioRef.current.play().catch(() => tryPlay(index + 1));
+        }
+      };
+      tryPlay(0);
+    },
+    [selectedSurah, ayahs, t]
+  );
+
+  const playWordAudio = useCallback(
+    (word: string, ayahNumber: number, wordIndex: number) => {
+      if (!selectedSurah) return;
+      const url = `https://audio.quranwbw.com/audio/${selectedSurah}_${ayahNumber}_${wordIndex + 1}.mp3`;
       if (audioRef.current) {
-        audioRef.current.src = sources[index];
+        audioRef.current.src = url;
         audioRef.current.load();
-        audioRef.current.play().catch(() => tryPlay(index + 1));
+        audioRef.current.play().catch(() => alert(t("quran-study.wordAudioComingSoon")));
       }
-    };
-    tryPlay(0);
-  }, [selectedSurah, ayahs, t]);
+    },
+    [selectedSurah, t]
+  );
 
-  const playWordAudio = useCallback((word: string, ayahNumber: number, wordIndex: number) => {
-    if (!selectedSurah) return;
-    const url = `https://audio.quranwbw.com/audio/${selectedSurah}_${ayahNumber}_${wordIndex + 1}.mp3`;
-    if (audioRef.current) {
-      audioRef.current.src = url;
-      audioRef.current.load();
-      audioRef.current.play().catch(() => alert(t("quran-study.wordAudioComingSoon")));
-    }
-  }, [selectedSurah, t]);
-
-  const handleSurahSelect = useCallback((number: number) => {
-    if (selectedSurah === number) return;
-    setSelectedSurah(number);
-    setMobileOpen(false);
-    setWritingPage(0);
-    setTafsirOpen({});
-    setIrabOpen({});
-    setRhetoricOpen({});
-    fetchAyahs(number);
-  }, [selectedSurah, fetchAyahs]);
+  const handleSurahSelect = useCallback(
+    (number: number) => {
+      if (selectedSurah === number) return;
+      setSelectedSurah(number);
+      setMobileOpen(false);
+      setWritingPage(0);
+      setTafsirOpen({});
+      setIrabOpen({});
+      setRhetoricOpen({});
+      fetchAyahs(number);
+    },
+    [selectedSurah, fetchAyahs]
+  );
 
   const writingChunks = useMemo(() => {
     if (!selectedSurah || ayahs.length === 0) return [];
@@ -338,10 +377,11 @@ export default function QuranStudyPage() {
       const words = analysis.words;
       for (let i = 0; i < words.length; i += wordsPerChunk) {
         const chunkWords = words.slice(i, i + wordsPerChunk);
-        const chunkText = chunkWords.map(w => w.word).join(" ");
-        const chunkTranslation = translationLang === "en"
-          ? analysis.ayahTranslationEn
-          : analysis.ayahTranslationTr;
+        const chunkText = chunkWords.map((w) => w.word).join(" ");
+        const chunkTranslation =
+          translationLang === "en"
+            ? analysis.ayahTranslationEn
+            : analysis.ayahTranslationTr;
         allChunks.push({
           ayahNumber: ayah.numberInSurah,
           words: chunkWords,
@@ -354,7 +394,10 @@ export default function QuranStudyPage() {
   }, [selectedSurah, ayahs, analyses, translationLang]);
 
   const totalWritingPages = Math.ceil(writingChunks.length / 2);
-  const currentPageChunks = writingChunks.slice(writingPage * 2, writingPage * 2 + 2);
+  const currentPageChunks = writingChunks.slice(
+    writingPage * 2,
+    writingPage * 2 + 2
+  );
   const printRef = useRef<HTMLDivElement>(null);
 
   const handleDownload = () => {
@@ -391,40 +434,60 @@ export default function QuranStudyPage() {
     setDownloadDialogOpen(false);
   };
 
-  const WordItem = ({ wordAnalysis, ayahNum, wordIndex, onPlayWord }: {
+  const WordItem = ({
+    wordAnalysis,
+    ayahNum,
+    wordIndex,
+    onPlayWord,
+  }: {
     wordAnalysis: WordAnalysis;
     ayahNum: number;
     wordIndex: number;
     onPlayWord: (word: string, ayah: number, idx: number) => void;
-  }) => (
-    <TooltipProvider delayDuration={200}>
-      <DropdownMenu>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <DropdownMenuTrigger asChild>
-              <span
-                className="cursor-pointer inline-block transition-all duration-200 hover:scale-110"
-                style={{ color: wordAnalysis.color }}
-              >
-                {wordAnalysis.word}
-              </span>
-            </DropdownMenuTrigger>
-          </TooltipTrigger>
-          <TooltipContent side="top" style={{ backgroundColor: "#064e3b", color: "#f59e0b" }}>
-            {/* الترجمة تظهر هنا عند توفرها */}
-          </TooltipContent>
-        </Tooltip>
-        <DropdownMenuContent className="w-56">
-          <DropdownMenuItem onClick={() => onPlayWord(wordAnalysis.word, ayahNum, wordIndex)}>
-            <Volume2 className="w-4 h-4 ml-2" /> {t("quran-study.playWord")}
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            <ListTree className="w-4 h-4 ml-2" /> {t("quran-study.morphologyAnalysis")}: {wordAnalysis.morphology || t("quran-study.notAvailable")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </TooltipProvider>
-  );
+  }) => {
+    const trans =
+      translationLang === "en"
+        ? wordAnalysis.translation.en
+        : wordAnalysis.translation.tr;
+    return (
+      <TooltipProvider delayDuration={200}>
+        <DropdownMenu>
+          <Tooltip open={!!trans}>
+            <TooltipTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <span
+                  className="cursor-pointer inline-block transition-all duration-200 hover:scale-110"
+                  style={{ color: wordAnalysis.color }}
+                >
+                  {wordAnalysis.word}
+                </span>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="bg-[#064e3b] text-[#f59e0b] border-[#f59e0b]"
+            >
+              {trans || wordAnalysis.word}
+            </TooltipContent>
+          </Tooltip>
+          <DropdownMenuContent className="w-56 bg-background border-border">
+            <DropdownMenuItem
+              onClick={() =>
+                onPlayWord(wordAnalysis.word, ayahNum, wordIndex)
+              }
+            >
+              <Volume2 className="w-4 h-4 ml-2" /> {t("quran-study.playWord")}
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <ListTree className="w-4 h-4 ml-2" />{" "}
+              {t("quran-study.morphologyAnalysis")}:{" "}
+              {wordAnalysis.morphology || t("quran-study.notAvailable")}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </TooltipProvider>
+    );
+  };
 
   const SurahList = () => (
     <ScrollArea className="h-full pr-2">
@@ -432,9 +495,15 @@ export default function QuranStudyPage() {
         {surahs.map((surah) => (
           <Button
             key={surah.number}
-            variant={selectedSurah === surah.number ? "secondary" : "ghost"}
+            variant={
+              selectedSurah === surah.number ? "secondary" : "ghost"
+            }
             className="w-full justify-start text-left h-auto py-3 px-4 font-normal hover:bg-green-50 dark:hover:bg-green-900/20 transition"
-            style={selectedSurah === surah.number ? { backgroundColor: "#064e3b", color: "#f59e0b" } : {}}
+            style={
+              selectedSurah === surah.number
+                ? { backgroundColor: "#064e3b", color: "#f59e0b" }
+                : {}
+            }
             onClick={() => handleSurahSelect(surah.number)}
           >
             <div className="flex items-center gap-3 w-full">
@@ -442,8 +511,12 @@ export default function QuranStudyPage() {
                 {surah.number}
               </span>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-medium truncate">{surah.englishName}</div>
-                <div className="text-xs text-muted-foreground font-arabic truncate">{surah.name}</div>
+                <div className="text-sm font-medium truncate">
+                  {surah.englishName}
+                </div>
+                <div className="text-xs text-muted-foreground font-arabic truncate">
+                  {surah.name}
+                </div>
               </div>
             </div>
           </Button>
@@ -460,8 +533,12 @@ export default function QuranStudyPage() {
         const isTafsirOpen = tafsirOpen[ayah.numberInSurah] || false;
         const isIrabOpen = irabOpen[ayah.numberInSurah] || false;
         const isRhetoricOpen = rhetoricOpen[ayah.numberInSurah] || false;
+
         return (
-          <div key={ayah.numberInSurah} className="group bg-white dark:bg-card/40 rounded-xl p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+          <div
+            key={ayah.numberInSurah}
+            className="bg-white dark:bg-card rounded-xl p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow"
+          >
             <div className="flex items-start gap-3">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -469,68 +546,171 @@ export default function QuranStudyPage() {
                     {ayah.numberInSurah}
                   </span>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48">
-                  <DropdownMenuItem onClick={() => playAyahAudio(ayah.numberInSurah)}>
-                    <Play className="w-4 h-4 ml-2" /> {t("quran-study.playAyah")}
+                <DropdownMenuContent className="w-48 bg-background border-border">
+                  <DropdownMenuItem
+                    onClick={() => playAyahAudio(ayah.numberInSurah)}
+                  >
+                    <Play className="w-4 h-4 ml-2" />{" "}
+                    {t("quran-study.playAyah")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setTafsirOpen(prev => ({ ...prev, [ayah.numberInSurah]: !isTafsirOpen }))}>
-                    <BookOpen className="w-4 h-4 ml-2" /> {t("quran-study.tafsir")}
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setTafsirOpen((prev) => ({
+                        ...prev,
+                        [ayah.numberInSurah]: !isTafsirOpen,
+                      }))
+                    }
+                  >
+                    <BookOpen className="w-4 h-4 ml-2" />{" "}
+                    {t("quran-study.tafsir")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setIrabOpen(prev => ({ ...prev, [ayah.numberInSurah]: !isIrabOpen }))}>
-                    <PenLine className="w-4 h-4 ml-2" /> {t("quran-study.irab")}
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setIrabOpen((prev) => ({
+                        ...prev,
+                        [ayah.numberInSurah]: !isIrabOpen,
+                      }))
+                    }
+                  >
+                    <PenLine className="w-4 h-4 ml-2" />{" "}
+                    {t("quran-study.irab")}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setRhetoricOpen(prev => ({ ...prev, [ayah.numberInSurah]: !isRhetoricOpen }))}>
-                    <BookText className="w-4 h-4 ml-2" /> {t("quran-study.rhetoricAnalysis")}
+                  <DropdownMenuItem
+                    onClick={() =>
+                      setRhetoricOpen((prev) => ({
+                        ...prev,
+                        [ayah.numberInSurah]: !isRhetoricOpen,
+                      }))
+                    }
+                  >
+                    <BookText className="w-4 h-4 ml-2" />{" "}
+                    {t("quran-study.rhetoricAnalysis")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <div className="flex-1">
-                <div className="flex flex-wrap justify-end gap-x-3 gap-y-2 text-3xl md:text-4xl font-arabic leading-relaxed">
+
+              <div className="flex-1" dir="rtl">
+                <div className="flex flex-wrap justify-start gap-x-3 gap-y-2 text-3xl md:text-4xl font-arabic leading-relaxed text-right">
                   {analysis.words.map((word, idx) => (
-                    <WordItem key={`${ayah.numberInSurah}-${idx}`} wordAnalysis={word} ayahNum={ayah.numberInSurah} wordIndex={idx} onPlayWord={playWordAudio} />
+                    <WordItem
+                      key={`${ayah.numberInSurah}-${idx}`}
+                      wordAnalysis={word}
+                      ayahNum={ayah.numberInSurah}
+                      wordIndex={idx}
+                      onPlayWord={playWordAudio}
+                    />
                   ))}
                 </div>
+
+                {/* عرض تحليلات AI */}
                 {analysis.tafsir && (
-                  <Collapsible open={isTafsirOpen} onOpenChange={(open) => setTafsirOpen(prev => ({ ...prev, [ayah.numberInSurah]: open }))} className="mt-3">
+                  <Collapsible
+                    open={isTafsirOpen}
+                    onOpenChange={(open) =>
+                      setTafsirOpen((prev) => ({
+                        ...prev,
+                        [ayah.numberInSurah]: open,
+                      }))
+                    }
+                    className="mt-3"
+                  >
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-xs gap-1 text-green-800">
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isTafsirOpen ? "rotate-180" : ""}`} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs gap-1 text-green-800"
+                      >
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform ${
+                            isTafsirOpen ? "rotate-180" : ""
+                          }`}
+                        />
                         {t("quran-study.tafsir")}
                       </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 p-3 bg-green-50/50 rounded-lg text-sm leading-relaxed font-arabic text-right" dir="rtl">
+                    <CollapsibleContent className="mt-2 p-3 bg-green-50/50 rounded-lg text-sm leading-relaxed font-arabic text-right">
                       {analysis.tafsir}
                     </CollapsibleContent>
                   </Collapsible>
                 )}
+
                 {(analysis.grammar || analysis.irab) && (
-                  <Collapsible open={isIrabOpen} onOpenChange={(open) => setIrabOpen(prev => ({ ...prev, [ayah.numberInSurah]: open }))} className="mt-2">
+                  <Collapsible
+                    open={isIrabOpen}
+                    onOpenChange={(open) =>
+                      setIrabOpen((prev) => ({
+                        ...prev,
+                        [ayah.numberInSurah]: open,
+                      }))
+                    }
+                    className="mt-2"
+                  >
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-xs gap-1 text-green-800">
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isIrabOpen ? "rotate-180" : ""}`} />
-                        {t("quran-study.irab")} &amp; {t("quran-study.grammarAnalysis")}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs gap-1 text-green-800"
+                      >
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform ${
+                            isIrabOpen ? "rotate-180" : ""
+                          }`}
+                        />
+                        {t("quran-study.irab")} &amp;{" "}
+                        {t("quran-study.grammarAnalysis")}
                       </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 p-3 bg-green-50/50 rounded-lg text-sm leading-relaxed font-arabic text-right" dir="rtl">
-                      <p className="font-bold mb-1">النحو:</p>
+                    <CollapsibleContent className="mt-2 p-3 bg-green-50/50 rounded-lg text-sm leading-relaxed font-arabic text-right">
+                      <p className="font-bold mb-1">
+                        {t("quran-study.grammarAnalysis")}:
+                      </p>
                       <p>{analysis.grammar || t("quran-study.notAvailable")}</p>
-                      <p className="font-bold mb-1 mt-2">الإعراب:</p>
+                      <p className="font-bold mb-1 mt-2">
+                        {t("quran-study.irab")}:
+                      </p>
                       <p>{analysis.irab || t("quran-study.notAvailable")}</p>
                     </CollapsibleContent>
                   </Collapsible>
                 )}
+
                 {analysis.rhetoric && (
-                  <Collapsible open={isRhetoricOpen} onOpenChange={(open) => setRhetoricOpen(prev => ({ ...prev, [ayah.numberInSurah]: open }))} className="mt-2">
+                  <Collapsible
+                    open={isRhetoricOpen}
+                    onOpenChange={(open) =>
+                      setRhetoricOpen((prev) => ({
+                        ...prev,
+                        [ayah.numberInSurah]: open,
+                      }))
+                    }
+                    className="mt-2"
+                  >
                     <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="text-xs gap-1 text-green-800">
-                        <ChevronDown className={`w-3 h-3 transition-transform ${isRhetoricOpen ? "rotate-180" : ""}`} />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs gap-1 text-green-800"
+                      >
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform ${
+                            isRhetoricOpen ? "rotate-180" : ""
+                          }`}
+                        />
                         {t("quran-study.rhetoricAnalysis")}
                       </Button>
                     </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-2 p-3 bg-green-50/50 rounded-lg text-sm leading-relaxed font-arabic text-right" dir="rtl">
+                    <CollapsibleContent className="mt-2 p-3 bg-green-50/50 rounded-lg text-sm leading-relaxed font-arabic text-right">
                       {analysis.rhetoric}
                     </CollapsibleContent>
                   </Collapsible>
+                )}
+
+                {aiLoading && (
+                  <div className="flex items-center gap-2 mt-2 text-green-600">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-xs">
+                      {t("quran-study.loadingAnalysis")}
+                    </span>
+                  </div>
                 )}
               </div>
             </div>
@@ -543,23 +723,52 @@ export default function QuranStudyPage() {
   const WritingView = () => (
     <div ref={printRef} className="space-y-8 print:space-y-2">
       {currentPageChunks.map((chunk, chunkIdx) => (
-        <div key={`${chunk.ayahNumber}-${chunkIdx}`} className="bg-white dark:bg-card/60 rounded-xl border border-green-200 p-6 print:border-2 print:border-black print:bg-white">
-          <div className="mb-3 text-right font-arabic text-2xl md:text-3xl leading-relaxed text-green-950 dark:text-green-100" dir="rtl">
+        <div
+          key={`${chunk.ayahNumber}-${chunkIdx}`}
+          className="bg-white dark:bg-card rounded-xl border border-green-200 p-6 print:border-2 print:border-black print:bg-white"
+        >
+          <div
+            className="mb-3 text-right font-arabic text-2xl md:text-3xl leading-relaxed"
+            dir="rtl"
+          >
             {chunk.ayahText}
           </div>
-          <div className="mb-5 text-lg text-green-800 dark:text-green-200 print:text-black font-medium">
+          <div className="mb-5 text-lg text-green-800 dark:text-green-200 font-medium">
             {chunk.ayahTranslation || t("quran-study.noTranslation")}
           </div>
           <div dir="rtl" style={{ direction: "rtl" }}>
-            <table className="w-full border-collapse bg-white dark:bg-transparent rounded-lg overflow-hidden" style={{ direction: "rtl" }}>
+            <table
+              className="w-full border-collapse bg-white dark:bg-transparent rounded-lg overflow-hidden"
+              style={{ direction: "rtl" }}
+            >
               <tbody>
+                {/* صف الكلمات العربية */}
                 <tr>
                   {chunk.words.map((word, wIdx) => (
-                    <td key={`w-${wIdx}`} className="border border-green-200 p-3 text-center font-arabic text-2xl font-bold" style={{ color: word.color }}>
+                    <td
+                      key={`w-${wIdx}`}
+                      className="border border-green-200 p-3 text-center font-arabic text-2xl font-bold"
+                      style={{ color: word.color }}
+                    >
                       {word.word}
                     </td>
                   ))}
                 </tr>
+                {/* صف ترجمة كلمة كلمة */}
+                <tr>
+                  {chunk.words.map((word, wIdx) => (
+                    <td
+                      key={`t-${wIdx}`}
+                      className="border border-green-200 p-3 text-center text-sm"
+                      style={{ color: word.color }}
+                    >
+                      {translationLang === "en"
+                        ? word.translation.en
+                        : word.translation.tr}
+                    </td>
+                  ))}
+                </tr>
+                {/* صفوف الكتابة (3 صفوف) */}
                 {[1, 2, 3].map((line) => (
                   <tr key={`line-${line}`}>
                     {chunk.words.map((word, wIdx) => (
@@ -579,12 +788,26 @@ export default function QuranStudyPage() {
         </div>
       ))}
       <div className="flex justify-between items-center mt-6 no-print">
-        <Button variant="outline" className="border-green-300" disabled={writingPage === 0} onClick={() => setWritingPage(p => p - 1)}>
-          <ChevronLeft className="w-4 h-4 ml-2" /> {t("quran-study.previousPage")}
+        <Button
+          variant="outline"
+          className="border-green-300"
+          disabled={writingPage === 0}
+          onClick={() => setWritingPage((p) => p - 1)}
+        >
+          <ChevronLeft className="w-4 h-4 ml-2" />{" "}
+          {t("quran-study.previousPage")}
         </Button>
-        <span className="text-sm font-medium">{t("quran-study.page")} {writingPage + 1} / {totalWritingPages}</span>
-        <Button variant="outline" className="border-green-300" disabled={writingPage >= totalWritingPages - 1} onClick={() => setWritingPage(p => p + 1)}>
-          {t("quran-study.nextPage")} <ChevronRight className="w-4 h-4 mr-2" />
+        <span className="text-sm font-medium">
+          {t("quran-study.page")} {writingPage + 1} / {totalWritingPages}
+        </span>
+        <Button
+          variant="outline"
+          className="border-green-300"
+          disabled={writingPage >= totalWritingPages - 1}
+          onClick={() => setWritingPage((p) => p + 1)}
+        >
+          {t("quran-study.nextPage")}{" "}
+          <ChevronRight className="w-4 h-4 mr-2" />
         </Button>
       </div>
     </div>
@@ -594,11 +817,14 @@ export default function QuranStudyPage() {
     <div className="flex flex-wrap items-center justify-between gap-3 mb-6 p-3 bg-green-50/80 dark:bg-green-900/20 rounded-xl border border-green-200 no-print">
       <div className="flex items-center gap-2">
         <Languages className="w-4 h-4 text-green-800" />
-        <Select value={translationLang} onValueChange={(v) => setTranslationLang(v as "en" | "tr")}>
-          <SelectTrigger className="w-28 h-9 border-green-300">
+        <Select
+          value={translationLang}
+          onValueChange={(v) => setTranslationLang(v as "en" | "tr")}
+        >
+          <SelectTrigger className="w-28 h-9 border-green-300 bg-background">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="bg-background border-border">
             <SelectItem value="en">English</SelectItem>
             <SelectItem value="tr">Türkçe</SelectItem>
           </SelectContent>
@@ -606,10 +832,20 @@ export default function QuranStudyPage() {
       </div>
       {viewMode === "writing" && (
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" className="border-green-300" onClick={() => setDownloadDialogOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-green-300"
+            onClick={() => setDownloadDialogOpen(true)}
+          >
             <Download className="w-4 h-4 mr-1" /> {t("quran-study.download")}
           </Button>
-          <Button variant="outline" size="sm" className="border-green-300" onClick={() => window.print()}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="border-green-300"
+            onClick={() => window.print()}
+          >
             <Printer className="w-4 h-4 mr-1" /> {t("quran-study.print")}
           </Button>
         </div>
@@ -619,25 +855,69 @@ export default function QuranStudyPage() {
 
   const DownloadDialog = () => (
     <Dialog open={downloadDialogOpen} onOpenChange={setDownloadDialogOpen}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle>{t("quran-study.downloadOptions")}</DialogTitle></DialogHeader>
+      <DialogContent className="sm:max-w-md bg-background border-border">
+        <DialogHeader>
+          <DialogTitle>{t("quran-study.downloadOptions")}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4">
           <div>
             <Label>{t("quran-study.format")}</Label>
-            <RadioGroup value={downloadFormat} onValueChange={(v) => setDownloadFormat(v as any)}>
-              <div className="flex items-center space-x-2"><RadioGroupItem value="pdf" id="pdf" /><Label htmlFor="pdf">PDF</Label></div>
-              <div className="flex items-center space-x-2"><RadioGroupItem value="word" id="word" /><Label htmlFor="word">Word</Label></div>
-              <div className="flex items-center space-x-2"><RadioGroupItem value="print" id="print" /><Label htmlFor="print">{t("quran-study.print")}</Label></div>
+            <RadioGroup
+              value={downloadFormat}
+              onValueChange={(v) => setDownloadFormat(v as any)}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="pdf" id="pdf" />
+                <Label htmlFor="pdf">PDF</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="word" id="word" />
+                <Label htmlFor="word">Word</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="print" id="print" />
+                <Label htmlFor="print">{t("quran-study.print")}</Label>
+              </div>
             </RadioGroup>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div><Label>{t("quran-study.fromPage")}</Label><Input type="number" min={1} max={totalWritingPages} value={pageRangeFrom} onChange={(e) => setPageRangeFrom(Number(e.target.value))} /></div>
-            <div><Label>{t("quran-study.toPage")}</Label><Input type="number" min={1} max={totalWritingPages} value={pageRangeTo} onChange={(e) => setPageRangeTo(Number(e.target.value))} /></div>
+            <div>
+              <Label>{t("quran-study.fromPage")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={totalWritingPages}
+                value={pageRangeFrom}
+                onChange={(e) => setPageRangeFrom(Number(e.target.value))}
+                className="bg-background"
+              />
+            </div>
+            <div>
+              <Label>{t("quran-study.toPage")}</Label>
+              <Input
+                type="number"
+                min={1}
+                max={totalWritingPages}
+                value={pageRangeTo}
+                onChange={(e) => setPageRangeTo(Number(e.target.value))}
+                className="bg-background"
+              />
+            </div>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDownloadDialogOpen(false)}>{t("quran-study.cancel")}</Button>
-          <Button onClick={handleDownload} style={{ backgroundColor: "#064e3b", color: "#f59e0b" }}>{t("quran-study.download")}</Button>
+          <Button
+            variant="outline"
+            onClick={() => setDownloadDialogOpen(false)}
+          >
+            {t("quran-study.cancel")}
+          </Button>
+          <Button
+            onClick={handleDownload}
+            style={{ backgroundColor: "#064e3b", color: "#f59e0b" }}
+          >
+            {t("quran-study.download")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -652,30 +932,47 @@ export default function QuranStudyPage() {
         <aside className="hidden lg:flex lg:w-80 xl:w-96 flex-col border-r border-green-200 bg-green-50/20 dark:bg-green-900/10 no-print">
           <div className="p-4 border-b border-green-200">
             <h2 className="text-lg font-semibold flex items-center gap-2 text-green-900 dark:text-green-100">
-              <BookOpen className="w-5 h-5 text-green-700" /> {t("quran-study.selectSurah")}
+              <BookOpen className="w-5 h-5 text-green-700" />{" "}
+              {t("quran-study.selectSurah")}
             </h2>
           </div>
           {loadingSurahs ? (
             <div className="p-4 space-y-3">
-              {Array.from({ length: 10 }).map((_, i) => (<Skeleton key={i} className="h-12 w-full" />))}
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
             </div>
           ) : error && surahs.length === 0 ? (
-            <Alert variant="destructive"><AlertDescription>{t(error)}</AlertDescription></Alert>
-          ) : (<SurahList />)}
+            <Alert variant="destructive">
+              <AlertDescription>{t(error)}</AlertDescription>
+            </Alert>
+          ) : (
+            <SurahList />
+          )}
         </aside>
 
         <main className="flex-1 flex flex-col min-w-0">
           <div className="lg:hidden flex items-center p-4 border-b border-green-200 bg-green-50/20 dark:bg-green-900/10 no-print">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="mr-3 border-green-300"><Menu className="w-5 h-5" /></Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="mr-3 border-green-300"
+                >
+                  <Menu className="w-5 h-5" />
+                </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0">
-                <SheetHeader className="p-4 border-b"><SheetTitle>{t("quran-study.selectSurah")}</SheetTitle></SheetHeader>
+              <SheetContent side="left" className="w-80 p-0 bg-background">
+                <SheetHeader className="p-4 border-b">
+                  <SheetTitle>{t("quran-study.selectSurah")}</SheetTitle>
+                </SheetHeader>
                 {!loadingSurahs && surahs.length > 0 && <SurahList />}
               </SheetContent>
             </Sheet>
-            <h1 className="text-xl font-bold text-green-900 dark:text-green-100">{t("quran-study.title")}</h1>
+            <h1 className="text-xl font-bold text-green-900 dark:text-green-100">
+              {t("quran-study.title")}
+            </h1>
           </div>
 
           <div className="flex-1 overflow-auto p-4 md:p-6 lg:p-8">
@@ -683,9 +980,14 @@ export default function QuranStudyPage() {
               <>
                 <div className="mb-6 text-center">
                   <h2 className="text-3xl font-bold text-green-900 dark:text-green-100">
-                    {surahs.find((s) => s.number === selectedSurah)?.englishName}
+                    {
+                      surahs.find((s) => s.number === selectedSurah)
+                        ?.englishName
+                    }
                     <span className="mx-2 text-yellow-500">|</span>
-                    <span className="font-arabic text-4xl">{surahs.find((s) => s.number === selectedSurah)?.name}</span>
+                    <span className="font-arabic text-4xl">
+                      {surahs.find((s) => s.number === selectedSurah)?.name}
+                    </span>
                   </h2>
                 </div>
 
@@ -693,28 +995,50 @@ export default function QuranStudyPage() {
 
                 {loadingAyahs ? (
                   <div className="space-y-4">
-                    {Array.from({ length: 5 }).map((_, i) => (<Skeleton key={i} className="h-20 w-full" />))}
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 w-full" />
+                    ))}
                   </div>
                 ) : (
-                  <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-full">
+                  <Tabs
+                    value={viewMode}
+                    onValueChange={(v) => setViewMode(v as any)}
+                    className="w-full"
+                  >
                     <TabsList className="mx-auto mb-6 w-fit bg-green-100/50 dark:bg-green-900/30 p-1 rounded-full no-print">
-                      <TabsTrigger value="study" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm">
-                        <Sparkles className="w-4 h-4 mr-1" /> {t("quran-study.studyMode")}
+                      <TabsTrigger
+                        value="study"
+                        className="rounded-full data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm"
+                      >
+                        <Sparkles className="w-4 h-4 mr-1" />{" "}
+                        {t("quran-study.studyMode")}
                       </TabsTrigger>
-                      <TabsTrigger value="writing" className="rounded-full data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm">
-                        <PenLine className="w-4 h-4 mr-1" /> {t("quran-study.writingMode")}
+                      <TabsTrigger
+                        value="writing"
+                        className="rounded-full data-[state=active]:bg-white data-[state=active]:text-green-900 data-[state=active]:shadow-sm"
+                      >
+                        <PenLine className="w-4 h-4 mr-1" />{" "}
+                        {t("quran-study.writingMode")}
                       </TabsTrigger>
                     </TabsList>
-                    <TabsContent value="study"><StudyView /></TabsContent>
-                    <TabsContent value="writing"><WritingView /></TabsContent>
+                    <TabsContent value="study">
+                      <StudyView />
+                    </TabsContent>
+                    <TabsContent value="writing">
+                      <WritingView />
+                    </TabsContent>
                   </Tabs>
                 )}
               </>
             ) : (
               <div className="flex flex-col items-center justify-center h-full text-center py-20">
                 <BookOpen className="w-20 h-20 text-green-300 mb-6" />
-                <h2 className="text-2xl font-bold mb-2 text-green-900 dark:text-green-100">{t("quran-study.title")}</h2>
-                <p className="text-muted-foreground max-w-md">{t("quran-study.selectPrompt")}</p>
+                <h2 className="text-2xl font-bold mb-2 text-green-900 dark:text-green-100">
+                  {t("quran-study.title")}
+                </h2>
+                <p className="text-muted-foreground max-w-md">
+                  {t("quran-study.selectPrompt")}
+                </p>
               </div>
             )}
           </div>

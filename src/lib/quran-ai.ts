@@ -108,3 +108,27 @@ export async function getTranslationFromAlquranCloud(
     return "";
   }
 }
+
+export async function getWordByWordTranslation(
+  verseKey: string, // e.g., "2:255"
+  language: "en" | "tr" = "en"
+): Promise<{ word: string; translation: string }[]> {
+  const translationsMap: Record<string, number> = {
+    en: 85,  // English (Dr. Mohsin Khan)
+    tr: 77,  // Turkish (Diyanet)
+  };
+  const translationId = translationsMap[language];
+  try {
+    const res = await fetch(
+      `https://api.quran.com/api/v4/verses/by_key/${verseKey}?words=true&translations=${translationId}`
+    );
+    const data = await res.json();
+    if (!data.verse || !data.verse.words) return [];
+    return data.verse.words.map((w: any) => ({
+      word: w.text_uthmani, // أو w.text_indopak
+      translation: w.translation?.text || "",
+    }));
+  } catch {
+    return [];
+  }
+}
