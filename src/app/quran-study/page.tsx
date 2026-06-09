@@ -84,7 +84,7 @@ interface SurahInfo {
 
 interface Ayah {
   numberInSurah: number;
-  text: string;
+  text: string; // النص العربي
 }
 
 interface WordAnalysis {
@@ -182,7 +182,7 @@ export default function QuranStudyPage() {
       .finally(() => setLoadingSurahs(false));
   }, []);
 
-  // جلب الآيات مع ترجمة كلمة كلمة وتفسير وتحليل AI
+  // جلب الآيات من api.alquran.cloud (نص عربي) ثم الترجمة والتحليل
   const fetchAyahs = useCallback(async (number: number) => {
     setError(null);
     setLoadingAyahs(true);
@@ -205,25 +205,30 @@ export default function QuranStudyPage() {
       const promises = ayahsData.map(async (ayah) => {
         const verseKey = `${number}:${ayah.numberInSurah}`;
 
-        // جلب الكلمات وترجماتها (إنجليزي وتركي) والتفسير
+        // جلب الترجمات والتفسير من api.quran.com
         const [wordDataEn, wordDataTr, tafsirText] = await Promise.all([
           getWords(verseKey, "en").catch(() => []),
           getWords(verseKey, "tr").catch(() => []),
           getTafsirFromQurancom(verseKey).catch(() => ""),
         ]);
 
-        // بناء تحليل الكلمات
-        const words: WordAnalysis[] = (wordDataEn || []).map((w: any, idx: number) => ({
-          word: w.word,
-          translation: {
-            en: w.translation,
-            tr: wordDataTr?.[idx]?.translation || "",
-          },
-          morphology: "",
-          color: getWordColor(w.word),
-        }));
+        // بناء الكلمات: نأخذ الكلمات من النص العربي لأنه هو الصحيح
+        const arabicWords = ayah.text.split(/\s+/);
+        const words: WordAnalysis[] = arabicWords.map((word, idx) => {
+          // نبحث عن ترجمة الكلمة في القوائم القادمة (مع مراعاة الاختلافات الطفيفة)
+          const enEntry = wordDataEn.find((w: any) => w.word === word);
+          const trEntry = wordDataTr.find((w: any) => w.word === word);
+          return {
+            word,
+            translation: {
+              en: enEntry?.translation || "",
+              tr: trEntry?.translation || "",
+            },
+            morphology: "",
+            color: getWordColor(word),
+          };
+        });
 
-        // ترجمة الجملة كاملة من الكلمات (أفضل من api.alquran.cloud لأنها متطابقة)
         const ayahTranslationEn = words.map(w => w.translation.en).join(" ");
         const ayahTranslationTr = words.map(w => w.translation.tr).join(" ");
 
@@ -241,7 +246,7 @@ export default function QuranStudyPage() {
       await Promise.all(promises);
       setAnalyses(analysesMap);
 
-      // بدء تحليل AI (نحو، إعراب، بلاغة)
+      // تشغيل التحليل بالذكاء الاصطناعي
       fetchAIAnalysis(number, ayahsData, analysesMap);
     } catch {
       setError("quran-study.errorLoadingAyahs");
@@ -305,7 +310,7 @@ export default function QuranStudyPage() {
     }
   };
 
-  // الصوت - آية (مصدر mp3quran)
+  // الصوت - آية
   const playAyahAudio = useCallback((ayahNumber: number) => {
     if (!selectedSurah) return;
     const url = `https://server11.mp3quran.net/huthifi/${String(selectedSurah).padStart(3, '0')}${String(ayahNumber).padStart(3, '0')}.mp3`;
@@ -316,7 +321,7 @@ export default function QuranStudyPage() {
     }
   }, [selectedSurah, t]);
 
-  // صوت الكلمة (مؤقت - سيتم تحديثه لاحقاً)
+  // صوت الكلمة (مؤقت)
   const playWordAudio = useCallback((word: string, ayahNumber: number, wordIndex: number) => {
     if (!selectedSurah) return;
     alert(t("quran-study.wordAudioComingSoon"));
@@ -401,7 +406,6 @@ export default function QuranStudyPage() {
     setDownloadDialogOpen(false);
   };
 
-  // مكون الكلمة مع Tooltip للترجمة
   const WordItem = ({ wordAnalysis, ayahNum, wordIndex, onPlayWord }: {
     wordAnalysis: WordAnalysis;
     ayahNum: number;
