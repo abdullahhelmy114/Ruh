@@ -35,7 +35,7 @@ export default function CartPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        <Link href="/login" className="text-amber-600"><T>Sign in to view your cart</T></Link>
+        <Link href="/login" className="text-accent-foreground"><T>Sign in to view your cart</T></Link>
       </div>
     );
   }
@@ -46,14 +46,14 @@ export default function CartPage() {
         <ArrowLeft size={16} /> <T>Back to Marketplace</T>
       </Link>
       <h1 className="font-serif text-3xl mb-6 flex items-center gap-2">
-        <ShoppingCart className="h-7 w-7 text-amber-500" /> <T>Shopping Cart</T>
+        <ShoppingCart className="h-7 w-7 text-secondary-foreground" /> <T>Shopping Cart</T>
       </h1>
 
       {loading ? (
         <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
       ) : items.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <ShoppingCart className="mx-auto h-12 w-12 mb-4 text-amber-500/50" />
+          <ShoppingCart className="mx-auto h-12 w-12 mb-4 text-secondary-foreground/50" />
           <p><T>Your cart is empty.</T></p>
         </div>
       ) : (
@@ -69,12 +69,12 @@ export default function CartPage() {
                   )}
                 </div>
                 <div>
-                  <Link href={`/courses/${item.course_id}`} className="font-medium hover:text-amber-600">{item.title}</Link>
+                  <Link href={`/courses/${item.course_id}`} className="font-medium hover:text-accent-foreground">{item.title}</Link>
                   <p className="text-xs text-muted-foreground"><T>by</T> {item.teacher_name} · {item.level}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-bold text-amber-600">${item.price}</span>
+                <span className="font-bold text-accent-foreground">${item.price}</span>
                 <button onClick={() => removeItem(item.course_id)} className="p-2 rounded-full hover:bg-red-50 text-red-500">
                   <Trash2 size={16} />
                 </button>

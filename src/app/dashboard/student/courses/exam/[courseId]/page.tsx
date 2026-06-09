@@ -48,7 +48,7 @@ export default function ExamPage() {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="glass rounded-3xl p-8 text-center max-w-md">
-          <ShieldAlert className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+          <ShieldAlert className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
           <h1 className="font-serif text-2xl"><T>Exam Completed</T></h1>
           <p className="mt-4 text-lg"><T>Your Score</T>: {result.score}/{result.total}</p>
           <p className={`mt-2 font-bold ${result.passed ? 'text-emerald-500' : 'text-red-500'}`}>
@@ -67,13 +67,13 @@ export default function ExamPage() {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
         <div className="glass rounded-3xl p-8 max-w-lg w-full text-center space-y-6 shadow-elegant">
-          <BookOpen className="mx-auto h-12 w-12 text-amber-500" />
+          <BookOpen className="mx-auto h-12 w-12 text-secondary-foreground" />
           <h1 className="font-serif text-2xl"><T>Final Exam</T></h1>
           <div className="space-y-3 text-left text-sm text-muted-foreground bg-background/50 rounded-2xl p-4">
-            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /> <T>The exam consists of 25 multiple‑choice questions randomly selected from the course material.</T></p>
-            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /> <T>You must score at least 60% to pass and earn your certificate.</T></p>
-            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /> <T>Once you start, you cannot pause or return to the exam. Make sure you have a stable internet connection.</T></p>
-            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" /> <T>Screenshots, copy/paste, and right‑click are disabled during the exam.</T></p>
+            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-secondary-foreground mt-0.5 shrink-0" /> <T>The exam consists of 25 multiple‑choice questions randomly selected from the course material.</T></p>
+            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-secondary-foreground mt-0.5 shrink-0" /> <T>You must score at least 60% to pass and earn your certificate.</T></p>
+            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-secondary-foreground mt-0.5 shrink-0" /> <T>Once you start, you cannot pause or return to the exam. Make sure you have a stable internet connection.</T></p>
+            <p className="flex items-start gap-2"><AlertTriangle className="h-4 w-4 text-secondary-foreground mt-0.5 shrink-0" /> <T>Screenshots, copy/paste, and right‑click are disabled during the exam.</T></p>
           </div>
           <button onClick={() => setStarted(true)} className="inline-flex items-center gap-2 rounded-full bg-amber-500 px-8 py-3 text-sm font-semibold text-black hover:bg-amber-400">
             <Clock className="h-4 w-4" /> <T>Start Exam</T>

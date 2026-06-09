@@ -104,7 +104,7 @@ export default function PublicTeacherPage() {
         </h2>
         {courses.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground">
-            <BookOpen className="mx-auto h-12 w-12 mb-3 text-amber-500/50" />
+            <BookOpen className="mx-auto h-12 w-12 mb-3 text-secondary-foreground/50" />
             <p><T>No courses published yet.</T></p>
           </div>
         ) : (
@@ -124,8 +124,8 @@ export default function PublicTeacherPage() {
                 </div>
                 <h3 className="font-serif text-lg">{course.title}</h3>
                 <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full">{course.level}</span>
-                  <span className="font-bold text-amber-600">{course.price === 0 ? <T>Free</T> : `$${course.price}`}</span>
+                  <span className="text-xs bg-amber-500/10 text-accent-foreground px-2 py-0.5 rounded-full">{course.level}</span>
+                  <span className="font-bold text-accent-foreground">{course.price === 0 ? <T>Free</T> : `$${course.price}`}</span>
                 </div>
                 {course.description && (
                   <p className="text-xs text-muted-foreground mt-2 line-clamp-2">{course.description}</p>

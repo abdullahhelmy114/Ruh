@@ -34,7 +34,7 @@ export default function WishlistPage() {
   if (!user) {
     return (
       <div className="flex min-h-screen items-center justify-center text-muted-foreground">
-        <Link href="/login" className="text-amber-600"><T>Sign in to see your wishlist</T></Link>
+        <Link href="/login" className="text-accent-foreground"><T>Sign in to see your wishlist</T></Link>
       </div>
     );
   }
@@ -60,11 +60,11 @@ export default function WishlistPage() {
           {items.map((item: any) => (
             <div key={item.id} className="flex items-center justify-between glass rounded-2xl p-4">
               <div>
-                <Link href={`/courses/${item.course_id}`} className="font-medium hover:text-amber-600">{item.title}</Link>
+                <Link href={`/courses/${item.course_id}`} className="font-medium hover:text-accent-foreground">{item.title}</Link>
                 <p className="text-xs text-muted-foreground"><T>by</T> {item.teacher_name} · {item.level}</p>
               </div>
               <div className="flex items-center gap-4">
-                <span className="font-bold text-amber-600">${item.price}</span>
+                <span className="font-bold text-accent-foreground">${item.price}</span>
                 <button onClick={() => removeItem(item.course_id)} className="text-red-500 hover:bg-red-50 p-2 rounded-full">
                   <Heart size={16} className="fill-current" />
                 </button>

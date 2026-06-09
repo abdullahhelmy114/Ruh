@@ -112,7 +112,7 @@ export default function MarketingPage() {
         <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>
       ) : students.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <Users className="mx-auto h-12 w-12 mb-4 text-amber-500/50" />
+          <Users className="mx-auto h-12 w-12 mb-4 text-secondary-foreground/50" />
           <p><T>No students match this filter.</T></p>
         </div>
       ) : (
@@ -125,7 +125,7 @@ export default function MarketingPage() {
                 <p className="text-xs text-muted-foreground flex items-center gap-1"><Mail size={14} /> {s.email}</p>
               </div>
               <div className="flex flex-wrap gap-1">
-                {s.nationality && <span className="text-[10px] bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full">{s.nationality}</span>}
+                {s.nationality && <span className="text-[10px] bg-amber-500/10 text-accent-foreground px-2 py-0.5 rounded-full">{s.nationality}</span>}
                 {s.residence && <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full">{s.residence}</span>}
               </div>
             </div>

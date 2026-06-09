@@ -89,7 +89,7 @@ export default function StudentDetailPage() {
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50">
-      <Icon className="h-5 w-5 text-amber-500 mt-0.5" />
+      <Icon className="h-5 w-5 text-secondary-foreground mt-0.5" />
       <div>
         <div className="text-xs text-muted-foreground"><T>{label}</T></div>
         <div className="text-sm font-medium">{value}</div>

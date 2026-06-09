@@ -94,7 +94,7 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
 
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-amber-500" />
+              <Shield className="h-4 w-4 text-secondary-foreground" />
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <T>Human Verification</T>
               </span>
@@ -115,7 +115,7 @@ export function CustomCaptcha({ onVerify }: CustomCaptchaProps) {
                   <span
                     key={i}
                     className={cn(
-                      char === "?" ? "text-amber-500" : "",
+                      char === "?" ? "text-secondary-foreground" : "",
                       "select-none"
                     )}
                     style={{

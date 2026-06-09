@@ -28,7 +28,7 @@ export default function BundlesPage() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-16 md:px-8">
       <div className="text-center mb-10">
-        <Package className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+        <Package className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
         <h1 className="font-serif text-4xl">{page.title}</h1>
         <p className="mt-2 text-muted-foreground">{page.content}</p>
       </div>
@@ -44,7 +44,7 @@ export default function BundlesPage() {
             <h3 className="font-serif text-xl mt-2"><T>{b.title}</T></h3>
             <p className="text-sm text-muted-foreground mt-1">{b.levels}</p>
             <div className="mt-4">
-              <span className="font-serif text-3xl font-bold text-amber-600">${b.price}</span>
+              <span className="font-serif text-3xl font-bold text-accent-foreground">${b.price}</span>
               <span className="text-sm line-through text-muted-foreground ml-2">${b.original}</span>
               <span className="ml-2 bg-emerald-100 text-emerald-700 text-xs px-2 py-0.5 rounded-full">-{b.discount}%</span>
             </div>
@@ -63,7 +63,7 @@ export default function BundlesPage() {
       {!user && (
         <div className="mt-12 text-center">
           <div className="glass rounded-3xl p-8 inline-block">
-            <UserPlus className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+            <UserPlus className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
             <h2 className="font-serif text-2xl mb-2"><T>Ready to save?</T></h2>
             <p className="text-muted-foreground mb-6"><T>Join now and get access to exclusive bundles.</T></p>
             <div className="flex justify-center gap-3">

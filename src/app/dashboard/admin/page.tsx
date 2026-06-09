@@ -76,7 +76,7 @@ export default function AdminDashboard() {
   if (!user)
     return (
       <div className="flex min-h-screen items-center justify-center">
-        <Link href="/login" className="text-amber-600">
+        <Link href="/login" className="text-accent-foreground">
           <T>تسجيل الدخول</T>
         </Link>
       </div>
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
             <Crown className="h-6 w-6 text-white" />
           </div>
           <div>
-            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+            <div className="text-xs font-semibold uppercase tracking-widest text-accent-foreground">
               <T>Management Suite</T>
             </div>
             <h1 className="font-serif text-3xl">
@@ -315,12 +315,12 @@ function TeacherVerificationTab() {
             {app.bio && <p className="text-xs text-muted-foreground italic">"{app.bio}"</p>}
             <div className="flex flex-wrap gap-2 text-xs">
               {app.cv_url && (
-                <a href={app.cv_url} target="_blank" className="text-amber-600 underline inline-flex items-center gap-1">
+                <a href={app.cv_url} target="_blank" className="text-accent-foreground underline inline-flex items-center gap-1">
                   <ExternalLink size={12} /> View CV
                 </a>
               )}
               {app.intro_video_url && (
-                <a href={app.intro_video_url} target="_blank" className="text-amber-600 underline inline-flex items-center gap-1">
+                <a href={app.intro_video_url} target="_blank" className="text-accent-foreground underline inline-flex items-center gap-1">
                   <Video size={12} /> Intro Video
                 </a>
               )}
@@ -428,7 +428,7 @@ function CourseModerationTab() {
           {courses.length > 0 && (
             <div>
               <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-amber-500" /> <T>Courses</T> ({courses.length})
+                <BookOpen className="h-5 w-5 text-secondary-foreground" /> <T>Courses</T> ({courses.length})
               </h3>
               <div className="space-y-3">
                 {courses.map(c => (
@@ -465,7 +465,7 @@ function CourseModerationTab() {
           {lessons.length > 0 && (
             <div>
               <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                <Video className="h-5 w-5 text-amber-500" /> <T>Lessons</T> ({lessons.length})
+                <Video className="h-5 w-5 text-secondary-foreground" /> <T>Lessons</T> ({lessons.length})
               </h3>
               <div className="space-y-3">
                 {lessons.map(l => (
@@ -743,7 +743,7 @@ function CouponsTab() {
         {coupons.map(c => (
           <div key={c.id} className="flex items-center justify-between glass rounded-2xl p-4">
             <div>
-              <span className="font-bold text-amber-600">{c.code}</span>
+              <span className="font-bold text-accent-foreground">{c.code}</span>
               <span className="ml-4 text-sm text-muted-foreground"><T>Discount</T>: {c.discount_percent}%</span>
               <span className="ml-4 text-sm text-muted-foreground"><T>Used</T>: {c.current_uses}/{c.max_uses || '∞'}</span>
               {c.valid_until && (

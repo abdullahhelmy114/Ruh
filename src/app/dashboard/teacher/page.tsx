@@ -336,7 +336,7 @@ const handleSaveLesson = async () => {
             {data.initial}
           </div>
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground">
               <T>Instructor Portal</T>
             </div>
             <h1 className="mt-1 font-serif text-3xl">{data.fullName}</h1>
@@ -350,14 +350,14 @@ const handleSaveLesson = async () => {
             href="/dashboard/teacher/analytics"
             className="inline-flex items-center gap-2 rounded-full border bg-background px-4 py-2.5 text-sm font-medium hover:bg-accent"
           >
-            <TrendingUp className="h-4 w-4 text-amber-500" />
+            <TrendingUp className="h-4 w-4 text-secondary-foreground" />
             <T>Analytics</T>
           </Link>
           <button
             onClick={() => setShowCourseModal(true)}
             className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent"
           >
-            <Upload className="h-4 w-4 text-amber-500" /> <T>New Course</T>
+            <Upload className="h-4 w-4 text-secondary-foreground" /> <T>New Course</T>
           </button>
           <button
             onClick={() => {
@@ -375,7 +375,7 @@ const handleSaveLesson = async () => {
             href="/dashboard/teacher/students"
             className="inline-flex items-center gap-2 rounded-full border bg-background px-6 py-3 text-sm font-medium hover:bg-accent"
           >
-            <Users className="h-4 w-4 text-amber-500" /> <T>My Students</T>
+            <Users className="h-4 w-4 text-secondary-foreground" /> <T>My Students</T>
           </Link>
         </div>
       </div>
@@ -393,7 +393,7 @@ const handleSaveLesson = async () => {
                 <Star className="h-6 w-6 fill-white" />
               </div>
               <div>
-                <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+                <div className="text-xs font-semibold uppercase tracking-widest text-accent-foreground">
                   <T>Your Rating</T>
                 </div>
                 <div className="font-serif text-3xl">
@@ -405,7 +405,7 @@ const handleSaveLesson = async () => {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+              <div className="text-xs font-semibold uppercase tracking-widest text-accent-foreground">
                 <T>Commission Rate</T>
               </div>
               <div className="font-serif text-3xl text-emerald-600">
@@ -427,7 +427,7 @@ const handleSaveLesson = async () => {
           className="live-sessions glass rounded-3xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Video className="h-5 w-5 text-amber-500" />
+            <Video className="h-5 w-5 text-secondary-foreground" />
             <h2 className="font-serif text-xl"><T>Your Live Sessions</T></h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -471,7 +471,7 @@ const handleSaveLesson = async () => {
           className="glass rounded-3xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
-            <FileText className="h-5 w-5 text-amber-500" />
+            <FileText className="h-5 w-5 text-secondary-foreground" />
             <h2 className="font-serif text-xl"><T>Pending Lessons</T></h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -520,7 +520,7 @@ const handleSaveLesson = async () => {
           className="glass rounded-3xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
-            <BookOpen className="h-5 w-5 text-amber-500" />
+            <BookOpen className="h-5 w-5 text-secondary-foreground" />
             <h2 className="font-serif text-xl"><T>Your Lessons</T></h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -539,7 +539,7 @@ const handleSaveLesson = async () => {
                   <span className={`text-xs px-2 py-0.5 rounded-full mt-1 inline-block ${
                     lesson.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' :
                     lesson.status === 'rejected' ? 'bg-red-500/10 text-red-600' :
-                    'bg-amber-500/10 text-amber-600'
+                    'bg-amber-500/10 text-accent-foreground'
                   }`}>
                     {lesson.status}
                   </span>
@@ -556,7 +556,7 @@ const handleSaveLesson = async () => {
           <h2 className="font-serif text-2xl"><T>Your Courses</T></h2>
           {data.courses.length === 0 ? (
             <div className="rounded-3xl border bg-card p-8 text-center text-muted-foreground">
-              <BookOpen className="mx-auto h-8 w-8 text-amber-500 mb-3" />
+              <BookOpen className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
               <p><T>You haven't created any courses yet.</T></p>
             </div>
           ) : (
@@ -574,7 +574,7 @@ const handleSaveLesson = async () => {
                     className={`text-xs px-2 py-0.5 rounded-full ${
                       course.status === 'published'
                         ? 'bg-emerald-500/10 text-emerald-600'
-                        : 'bg-amber-500/10 text-amber-600'
+                        : 'bg-amber-500/10 text-accent-foreground'
                     }`}
                   >
                     {course.status}
@@ -590,7 +590,7 @@ const handleSaveLesson = async () => {
                 </div>
                 <Link
                   href={`/dashboard/teacher/courses/${course.id}`}
-                  className="text-amber-600 text-sm font-semibold hover:underline"
+                  className="text-accent-foreground text-sm font-semibold hover:underline"
                 >
                   <T>Manage →</T>
                 </Link>
@@ -602,7 +602,7 @@ const handleSaveLesson = async () => {
         {/* Stats Sidebar */}
         <div className="stats-sidebar space-y-4">
           <div className="rounded-3xl border bg-card p-6 shadow-elegant">
-            <div className="text-xs font-semibold uppercase tracking-widest text-amber-600">
+            <div className="text-xs font-semibold uppercase tracking-widest text-accent-foreground">
               <T>Stats</T>
             </div>
             <div className="mt-4 space-y-3">
@@ -784,7 +784,7 @@ const handleSaveLesson = async () => {
           <button
             type="button"
             onClick={() => { setShowLessonModal(false); setShowCourseModal(true); }}
-            className="text-xs text-amber-600 hover:underline mt-1 inline-block"
+            className="text-xs text-accent-foreground hover:underline mt-1 inline-block"
           >
             + <T>Create a new course</T>
           </button>

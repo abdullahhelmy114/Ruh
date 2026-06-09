@@ -79,7 +79,7 @@ export default function LiveLessonPage() {
         <div className="text-center glass rounded-3xl p-12 max-w-md">
           <h1 className="font-serif text-2xl mb-3"><T>Unavailable</T></h1>
           <p className="text-muted-foreground">{error || <T>The lesson does not exist</T>}</p>
-          <Link href="/" className="mt-6 inline-flex items-center gap-2 text-amber-600 hover:underline">
+          <Link href="/" className="mt-6 inline-flex items-center gap-2 text-accent-foreground hover:underline">
             <ArrowLeft size={16} /> <T>Back to Home</T>
           </Link>
         </div>

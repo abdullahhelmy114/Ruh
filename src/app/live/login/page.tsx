@@ -82,7 +82,7 @@ export default function LoginPage() {
           className="glass overflow-hidden rounded-3xl bg-card p-8 shadow-elegant md:p-10"
         >
           <div className="mb-8 text-center">
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-accent-foreground">
               <T>Ruhulqudus Academy</T>
             </div>
             <h1 className="mt-3 font-serif text-3xl md:text-4xl"><T>Welcome Back</T></h1>
@@ -171,7 +171,7 @@ export default function LoginPage() {
             </button>
             <p className="text-center text-xs text-muted-foreground">
               <T>Don't have an account?</T>{" "}
-              <Link href="/signup" className="text-amber-600 underline-offset-4 hover:underline">
+              <Link href="/signup" className="text-accent-foreground underline-offset-4 hover:underline">
                 <T>Create one</T>
               </Link>
             </p>

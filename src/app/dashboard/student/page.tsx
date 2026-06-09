@@ -102,7 +102,7 @@ export default function StudentDashboard() {
       <div className="relative overflow-hidden rounded-4xl border border-border bg-card p-8 shadow-elegant flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
         <div className="relative z-10">
-          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground">
             <T>As‑salāmu ʿalaykum</T>
           </div>
           <h1 className="mt-1 font-serif text-3xl md:text-4xl">
@@ -113,7 +113,7 @@ export default function StudentDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3 rounded-full border border-amber-500/20 bg-background/50 px-5 py-2.5 text-sm font-semibold">
-          <Trophy className="h-5 w-5 animate-bounce text-amber-500" />
+          <Trophy className="h-5 w-5 animate-bounce text-secondary-foreground" />
           {data.streak}
           <T>-day streak</T>
         </div>
@@ -127,7 +127,7 @@ export default function StudentDashboard() {
           className="live-sessions glass rounded-3xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Video className="h-5 w-5 text-amber-500" />
+            <Video className="h-5 w-5 text-secondary-foreground" />
             <h2 className="font-serif text-xl">
               <T>Upcoming Live Sessions</T>
             </h2>
@@ -183,7 +183,7 @@ export default function StudentDashboard() {
         <div className="space-y-10 lg:col-span-2">
           {/* My Courses */}
           <section className="your-courses">
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
               <T>My Courses</T>
             </div>
             <h2 className="font-serif text-2xl">
@@ -192,13 +192,13 @@ export default function StudentDashboard() {
             <div className="mt-4 space-y-4">
               {enrolledCourses.length === 0 ? (
                 <div className="rounded-4xl border bg-card p-8 text-center text-muted-foreground">
-                  <BookOpen className="mx-auto h-8 w-8 text-amber-500 mb-3" />
+                  <BookOpen className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
                   <p>
                     <T>You haven't enrolled in any courses yet.</T>
                   </p>
                   <Link
                     href="/marketplace"
-                    className="mt-3 inline-block text-sm font-medium text-amber-600 hover:underline"
+                    className="mt-3 inline-block text-sm font-medium text-accent-foreground hover:underline"
                   >
                     <T>Browse Courses →</T>
                   </Link>
@@ -225,7 +225,7 @@ export default function StudentDashboard() {
                     </div>
                     <Link
                       href={`/dashboard/student/courses/${c.id}`}
-                      className="mt-3 inline-block text-sm font-semibold text-amber-600 hover:underline"
+                      className="mt-3 inline-block text-sm font-semibold text-accent-foreground hover:underline"
                     >
                       <T>View Course →</T>
                     </Link>
@@ -238,7 +238,7 @@ export default function StudentDashboard() {
           {/* Completed Courses with Recording */}
           {data.completed.length > 0 && (
             <section>
-              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">
+              <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
                 <T>Your milestones</T>
               </div>
               <h2 className="font-serif text-2xl">
@@ -278,7 +278,7 @@ export default function StudentDashboard() {
 
         <div className="space-y-8">
           <section>
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-amber-600">
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
               <T>Your milestones</T>
             </div>
             <h2 className="font-serif text-2xl">
@@ -286,7 +286,7 @@ export default function StudentDashboard() {
             </h2>
             {data.completed.length === 0 ? (
               <div className="mt-4 rounded-4xl border bg-card p-6 text-center text-muted-foreground">
-                <Award className="mx-auto h-8 w-8 text-amber-500 mb-3" />
+                <Award className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
                 <p>
                   <T>No completed courses yet.</T>
                 </p>
@@ -314,7 +314,7 @@ export default function StudentDashboard() {
           </section>
 
           <div className="placement-test group relative overflow-hidden rounded-4xl border-2 border-amber-500/30 bg-card p-8 shadow-elegant">
-            <GraduationCap className="mb-4 h-10 w-10 text-amber-500" />
+            <GraduationCap className="mb-4 h-10 w-10 text-secondary-foreground" />
             <h3 className="font-serif text-2xl">
               <T>Placement Test</T>
             </h3>
@@ -327,7 +327,7 @@ export default function StudentDashboard() {
           </div>
 
           <div className="rounded-4xl border bg-card p-8 shadow-elegant">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-600">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground">
               <T>Referral Center</T>
             </div>
             <h3 className="mt-2 font-serif text-xl">
@@ -350,7 +350,7 @@ export default function StudentDashboard() {
                 </div>
               </div>
               <div className="rounded-2xl border bg-background p-4">
-                <div className="font-serif text-2xl text-amber-600">
+                <div className="font-serif text-2xl text-accent-foreground">
                   ${data.referral.credits}
                 </div>
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
@@ -362,7 +362,7 @@ export default function StudentDashboard() {
 
           <Link
             href="/marketplace"
-            className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 text-sm font-bold text-amber-600 hover:bg-amber-500/10"
+            className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 text-sm font-bold text-accent-foreground hover:bg-amber-500/10"
           >
             <T>Explore Marketplace →</T>
           </Link>

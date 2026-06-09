@@ -66,7 +66,7 @@ function CourseCompletionSection({
   if (hasExam) {
     return (
       <div className="glass rounded-2xl p-6 text-center space-y-4">
-        <HelpCircle className="mx-auto h-10 w-10 text-amber-500" />
+        <HelpCircle className="mx-auto h-10 w-10 text-secondary-foreground" />
         <h3 className="font-serif text-xl"><T>Final Exam Required</T></h3>
         <p className="text-muted-foreground"><T>You must pass the final exam to earn your certificate.</T></p>
         <Link
@@ -114,7 +114,7 @@ function QuizSection({ lessonId }: { lessonId: string }) {
   return (
     <div className="glass rounded-2xl p-5 space-y-3">
       <h3 className="font-serif text-lg flex items-center gap-2">
-        <HelpCircle className="h-5 w-5 text-amber-500" />
+        <HelpCircle className="h-5 w-5 text-secondary-foreground" />
         <T>Lesson Quiz</T>
       </h3>
       <QuizPlayer quizzes={quizzes} />
@@ -172,7 +172,7 @@ export default function CoursePlayerPage() {
           <ArrowLeft size={16} /> <T>Back to Dashboard</T>
         </Link>
         <h2 className="font-serif text-xl flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-amber-500" /> {data.course.title}
+          <BookOpen className="h-5 w-5 text-secondary-foreground" /> {data.course.title}
         </h2>
         <p className="text-xs text-muted-foreground mt-1"><T>Level</T> {data.course.level}</p>
         <div className="mt-4 space-y-2">
@@ -204,7 +204,7 @@ export default function CoursePlayerPage() {
               className="flex items-center gap-3 p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition w-full"
             >
               <span className="shrink-0 w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center text-xs text-black font-bold">?</span>
-              <span className="text-sm font-medium text-amber-600"><T>Final Exam</T></span>
+              <span className="text-sm font-medium text-accent-foreground"><T>Final Exam</T></span>
             </Link>
           ) : (
             <button
@@ -248,7 +248,7 @@ export default function CoursePlayerPage() {
             {currentLesson.files && currentLesson.files.length > 0 && (
               <div className="glass rounded-2xl p-5">
                 <h3 className="font-serif text-lg mb-3 flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-amber-500" /> <T>Lesson Resources</T>
+                  <FileText className="h-5 w-5 text-secondary-foreground" /> <T>Lesson Resources</T>
                 </h3>
                 <div className="grid gap-2 sm:grid-cols-2">
                   {currentLesson.files.map((file, i) => (

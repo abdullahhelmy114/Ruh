@@ -147,7 +147,7 @@ export default function VerifyEmailPage() {
             </>
           ) : (
             <>
-              <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+              <Mail className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
               <h1 className="font-serif text-2xl"><T>Enter Verification Code</T></h1>
               <p className="mt-2 text-sm text-muted-foreground"><T>We sent a 6-digit code to your email.</T></p>
 

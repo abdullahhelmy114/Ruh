@@ -88,7 +88,7 @@ export function Footer() {
               </Link>
             </li>
             <li className="flex items-center gap-1">
-              <Mail size={12} className="text-amber-500" />
+              <Mail size={12} className="text-secondary-foreground" />
               <a href="mailto:info@ruhulqudus.com" className="hover:text-foreground transition-colors">
                 <T>Contact</T>
               </a>

@@ -141,7 +141,7 @@ export default function CourseDetailPage() {
             <h1 className="font-serif text-3xl md:text-4xl mt-3">{course.title}</h1>
             <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
               <User size={16} /> <T>by</T>{" "}
-              <Link href={`/teachers/${course.teacher_uid}`} className="font-medium text-foreground hover:text-amber-600 transition-colors">
+              <Link href={`/teachers/${course.teacher_uid}`} className="font-medium text-foreground hover:text-accent-foreground transition-colors">
                 {course.teacher_name}
               </Link>
             </div>
@@ -160,7 +160,7 @@ export default function CourseDetailPage() {
               course.lessons?.map((lesson) => (
                 <div key={lesson.id} className="border rounded-2xl p-4 bg-card mb-3">
                   <div className="flex items-center gap-2">
-                    {lesson.type === "zoom" ? <Video size={16} className="text-amber-500" /> : <FileText size={16} className="text-emerald-500" />}
+                    {lesson.type === "zoom" ? <Video size={16} className="text-secondary-foreground" /> : <FileText size={16} className="text-emerald-500" />}
                     <h3 className="font-serif text-lg">{lesson.title}</h3>
                   </div>
                   {lesson.recording_url && (
@@ -176,7 +176,7 @@ export default function CourseDetailPage() {
 
         <div className="space-y-4">
           <div className="rounded-3xl border bg-card p-6 shadow-elegant sticky top-24">
-            <div className="text-3xl font-serif text-amber-600">${course.price}</div>
+            <div className="text-3xl font-serif text-accent-foreground">${course.price}</div>
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground"><T>Level</T></span>

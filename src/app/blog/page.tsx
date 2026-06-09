@@ -186,7 +186,7 @@ export default function BlogPage() {
               <div className="space-y-3 pt-2 border-t border-border/50">
                 {post.comments.map(c => (
                   <div key={c.id} className="flex items-start gap-2 text-sm">
-                    <span className="font-medium text-amber-600">{c.user_name}</span>
+                    <span className="font-medium text-accent-foreground">{c.user_name}</span>
                     <span className="text-muted-foreground">{c.comment}</span>
                     <span className="text-[10px] text-muted-foreground ml-auto">{new Date(c.created_at).toLocaleDateString()}</span>
                   </div>

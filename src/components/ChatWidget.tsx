@@ -48,7 +48,7 @@ export function ChatWidget({ roomId }: { roomId: string }) {
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((m, i) => (
               <div key={i} className={`text-sm ${m.user === user?.email?.split("@")[0] ? "text-right" : ""}`}>
-                <span className="font-semibold text-amber-600">{m.user}</span>
+                <span className="font-semibold text-accent-foreground">{m.user}</span>
                 <div className="bg-accent/50 rounded-2xl px-3 py-1.5 inline-block max-w-[80%]">{m.message}</div>
               </div>
             ))}

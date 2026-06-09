@@ -84,7 +84,7 @@ function ResetPasswordForm() {
       <div className="relative w-full max-w-md">
         <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[3rem] bg-amber-500/20 blur-3xl" />
         <div className="glass rounded-3xl p-8 md:p-10 shadow-elegant text-center">
-          <Lock className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+          <Lock className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
           <h1 className="font-serif text-2xl"><T>New Password</T></h1>
           <p className="mt-2 text-sm text-muted-foreground"><T>Enter your new password below.</T></p>
           <form onSubmit={handleReset} className="mt-6 space-y-5">

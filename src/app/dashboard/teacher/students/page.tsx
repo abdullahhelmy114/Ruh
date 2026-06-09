@@ -96,7 +96,7 @@ export default function TeacherStudentsPage() {
       {/* قائمة الطلاب */}
       {students.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <Users className="mx-auto h-12 w-12 mb-4 text-amber-500/50" />
+          <Users className="mx-auto h-12 w-12 mb-4 text-secondary-foreground/50" />
           <p><T>No students found.</T></p>
         </div>
       ) : (
@@ -107,7 +107,7 @@ export default function TeacherStudentsPage() {
                 <h3 className="font-medium">{s.full_name}</h3>
                 <p className="text-xs text-muted-foreground mt-1">{s.email}</p>
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {s.nationality && <span className="text-[10px] bg-amber-500/10 text-amber-600 px-2 py-0.5 rounded-full">{s.nationality}</span>}
+                  {s.nationality && <span className="text-[10px] bg-amber-500/10 text-accent-foreground px-2 py-0.5 rounded-full">{s.nationality}</span>}
                   {s.residence && <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-full">{s.residence}</span>}
                   {s.native_language && <span className="text-[10px] bg-blue-500/10 text-blue-600 px-2 py-0.5 rounded-full">{s.native_language}</span>}
                 </div>

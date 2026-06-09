@@ -67,7 +67,7 @@ export default function ContactPage() {
           <Send className="mx-auto h-12 w-12 text-emerald-500 mb-4" />
           <h1 className="font-serif text-2xl"><T>Message Sent!</T></h1>
           <p className="mt-2 text-muted-foreground"><T>We'll get back to you shortly.</T></p>
-          <Link href="/" className="mt-6 inline-flex items-center gap-2 text-amber-600 hover:underline">
+          <Link href="/" className="mt-6 inline-flex items-center gap-2 text-accent-foreground hover:underline">
             <T>Back to Home</T>
           </Link>
         </div>
@@ -80,7 +80,7 @@ export default function ContactPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 md:px-8">
       <div className="text-center mb-10">
-        <Mail className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+        <Mail className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
         <h1 className="font-serif text-4xl">{page.title}</h1>
         <p className="mt-2 text-muted-foreground">{page.content}</p>
       </div>
@@ -88,21 +88,21 @@ export default function ContactPage() {
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         <div className="glass rounded-3xl p-6 space-y-6 self-start">
           <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-amber-500 mt-0.5" />
+            <MapPin className="h-5 w-5 text-secondary-foreground mt-0.5" />
             <div>
               <h3 className="font-medium"><T>Address</T></h3>
               <p className="text-sm text-muted-foreground"><T>Sakarya, Turkey</T></p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Mail className="h-5 w-5 text-amber-500 mt-0.5" />
+            <Mail className="h-5 w-5 text-secondary-foreground mt-0.5" />
             <div>
               <h3 className="font-medium"><T>Email</T></h3>
-              <a href="mailto:info@ruhulqudus.net" className="text-sm text-amber-600 hover:underline">info@ruhulqudus.net</a>
+              <a href="mailto:info@ruhulqudus.net" className="text-sm text-accent-foreground hover:underline">info@ruhulqudus.net</a>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <Phone className="h-5 w-5 text-amber-500 mt-0.5" />
+            <Phone className="h-5 w-5 text-secondary-foreground mt-0.5" />
             <div>
               <h3 className="font-medium"><T>Phone</T></h3>
               <p className="text-sm text-muted-foreground">+90 551 899 87 16</p>

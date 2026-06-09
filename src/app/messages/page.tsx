@@ -45,7 +45,7 @@ export default function MessagesPage() {
       <h1 className="font-serif text-3xl mb-6"><T>Messages</T></h1>
       {messages.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <Mail className="mx-auto h-12 w-12 mb-4 text-amber-500/50" />
+          <Mail className="mx-auto h-12 w-12 mb-4 text-secondary-foreground/50" />
           <p><T>No messages yet.</T></p>
         </div>
       ) : (
@@ -53,12 +53,12 @@ export default function MessagesPage() {
           {messages.map(m => (
             <div key={m.id} className={`glass rounded-2xl p-4 ${!m.read ? 'border-l-4 border-l-amber-500' : ''}`}>
               <div className="flex items-center gap-2 text-sm">
-                <User size={14} className="text-amber-500" />
+                <User size={14} className="text-secondary-foreground" />
                 <span className="font-medium">{m.sender_name}</span>
                 <span className="text-xs text-muted-foreground">{new Date(m.created_at).toLocaleString()}</span>
               </div>
               <p className="mt-2 text-sm">{m.message}</p>
-              <button onClick={() => { setReplyTo(m.sender_uid); setReplyText(""); }} className="mt-2 text-xs text-amber-600 hover:underline">
+              <button onClick={() => { setReplyTo(m.sender_uid); setReplyText(""); }} className="mt-2 text-xs text-accent-foreground hover:underline">
                 <T>Reply</T>
               </button>
             </div>

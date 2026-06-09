@@ -137,12 +137,12 @@ function AdminUserProfileContent() {
           <>
             <div className="pt-4 border-t">
               <h3 className="font-serif text-lg flex items-center gap-2 mb-2">
-                <BookOpen className="h-5 w-5 text-amber-500" /> Teacher Info
+                <BookOpen className="h-5 w-5 text-secondary-foreground" /> Teacher Info
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <InfoRow icon={Mail} label="Telegram" value={profile.telegram || "—"} />
                 <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50">
-                  <BookOpen className="h-5 w-5 text-amber-500 mt-0.5" />
+                  <BookOpen className="h-5 w-5 text-secondary-foreground mt-0.5" />
                   <div>
                     <div className="text-xs text-muted-foreground">Social Links</div>
                     <div className="text-sm font-medium">
@@ -188,7 +188,7 @@ function AdminUserProfileContent() {
         {/* الاشتراكات (للطالب) أو الدورات (للمعلم) */}
         <div className="pt-4 border-t">
           <h3 className="font-serif text-lg flex items-center gap-2 mb-2">
-            <BookOpen className="h-5 w-5 text-amber-500" />{" "}
+            <BookOpen className="h-5 w-5 text-secondary-foreground" />{" "}
             {profile.role === "student" ? "Enrollments" : "Courses"}
           </h3>
           {enrollments.length === 0 ? (
@@ -212,7 +212,7 @@ function AdminUserProfileContent() {
 function InfoRow({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
   return (
     <div className="flex items-start gap-3 p-3 rounded-xl bg-background/50">
-      <Icon className="h-5 w-5 text-amber-500 mt-0.5" />
+      <Icon className="h-5 w-5 text-secondary-foreground mt-0.5" />
       <div>
         <div className="text-xs text-muted-foreground">
           <T>{label}</T>

@@ -58,7 +58,7 @@ export default function ForgotPasswordPage() {
               </p>
               <Link
                 href="/login"
-                className="mt-6 inline-flex items-center gap-2 text-amber-600 hover:underline font-medium"
+                className="mt-6 inline-flex items-center gap-2 text-accent-foreground hover:underline font-medium"
               >
                 <ArrowLeft size={16} /> <T>Back to Sign In</T>
               </Link>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
             >
               <div className="mb-6 text-center">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-500/10 mb-4">
-                  <Mail className="h-7 w-7 text-amber-500" />
+                  <Mail className="h-7 w-7 text-secondary-foreground" />
                 </div>
                 <h1 className="font-serif text-2xl md:text-3xl"><T>Forgot Password?</T></h1>
                 <p className="mt-2 text-sm text-muted-foreground">

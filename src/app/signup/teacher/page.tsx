@@ -83,7 +83,7 @@ export default function TeacherSignupStep1Page() {
           className="glass overflow-hidden rounded-3xl bg-card p-8 shadow-elegant md:p-10"
         >
           <div className="mb-8 text-center">
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-accent-foreground">
               <T>Ruhulqudus Academy</T>
             </div>
             <h1 className="mt-3 font-serif text-3xl md:text-4xl">
@@ -317,7 +317,7 @@ export default function TeacherSignupStep1Page() {
 
             <p className="text-center text-xs text-muted-foreground">
               <T>Already have an account?</T>{" "}
-              <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
+              <Link href="/login" className="text-accent-foreground underline-offset-4 hover:underline">
                 <T>Sign in</T>
               </Link>
             </p>

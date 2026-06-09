@@ -90,7 +90,7 @@ export default function SignupRolePage() {
           >
             <div className="flex items-center gap-3 mb-6">
               <div className="p-3 rounded-full bg-amber-100 dark:bg-amber-900/30">
-                <GraduationCap className="h-6 w-6 text-amber-600" />
+                <GraduationCap className="h-6 w-6 text-accent-foreground" />
               </div>
               <h2 className="text-2xl font-bold font-serif">
                 <T>Teacher</T>
@@ -99,7 +99,7 @@ export default function SignupRolePage() {
 
             <ul className="space-y-3 mb-8 text-muted-foreground flex-1">
               <li className="flex items-start gap-2">
-                <span className="text-amber-500 mt-1">✓</span>
+                <span className="text-secondary-foreground mt-1">✓</span>
                 <span><T>Create and sell your courses</T></span>
               </li>
               <li className="flex items-start gap-2">

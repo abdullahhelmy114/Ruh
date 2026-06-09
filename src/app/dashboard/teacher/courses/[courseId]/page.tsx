@@ -67,13 +67,13 @@ export default function ManageCoursePage() {
           {lessons.map(l => (
             <div key={l.id} className="flex items-center justify-between glass rounded-2xl p-4">
               <div className="flex items-center gap-3">
-                {l.type === "zoom" ? <Video size={16} className="text-amber-500" /> : <FileText size={16} className="text-emerald-500" />}
+                {l.type === "zoom" ? <Video size={16} className="text-secondary-foreground" /> : <FileText size={16} className="text-emerald-500" />}
                 <div>
                   <p className="font-medium">{l.title}</p>
                   <span className={`text-xs px-2 py-0.5 rounded-full ${
                     l.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' :
                     l.status === 'rejected' ? 'bg-red-500/10 text-red-600' :
-                    'bg-amber-500/10 text-amber-600'
+                    'bg-amber-500/10 text-accent-foreground'
                   }`}>{l.status}</span>
                 </div>
               </div>

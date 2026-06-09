@@ -113,7 +113,7 @@ export default function PendingLessonsPage() {
                 <div className="flex items-start gap-3">
                   <div className="mt-1">
                     {lesson.type === "zoom" ? (
-                      <Video className="h-5 w-5 text-amber-500" />
+                      <Video className="h-5 w-5 text-secondary-foreground" />
                     ) : (
                       <FileText className="h-5 w-5 text-emerald" />
                     )}

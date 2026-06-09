@@ -57,9 +57,9 @@ export default function TeacherAnalyticsPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           { label: "Total Students", value: data.totalStudents, icon: Users, color: "text-emerald-500" },
-          { label: "Courses", value: data.totalCourses, icon: BookOpen, color: "text-amber-500" },
+          { label: "Courses", value: data.totalCourses, icon: BookOpen, color: "text-secondary-foreground" },
           { label: "Revenue", value: `$${data.totalRevenue}`, icon: DollarSign, color: "text-emerald-500" },
-          { label: "Avg Rating", value: data.averageRating.toFixed(1), icon: Star, color: "text-amber-500" },
+          { label: "Avg Rating", value: data.averageRating.toFixed(1), icon: Star, color: "text-secondary-foreground" },
         ].map(s => {
           const Icon = s.icon;
           return (

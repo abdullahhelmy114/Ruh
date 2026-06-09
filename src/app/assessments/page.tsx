@@ -25,7 +25,7 @@ export default function AssessmentsPage() {
   return (
     <div className="mx-auto max-w-4xl px-4 py-16 md:px-8">
       <div className="text-center mb-10">
-        <GraduationCap className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+        <GraduationCap className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
         <h1 className="font-serif text-4xl">{page.title}</h1>
         <p className="mt-2 text-muted-foreground">{page.content}</p>
       </div>
@@ -40,7 +40,7 @@ export default function AssessmentsPage() {
           <div key={test.title} className="glass rounded-3xl p-6 text-center">
             <h3 className="font-serif text-xl"><T>{test.title}</T></h3>
             <p className="text-sm text-muted-foreground mt-2"><T>{test.desc}</T></p>
-            <Link href="#" className="mt-4 inline-flex items-center gap-2 text-amber-600 hover:underline text-sm font-medium">
+            <Link href="#" className="mt-4 inline-flex items-center gap-2 text-accent-foreground hover:underline text-sm font-medium">
               <T>Start Test</T> <ArrowRight size={16} />
             </Link>
           </div>
@@ -50,7 +50,7 @@ export default function AssessmentsPage() {
       {!user && (
         <div className="mt-12 text-center">
           <div className="glass rounded-3xl p-8 inline-block">
-            <UserPlus className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+            <UserPlus className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
             <h2 className="font-serif text-2xl mb-2"><T>Ready to start learning?</T></h2>
             <p className="text-muted-foreground mb-6"><T>Join now and take the placement test.</T></p>
             <div className="flex justify-center gap-3">

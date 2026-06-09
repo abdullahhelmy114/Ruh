@@ -180,7 +180,7 @@ export default function MarketplacePage() {
     <div className="mx-auto max-w-7xl px-4 py-12 md:px-8">
       {/* Header */}
       <div className="mb-8 text-center">
-        <div className="text-xs font-bold uppercase tracking-[0.3em] text-amber-600">
+        <div className="text-xs font-bold uppercase tracking-[0.3em] text-accent-foreground">
           <T>Marketplace</T>
         </div>
         <h1 className="mt-3 font-serif text-4xl md:text-5xl">
@@ -264,7 +264,7 @@ export default function MarketplacePage() {
       {/* Coupon */}
       <div className="mb-8 flex items-center justify-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 glass rounded-full px-4 py-2">
-          <Tag size={16} className="text-amber-500" />
+          <Tag size={16} className="text-secondary-foreground" />
           <input
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
@@ -298,7 +298,7 @@ export default function MarketplacePage() {
       {/* Course Grid */}
       {courses.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <BookOpen className="mx-auto h-16 w-16 mb-4 text-amber-500/50" />
+          <BookOpen className="mx-auto h-16 w-16 mb-4 text-secondary-foreground/50" />
           <p className="text-lg font-serif"><T>No courses available yet.</T></p>
           <p className="text-sm mt-2">
             <T>Try adjusting your filters or check back later.</T>
@@ -347,15 +347,15 @@ export default function MarketplacePage() {
                 {/* محتوى البطاقة */}
                 <div className="p-5 flex flex-col h-55">
                   <Link href={`/courses/${course.id}`}>
-                    <h3 className="font-serif text-lg leading-tight hover:text-amber-600 transition-colors line-clamp-2">
+                    <h3 className="font-serif text-lg leading-tight hover:text-accent-foreground transition-colors line-clamp-2">
                       {course.title}
                     </h3>
                   </Link>
 
                   {/* تقييم النجوم */}
                   {rating && rating.count > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-amber-500 mt-1">
-                      <Star size={12} className="fill-amber-400 text-amber-400" />
+                    <div className="flex items-center gap-1 text-xs text-secondary-foreground mt-1">
+                      <Star size={12} className="fill-amber-400 text-accent" />
                       <span>{rating.avg} ({rating.count})</span>
                     </div>
                   )}
@@ -374,7 +374,7 @@ export default function MarketplacePage() {
                     <div className="flex items-baseline gap-1">
                       {hasDiscount ? (
                         <>
-                          <span className="font-serif text-xl font-bold text-amber-600">
+                          <span className="font-serif text-xl font-bold text-accent-foreground">
                             ${finalPrice}
                           </span>
                           <span className="text-xs line-through text-muted-foreground">
@@ -382,7 +382,7 @@ export default function MarketplacePage() {
                           </span>
                         </>
                       ) : (
-                        <span className="font-serif text-xl font-bold text-amber-600">
+                        <span className="font-serif text-xl font-bold text-accent-foreground">
                           {course.price === 0 ? <T>Free</T> : `$${course.price}`}
                         </span>
                       )}
