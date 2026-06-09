@@ -66,7 +66,7 @@ export default function PrivacyPage() {
       {!user && (
         <div className="mt-12 text-center">
           <div className="glass rounded-3xl p-8 inline-block">
-            <UserPlus className="mx-auto h-12 w-12 text-amber-500 mb-4" />
+            <UserPlus className="mx-auto h-12 w-12 text-secondary-foreground mb-4" />
             <h2 className="font-serif text-2xl mb-2"><T>Trust our platform?</T></h2>
             <p className="text-muted-foreground mb-6"><T>Join thousands of learners who trust us with their data.</T></p>
             <div className="flex justify-center gap-3">

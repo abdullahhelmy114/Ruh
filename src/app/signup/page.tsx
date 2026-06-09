@@ -103,15 +103,15 @@ export default function SignupRolePage() {
                 <span><T>Create and sell your courses</T></span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-500 mt-1">✓</span>
+                <span className="text-secondary-foreground mt-1">✓</span>
                 <span><T>Earn competitive commissions</T></span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-500 mt-1">✓</span>
+                <span className="text-secondary-foreground mt-1">✓</span>
                 <span><T>Access to teaching tools & analytics</T></span>
               </li>
               <li className="flex items-start gap-2">
-                <span className="text-amber-500 mt-1">✓</span>
+                <span className="text-secondary-foreground mt-1">✓</span>
                 <span><T>Join a network of top Arabic instructors</T></span>
               </li>
             </ul>
