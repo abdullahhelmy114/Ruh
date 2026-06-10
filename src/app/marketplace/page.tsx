@@ -7,11 +7,11 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   Loader2, BookOpen, CreditCard, Tag, Search, Filter, X,
-  User, ArrowRight, Sparkles, Star,
-  ShoppingCart, Heart,
+  User, Sparkles, Star, ShoppingCart, Heart,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { T } from "@/components/TranslatedText";
+import PayPalButton from "@/components/PayPalButton";
 
 interface Course {
   id: string;
@@ -32,6 +32,7 @@ export default function MarketplacePage() {
   const [loading, setLoading] = useState(true);
   const [enrolling, setEnrolling] = useState<string | null>(null);
   const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState<"success" | "error">("success");
 
   // بحث وفلترة
   const [search, setSearch] = useState("");
@@ -111,39 +112,15 @@ export default function MarketplacePage() {
     }
   };
 
-  const handleEnroll = async (course: Course) => {
+  // ✅ تسجيل مجاني (للكورسات بسعر 0)
+  const handleFreeEnroll = async (course: Course) => {
     if (!user) {
       router.push("/login");
       return;
     }
-
     setEnrolling(course.id);
     setMessage("");
-
-    const finalPrice = Math.max(
-      course.price - (course.price * discountPercent) / 100,
-      0
-    );
-
     try {
-      if (process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-        const res = await fetch("/api/stripe/checkout", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            courseId: course.id,
-            courseName: course.title,
-            price: finalPrice,
-            userId: user.uid,
-          }),
-        });
-        const data = await res.json();
-        if (data.url) {
-          window.location.href = data.url;
-          return;
-        }
-      }
-
       const res = await fetch("/api/enroll", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,18 +128,45 @@ export default function MarketplacePage() {
       });
       if (res.ok) {
         setMessage("Enrolled successfully!");
-        setTimeout(
-          () => router.push(`/dashboard/student/courses/${course.id}`),
-          1000
-        );
+        setMessageType("success");
+        setTimeout(() => router.push(`/dashboard/student/courses/${course.id}`), 1000);
       } else {
         const err = await res.json();
         setMessage(err.error || "Enrollment failed");
+        setMessageType("error");
       }
     } catch {
       setMessage("Network error");
+      setMessageType("error");
     } finally {
       setEnrolling(null);
+    }
+  };
+
+  // ✅ نجاح الدفع بـ PayPal
+  const handlePaymentSuccess = async (details: { orderID: string; payerID: string }, courseId: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/payment/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderID: details.orderID,
+          payerID: details.payerID,
+          type: "course",
+          course_id: courseId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        router.push(data.redirect || "/payment/success");
+      } else {
+        setMessage(data.error || "Payment verification failed");
+        setMessageType("error");
+      }
+    } catch {
+      setMessage("Network error");
+      setMessageType("error");
     }
   };
 
@@ -183,7 +187,7 @@ export default function MarketplacePage() {
         <div className="text-xs font-bold uppercase tracking-[0.3em] text-accent-foreground">
           <T>Marketplace</T>
         </div>
-        <h1 className="mt-3 font-serif text-4xl md:text-5xl">
+        <h1 className="mt-3 font-serif text-4xl md:text-5xl text-foreground">
           <T>Explore Our Courses</T>
         </h1>
         <p className="mt-2 text-muted-foreground max-w-xl mx-auto">
@@ -202,14 +206,14 @@ export default function MarketplacePage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search courses..."
-            className="w-full rounded-full border bg-background pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full rounded-full border border-border bg-background pl-10 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
 
         <select
           value={selectedLevel}
           onChange={(e) => setSelectedLevel(e.target.value)}
-          className="rounded-full border bg-background px-4 py-2.5 text-sm outline-none"
+          className="rounded-full border border-border bg-background px-4 py-2.5 text-sm outline-none"
         >
           <option value="">All Levels</option>
           {levels.map((l) => (
@@ -226,7 +230,7 @@ export default function MarketplacePage() {
             placeholder="Min"
             value={minPrice}
             onChange={(e) => setMinPrice(e.target.value)}
-            className="w-full rounded-full border bg-background pl-8 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full rounded-full border border-border bg-background pl-8 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
 
@@ -237,14 +241,14 @@ export default function MarketplacePage() {
             placeholder="Max"
             value={maxPrice}
             onChange={(e) => setMaxPrice(e.target.value)}
-            className="w-full rounded-full border bg-background pl-8 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-amber-500/50"
+            className="w-full rounded-full border border-border bg-background pl-8 pr-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary/50"
           />
         </div>
 
         <div className="flex gap-2">
           <button
             type="submit"
-            className="flex-1 rounded-full bg-amber-500 px-4 py-2.5 text-sm font-semibold text-black hover:bg-amber-400 transition flex items-center justify-center gap-2"
+            className="flex-1 rounded-full bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition flex items-center justify-center gap-2"
           >
             <Filter size={16} />
             <T>Filter</T>
@@ -253,7 +257,7 @@ export default function MarketplacePage() {
             <button
               type="button"
               onClick={clearFilters}
-              className="rounded-full border bg-background px-3 py-2.5 text-sm hover:bg-accent transition"
+              className="rounded-full border border-border bg-background px-3 py-2.5 text-sm hover:bg-secondary transition"
             >
               <X size={16} />
             </button>
@@ -264,7 +268,7 @@ export default function MarketplacePage() {
       {/* Coupon */}
       <div className="mb-8 flex items-center justify-center gap-3 flex-wrap">
         <div className="flex items-center gap-2 glass rounded-full px-4 py-2">
-          <Tag size={16} className="text-secondary-foreground" />
+          <Tag size={16} className="text-accent-foreground" />
           <input
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value)}
@@ -273,7 +277,7 @@ export default function MarketplacePage() {
           />
           <button
             onClick={validateCoupon}
-            className="rounded-full bg-amber-500 px-4 py-1.5 text-xs font-semibold text-black hover:bg-amber-400 transition"
+            className="rounded-full bg-accent px-4 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/90 transition"
           >
             <T>Apply</T>
           </button>
@@ -282,7 +286,7 @@ export default function MarketplacePage() {
           <p className="text-red-500 text-sm">{couponError}</p>
         )}
         {discountPercent > 0 && (
-          <div className="flex items-center gap-1 text-emerald-600 text-sm bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full">
+          <div className="flex items-center gap-1 text-primary bg-secondary px-3 py-1 rounded-full text-sm">
             <Sparkles size={14} />
             <T>{`${discountPercent}% discount applied!`}</T>
           </div>
@@ -290,7 +294,13 @@ export default function MarketplacePage() {
       </div>
 
       {message && (
-        <div className="mb-6 text-center text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-full">
+        <div
+          className={`mb-6 text-center text-sm font-medium p-3 rounded-full ${
+            messageType === "success"
+              ? "text-primary bg-secondary"
+              : "text-destructive bg-destructive/10"
+          }`}
+        >
           <T>{message}</T>
         </div>
       )}
@@ -298,7 +308,7 @@ export default function MarketplacePage() {
       {/* Course Grid */}
       {courses.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <BookOpen className="mx-auto h-16 w-16 mb-4 text-secondary-foreground/50" />
+          <BookOpen className="mx-auto h-16 w-16 mb-4 text-accent-foreground/50" />
           <p className="text-lg font-serif"><T>No courses available yet.</T></p>
           <p className="text-sm mt-2">
             <T>Try adjusting your filters or check back later.</T>
@@ -318,11 +328,11 @@ export default function MarketplacePage() {
               <motion.div
                 key={course.id}
                 whileHover={{ y: -6 }}
-                className="group overflow-hidden rounded-3xl border bg-card shadow-elegant transition-shadow hover:shadow-2xl hover:shadow-amber-500/10"
+                className="group overflow-hidden rounded-3xl border border-border bg-card shadow-lg transition-shadow hover:shadow-2xl hover:shadow-primary/10"
               >
                 {/* صورة الكورس */}
                 <Link href={`/courses/${course.id}`}>
-                  <div className="h-48 bg-linear-to-br from-emerald-600 to-emerald-800 flex items-center justify-center relative overflow-hidden">
+                  <div className="h-48 bg-gradient-primary flex items-center justify-center relative overflow-hidden">
                     {course.image_url ? (
                       <Image
                         src={course.image_url}
@@ -331,13 +341,13 @@ export default function MarketplacePage() {
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <BookOpen className="h-20 w-20 text-white/20" />
+                      <BookOpen className="h-20 w-20 text-primary-foreground/20" />
                     )}
                     <span className="absolute top-3 right-3 rounded-full bg-black/30 backdrop-blur-md px-3 py-1 text-xs font-bold text-white">
                       {course.level}
                     </span>
                     {hasDiscount && (
-                      <span className="absolute top-3 left-3 rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <span className="absolute top-3 left-3 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
                         -{discountPercent}%
                       </span>
                     )}
@@ -347,15 +357,15 @@ export default function MarketplacePage() {
                 {/* محتوى البطاقة */}
                 <div className="p-5 flex flex-col h-55">
                   <Link href={`/courses/${course.id}`}>
-                    <h3 className="font-serif text-lg leading-tight hover:text-accent-foreground transition-colors line-clamp-2">
+                    <h3 className="font-serif text-lg leading-tight hover:text-accent-foreground transition-colors line-clamp-2 text-foreground">
                       {course.title}
                     </h3>
                   </Link>
 
                   {/* تقييم النجوم */}
                   {rating && rating.count > 0 && (
-                    <div className="flex items-center gap-1 text-xs text-secondary-foreground mt-1">
-                      <Star size={12} className="fill-amber-400 text-accent" />
+                    <div className="flex items-center gap-1 text-xs text-accent-foreground mt-1">
+                      <Star size={12} className="fill-accent text-accent" />
                       <span>{rating.avg} ({rating.count})</span>
                     </div>
                   )}
@@ -374,7 +384,7 @@ export default function MarketplacePage() {
                     <div className="flex items-baseline gap-1">
                       {hasDiscount ? (
                         <>
-                          <span className="font-serif text-xl font-bold text-accent-foreground">
+                          <span className="font-serif text-xl font-bold text-primary">
                             ${finalPrice}
                           </span>
                           <span className="text-xs line-through text-muted-foreground">
@@ -382,7 +392,7 @@ export default function MarketplacePage() {
                           </span>
                         </>
                       ) : (
-                        <span className="font-serif text-xl font-bold text-accent-foreground">
+                        <span className="font-serif text-xl font-bold text-primary">
                           {course.price === 0 ? <T>Free</T> : `$${course.price}`}
                         </span>
                       )}
@@ -398,10 +408,11 @@ export default function MarketplacePage() {
                             body: JSON.stringify({ uid: user.uid, courseId: course.id }),
                           });
                           setMessage("Added to wishlist!");
+                          setMessageType("success");
                         }}
-                        className="rounded-full border bg-background p-2 text-sm hover:bg-accent"
+                        className="rounded-full border border-border bg-background p-2 text-sm hover:bg-secondary"
                       >
-                        <Heart size={16} className="text-red-500" />
+                        <Heart size={16} className="text-accent" />
                       </button>
 
                       <button
@@ -413,29 +424,47 @@ export default function MarketplacePage() {
                             body: JSON.stringify({ uid: user.uid, courseId: course.id }),
                           });
                           setMessage("Added to cart!");
+                          setMessageType("success");
                         }}
-                        className="rounded-full border bg-background p-2 text-sm hover:bg-accent"
+                        className="rounded-full border border-border bg-background p-2 text-sm hover:bg-secondary"
                       >
                         <ShoppingCart size={16} />
                       </button>
                     </div>
 
-                    <button
-                      onClick={() => handleEnroll(course)}
-                      disabled={enrolling === course.id}
-                      className="rounded-full bg-amber-500 px-4 py-2 text-xs font-semibold text-black hover:bg-amber-400 disabled:opacity-50 transition inline-flex items-center gap-1"
-                    >
-                      {enrolling === course.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    {/* ✅ زر الشراء أو التسجيل المجاني - بعد التعديل */}
+                    <div className="ml-2">
+                      {course.price > 0 ? (
+                        user ? (
+                          <PayPalButton
+                            amount={(hasDiscount ? finalPrice : course.price).toFixed(2)}
+                            onSuccess={(details) => handlePaymentSuccess(details, course.id)}
+                          />
+                        ) : (
+                          <button
+                            onClick={() => router.push("/login")}
+                            className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 transition"
+                          >
+                            <T>Login to Buy</T>
+                          </button>
+                        )
                       ) : (
-                        <>
-                          {course.price > 0 && <CreditCard size={14} />}
-                          <T>
-                            {course.price === 0 ? "Enroll for Free" : "Enroll Now"}
-                          </T>
-                        </>
+                        <button
+                          onClick={() => handleFreeEnroll(course)}
+                          disabled={enrolling === course.id}
+                          className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition inline-flex items-center gap-1"
+                        >
+                          {enrolling === course.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <>
+                              <CreditCard size={14} />
+                              <T>Enroll for Free</T>
+                            </>
+                          )}
+                        </button>
                       )}
-                    </button>
+                    </div>
                   </div>
                 </div>
               </motion.div>

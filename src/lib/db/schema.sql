@@ -96,3 +96,63 @@ CREATE TRIGGER trg_set_admin_role
   BEFORE INSERT ON profiles
   FOR EACH ROW
   EXECUTE FUNCTION set_admin_role();
+
+-- أضف هذه الجداول إلى ملف schema.sql أو قم بتشغيلها مباشرة
+
+CREATE TABLE IF NOT EXISTS bundles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT,
+  price NUMERIC(10,2) NOT NULL,
+  course_ids JSONB NOT NULL, -- مصفوفة من معرفات الكورسات
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  plan_id UUID NOT NULL, -- يمكن إنشاء جدول plans لاحقاً
+  expires_at TIMESTAMP NOT NULL,
+  courses_used INTEGER DEFAULT 0,
+  max_courses INTEGER DEFAULT 3,
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS subscription_courses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+  course_id UUID NOT NULL REFERENCES courses(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS purchases (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id),
+  type TEXT NOT NULL CHECK (type IN ('course', 'bundle', 'subscription')),
+  course_id UUID REFERENCES courses(id),
+  bundle_id UUID REFERENCES bundles(id),
+  subscription_id UUID REFERENCES subscriptions(id),
+  amount NUMERIC(10,2) NOT NULL,
+  paypal_order_id TEXT NOT NULL,
+  paypal_payer_id TEXT,
+  status TEXT DEFAULT 'completed',
+  created_at TIMESTAMP DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS purchase_courses (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  purchase_id UUID REFERENCES purchases(id) ON DELETE CASCADE,
+  course_id UUID NOT NULL REFERENCES courses(id),
+  teacher_id UUID REFERENCES users(id), -- معلم الكورس
+  amount NUMERIC(10,2) NOT NULL,
+  commission_amount NUMERIC(10,2) NOT NULL,
+  commission_status TEXT DEFAULT 'pending' CHECK (commission_status IN ('pending', 'paid'))
+);
+
+CREATE TABLE IF NOT EXISTS teacher_earnings (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  teacher_id UUID NOT NULL REFERENCES users(id),
+  purchase_course_id UUID REFERENCES purchase_courses(id),
+  amount NUMERIC(10,2) NOT NULL,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'paid'))
+);

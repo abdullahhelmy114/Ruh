@@ -12,6 +12,7 @@ import {
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
 import { StarRating } from "@/components/StarRating";
 import { T } from "@/components/TranslatedText";
+import PayPalButton from "@/components/PayPalButton"; // ✅ إضافة مكون PayPal
 
 interface Lesson {
   id: string;
@@ -57,15 +58,50 @@ export default function CourseDetailPage() {
       .catch(() => setLoading(false));
   }, [params.courseId]);
 
-  const handleEnroll = async () => {
+  // الدفع عبر PayPal (يحل محل التسجيل التقليدي للكورسات المدفوعة)
+  const handlePaymentSuccess = async (details: { orderID: string; payerID: string }) => {
+    if (!user || !course) return;
+
+    setEnrolling(true);
+    setMessage("");
+
+    try {
+      const res = await fetch("/api/payment/capture", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderID: details.orderID,
+          payerID: details.payerID,
+          type: "course",
+          course_id: course.id,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        router.push(data.redirect || "/payment/success");
+      } else {
+        setMessage(data.error || "Payment verification failed");
+      }
+    } catch (err) {
+      setMessage("Network error during payment verification");
+    } finally {
+      setEnrolling(false);
+    }
+  };
+
+  // التسجيل المجاني (للكورسات بدون سعر)
+  const handleFreeEnroll = async () => {
     if (!user) {
       router.push("/login");
       return;
     }
     if (course!.price > 0) {
-      setMessage("Payment is not available yet. Free enrollment only.");
+      // الكورسات المدفوعة تتعامل معها عبر PayPal فقط
       return;
     }
+
     setEnrolling(true);
     setMessage("");
     try {
@@ -106,6 +142,7 @@ export default function CourseDetailPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 md:px-8 space-y-8">
+      {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Link href="/" className="hover:text-foreground">
           <T>Home</T>
@@ -120,25 +157,28 @@ export default function CourseDetailPage() {
 
       <div className="grid lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <div className="rounded-3xl overflow-hidden bg-linear-to-br from-emerald-600 to-emerald-800 h-64 md:h-80 flex items-center justify-center">
+          {/* صورة الكورس */}
+          <div className="rounded-3xl overflow-hidden bg-gradient-primary h-64 md:h-80 flex items-center justify-center">
             {course.image_url ? (
               <Image src={course.image_url} alt={course.title} width={800} height={400} className="object-cover w-full h-full" />
             ) : (
-              <BookOpen className="h-24 w-24 text-white/20" />
+              <BookOpen className="h-24 w-24 text-primary-foreground/20" />
             )}
           </div>
 
+          {/* فيديو التشويق */}
           {course.trailer_url && (
-            <div className="rounded-3xl overflow-hidden shadow-elegant">
+            <div className="rounded-3xl overflow-hidden shadow-lg">
               <YouTubeEmbed url={course.trailer_url} title={course.title} />
             </div>
           )}
 
+          {/* مستوى الكورس والعنوان */}
           <div>
-            <span className="inline-block rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-3 py-1 text-xs font-semibold">
+            <span className="inline-block rounded-full bg-secondary dark:bg-secondary/30 text-secondary-foreground px-3 py-1 text-xs font-semibold">
               {course.level}
             </span>
-            <h1 className="font-serif text-3xl md:text-4xl mt-3">{course.title}</h1>
+            <h1 className="font-serif text-3xl md:text-4xl mt-3 text-foreground">{course.title}</h1>
             <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
               <User size={16} /> <T>by</T>{" "}
               <Link href={`/teachers/${course.teacher_uid}`} className="font-medium text-foreground hover:text-accent-foreground transition-colors">
@@ -147,21 +187,29 @@ export default function CourseDetailPage() {
             </div>
           </div>
 
+          {/* وصف الكورس */}
           <div className="prose dark:prose-invert max-w-none">
-            <h2 className="font-serif text-2xl"><T>About This Course</T></h2>
-            <p>{course.description || <T>No description available.</T>}</p>
+            <h2 className="font-serif text-2xl text-foreground"><T>About This Course</T></h2>
+            <p className="text-muted-foreground">{course.description || <T>No description available.</T>}</p>
           </div>
 
+          {/* الدروس */}
           <div>
-            <h2 className="font-serif text-2xl mb-4"><T>Lessons</T> ({course.lessons?.length || 0})</h2>
+            <h2 className="font-serif text-2xl mb-4 text-foreground">
+              <T>Lessons</T> ({course.lessons?.length || 0})
+            </h2>
             {course.lessons?.length === 0 ? (
               <p className="text-muted-foreground"><T>No lessons yet.</T></p>
             ) : (
               course.lessons?.map((lesson) => (
-                <div key={lesson.id} className="border rounded-2xl p-4 bg-card mb-3">
+                <div key={lesson.id} className="border border-border rounded-2xl p-4 bg-card mb-3">
                   <div className="flex items-center gap-2">
-                    {lesson.type === "zoom" ? <Video size={16} className="text-secondary-foreground" /> : <FileText size={16} className="text-emerald-500" />}
-                    <h3 className="font-serif text-lg">{lesson.title}</h3>
+                    {lesson.type === "zoom" ? (
+                      <Video size={16} className="text-accent-foreground" />
+                    ) : (
+                      <FileText size={16} className="text-primary" />
+                    )}
+                    <h3 className="font-serif text-lg text-foreground">{lesson.title}</h3>
                   </div>
                   {lesson.recording_url && (
                     <div className="mt-3 rounded-xl overflow-hidden">
@@ -174,33 +222,62 @@ export default function CourseDetailPage() {
           </div>
         </div>
 
+        {/* بطاقة الشراء الجانبية */}
         <div className="space-y-4">
-          <div className="rounded-3xl border bg-card p-6 shadow-elegant sticky top-24">
-            <div className="text-3xl font-serif text-accent-foreground">${course.price}</div>
+          <div className="rounded-3xl border border-border bg-card p-6 shadow-lg sticky top-24">
+            <div className="text-3xl font-serif text-primary">${course.price}</div>
             <div className="mt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground"><T>Level</T></span>
-                <span className="font-medium">{course.level}</span>
+                <span className="font-medium text-foreground">{course.level}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground"><T>Lessons</T></span>
-                <span className="font-medium">{course.lessons?.length || 0}</span>
+                <span className="font-medium text-foreground">{course.lessons?.length || 0}</span>
               </div>
             </div>
 
             {message && (
-              <div className={`mt-3 text-xs text-center font-medium ${message.includes("success") ? "text-emerald-600" : "text-red-500"}`}>
+              <div className={`mt-3 text-xs text-center font-medium ${
+                message.includes("success") ? "text-primary" : "text-destructive"
+              }`}>
                 <T>{message}</T>
               </div>
             )}
 
-            <button
-              onClick={handleEnroll}
-              disabled={enrolling}
-              className="mt-4 w-full rounded-full bg-linear-to-r from-emerald-600 to-emerald-700 py-3 text-sm font-semibold text-white disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {enrolling ? <Loader2 size={16} className="animate-spin" /> : <><CreditCard size={16} /> <T>Enroll Now</T></>}
-            </button>
+            {/* زر الشراء - يختلف حسب السعر */}
+            {course.price > 0 ? (
+              <div className="mt-4">
+                {user ? (
+                  <PayPalButton
+                    amount={course.price.toFixed(2)}
+                    onSuccess={handlePaymentSuccess}
+                  />
+                ) : (
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground"
+                  >
+                    <T>Login to Enroll</T>
+                  </button>
+                )}
+              </div>
+            ) : (
+              <button
+                onClick={handleFreeEnroll}
+                disabled={enrolling}
+                className="mt-4 w-full rounded-full bg-primary py-3 text-sm font-semibold text-primary-foreground disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {enrolling ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : (
+                  <>
+                    <CreditCard size={16} />
+                    <T>Enroll Now (Free)</T>
+                  </>
+                )}
+              </button>
+            )}
 
             <Link href="/marketplace" className="mt-4 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground">
               <ArrowLeft size={16} /> <T>Back to Marketplace</T>
@@ -216,7 +293,7 @@ export default function CourseDetailPage() {
 }
 
 // ----------------------------------------------------------------
-// ReviewsSection component
+// ReviewsSection component (بألوان الهوية الجديدة)
 // ----------------------------------------------------------------
 function ReviewsSection({ courseId }: { courseId: string }) {
   const { user } = useAuth();
@@ -256,26 +333,26 @@ function ReviewsSection({ courseId }: { courseId: string }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h2 className="font-serif text-2xl"><T>Reviews</T></h2>
+        <h2 className="font-serif text-2xl text-foreground"><T>Reviews</T></h2>
         <StarRating rating={average} readonly size={18} />
         <span className="text-sm text-muted-foreground">({count})</span>
       </div>
 
       {user && (
         <div className="glass rounded-2xl p-4 space-y-3">
-          <p className="text-sm font-medium"><T>Your Rating</T></p>
+          <p className="text-sm font-medium text-foreground"><T>Your Rating</T></p>
           <StarRating rating={myRating} onChange={setMyRating} size={24} />
           <textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
             rows={2}
             placeholder="Add a comment (optional)"
-            className="w-full rounded-xl border bg-background px-4 py-2 text-sm resize-none"
+            className="w-full rounded-xl border border-border bg-background px-4 py-2 text-sm resize-none text-foreground placeholder:text-muted-foreground"
           />
           <button
             onClick={handleSubmitReview}
             disabled={submitting || !myRating}
-            className="rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-black disabled:opacity-50"
+            className="rounded-full bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
           >
             {submitting ? <Loader2 size={16} className="animate-spin mx-auto" /> : <T>Submit Review</T>}
           </button>
@@ -289,7 +366,7 @@ function ReviewsSection({ courseId }: { courseId: string }) {
           {reviews.map(r => (
             <div key={r.id} className="glass rounded-2xl p-4">
               <div className="flex items-center justify-between">
-                <span className="font-medium">{r.user_name}</span>
+                <span className="font-medium text-foreground">{r.user_name}</span>
                 <StarRating rating={r.rating} readonly size={14} />
               </div>
               {r.comment && <p className="mt-2 text-sm text-muted-foreground">{r.comment}</p>}
