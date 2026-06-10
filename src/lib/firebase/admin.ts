@@ -12,3 +12,11 @@ if (!getApps().length) {
 }
 
 export { admin };
+
+/**
+ * دالة مساعدة للحصول على تطبيق Firebase Admin المُهيّأ
+ * تُستخدم في routes التي تحتاج تمرير app إلى getAuth(app)
+ */
+export function getAdminApp() {
+  return admin.app();
+}
