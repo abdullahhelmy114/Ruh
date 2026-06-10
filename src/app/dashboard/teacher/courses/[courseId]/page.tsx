@@ -1,96 +1,187 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/lib/firebase/AuthProvider";
-import { T } from "@/components/TranslatedText";
-import { Loader2, ArrowLeft, Trash2, Video, FileText, Plus, Eye } from "lucide-react";
-import Link from "next/link";
+import { useParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import LessonCreationDialog from "@/components/dashboard/LessonCreationDialog";
+import { CalendarDays, Video, MonitorPlay } from "lucide-react";
+import { toast } from "sonner";
 
-interface Lesson {
-  id: string; title: string; type: string; status: string; recording_url?: string;
-}
+type Lesson = {
+  id: string;
+  type: "zoom" | "recorded";
+  scheduled_at: string;
+  scenario: string;
+  teacher_notes: string;
+  status: string;
+};
 
-export default function ManageCoursePage() {
-  const { user, role } = useAuth();
-  const router = useRouter();
-  const params = useParams<{ courseId: string }>();
-  const [course, setCourse] = useState<any>(null);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
+type LiveCourseDetail = {
+  id: string;
+  title: string;
+  category: string;
+  level: string;
+  base_price: number;
+  model_scenario: string;
+  scenario: string;
+  lessons: Lesson[];
+};
+
+export default function CourseDetailPage() {
+  const params = useParams();
+  const courseId = params.courseId as string;
+
+  const [course, setCourse] = useState<LiveCourseDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
-  useEffect(() => {
-    if (!user || (role !== "teacher" && role !== "admin")) { router.push("/login"); return; }
-    fetch(`/api/courses/${params.courseId}`)
-      .then(r => r.json())
-      .then(d => setCourse(d.course))
-      .catch(() => {});
-    fetch(`/api/lessons?teacherUid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => setLessons((d.lessons || []).filter((l: any) => l.course_id === params.courseId)))
+  const fetchCourse = () => {
+    setLoading(true);
+    fetch(`/api/teacher/live-courses/${courseId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.id) {
+          setCourse(data);
+        } else {
+          toast.error("الكورس غير موجود");
+        }
+      })
+      .catch(() => toast.error("تعذر تحميل بيانات الكورس"))
       .finally(() => setLoading(false));
-  }, [params.courseId, user, role, router]);
-
-  const handleDelete = async (lessonId: string) => {
-    if (!confirm("Delete this lesson?")) return;
-    await fetch(`/api/lessons/${lessonId}`, { method: 'DELETE' });
-    setLessons(prev => prev.filter(l => l.id !== lessonId));
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="animate-spin" /></div>;
-  if (!course) return <div className="text-center py-20"><T>Course not found</T></div>;
+  useEffect(() => {
+    if (courseId) fetchCourse();
+  }, [courseId]);
+
+  if (loading) {
+    return (
+      <div className="container p-6 text-center text-muted-foreground">
+        جارٍ تحميل الكورس...
+      </div>
+    );
+  }
+
+  if (!course) {
+    return (
+      <div className="container p-6 text-center text-muted-foreground">
+        الكورس غير موجود أو ليس لديك صلاحية الوصول إليه.
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      <Link href="/dashboard/teacher" className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-        <ArrowLeft size={16} /> <T>Back to Dashboard</T>
-      </Link>
-      <div className="flex items-center justify-between mb-6">
+    <div className="container p-6 space-y-6">
+      {/* رأس الصفحة */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="font-serif text-2xl">{course.title}</h1>
-          <p className="text-sm text-muted-foreground"><T>Level</T> {course.level} · ${course.price}</p>
+          <h1 className="text-3xl font-bold text-foreground">{course.title}</h1>
+          <div className="flex flex-wrap gap-2 mt-2">
+            <Badge variant="secondary">{course.category}</Badge>
+            <Badge variant="outline">{course.level}</Badge>
+          </div>
         </div>
-        <Link
-          href={`/dashboard/teacher/courses/new?courseId=${params.courseId}`}
-          className="rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white flex items-center gap-2"
-        >
-          <Plus size={16} /> <T>Add Lesson</T>
-        </Link>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+              إضافة حصة جديدة
+            </Button>
+          </DialogTrigger>
+          {dialogOpen && (
+            <LessonCreationDialog
+              liveCourseId={course.id}
+              onSuccess={() => {
+                setDialogOpen(false);
+                fetchCourse();
+              }}
+            />
+          )}
+        </Dialog>
       </div>
 
-      {lessons.length === 0 ? (
-        <div className="text-center py-20 text-muted-foreground">
-          <p><T>No lessons yet.</T></p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {lessons.map(l => (
-            <div key={l.id} className="flex items-center justify-between glass rounded-2xl p-4">
-              <div className="flex items-center gap-3">
-                {l.type === "zoom" ? <Video size={16} className="text-secondary-foreground" /> : <FileText size={16} className="text-emerald-500" />}
-                <div>
-                  <p className="font-medium">{l.title}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full ${
-                    l.status === 'approved' ? 'bg-emerald-500/10 text-emerald-600' :
-                    l.status === 'rejected' ? 'bg-red-500/10 text-red-600' :
-                    'bg-amber-500/10 text-accent-foreground'
-                  }`}>{l.status}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {l.recording_url && (
-                  <a href={l.recording_url} target="_blank" className="p-2 rounded-full hover:bg-accent" title="View Recording">
-                    <Eye size={16} />
-                  </a>
-                )}
-                <button onClick={() => handleDelete(l.id)} className="p-2 rounded-full hover:bg-red-50 text-red-500">
-                  <Trash2 size={16} />
-                </button>
-              </div>
+      {/* بطاقة السيناريو التعليمي */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-xl">السيناريو التعليمي</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="prose prose-sm max-w-none text-foreground/80 whitespace-pre-wrap leading-relaxed">
+            {course.scenario || course.model_scenario || "لا يوجد سيناريو مرفق بعد."}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* بطاقة الحصص */}
+      <Card className="bg-card border-border">
+        <CardHeader>
+          <CardTitle className="text-xl">
+            الحصص ({course.lessons?.length || 0})
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!course.lessons || course.lessons.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              لم تُضف أي حصص بعد. ابدأ بإضافة أول حصة.
             </div>
-          ))}
-        </div>
-      )}
+          ) : (
+            <div className="space-y-3">
+              {course.lessons.map((lesson, idx) => (
+                <div
+                  key={lesson.id}
+                  className="flex items-center gap-4 p-4 rounded-lg bg-secondary/20 border border-border hover:bg-secondary/30 transition-colors"
+                >
+                  <div className="shrink-0">
+                    {lesson.type === "zoom" ? (
+                      <Video className="h-6 w-6 text-primary" />
+                    ) : (
+                      <MonitorPlay className="h-6 w-6 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-foreground">
+                      حصة {idx + 1}: {lesson.type === "zoom" ? "زوم مباشر" : "مسجلة"}
+                    </p>
+                    <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                      <CalendarDays className="h-4 w-4" />
+                      {new Date(lesson.scheduled_at).toLocaleString("ar", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                    {lesson.scenario && (
+                      <p className="text-xs text-muted-foreground mt-1 truncate">
+                        السيناريو: {lesson.scenario.substring(0, 100)}
+                        {lesson.scenario.length > 100 ? "..." : ""}
+                      </p>
+                    )}
+                    {lesson.teacher_notes && (
+                      <p className="text-xs text-muted-foreground/70 mt-0.5 truncate">
+                        ملاحظات: {lesson.teacher_notes.substring(0, 80)}
+                      </p>
+                    )}
+                  </div>
+                  <Badge
+                    variant={lesson.status === "completed" ? "default" : "outline"}
+                    className={
+                      lesson.status === "completed"
+                        ? "bg-primary/80 text-primary-foreground"
+                        : ""
+                    }
+                  >
+                    {lesson.status === "completed" ? "مكتملة" : "قادمة"}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

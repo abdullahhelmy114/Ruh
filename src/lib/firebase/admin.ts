@@ -1,12 +1,14 @@
-import { initializeApp, getApps, cert } from "firebase-admin/app";
+import admin from "firebase-admin";
+import { getApps } from "firebase-admin/app";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_KEY || "{}");
-
-export function getAdminApp() {
-  if (!getApps().length) {
-    initializeApp({
-      credential: cert(serviceAccount),
-    });
-  }
-  return getApps()[0];
+if (!getApps().length) {
+  admin.initializeApp({
+    credential: admin.credential.cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+    }),
+  });
 }
+
+export { admin };

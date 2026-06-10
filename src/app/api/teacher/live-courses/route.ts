@@ -10,18 +10,12 @@ export async function GET(req: NextRequest) {
     }
 
     const courses = await sql.query(
-      `SELECT mc.*, 
-        CASE WHEN ta.status = 'pending' THEN 'pending'
-             WHEN lc.id IS NOT NULL THEN 'active'
-             ELSE NULL
-        END AS teacher_status
-      FROM model_courses mc
-      LEFT JOIN teaching_applications ta 
-        ON ta.model_course_id = mc.id AND ta.teacher_id = $1
-      LEFT JOIN live_courses lc 
-        ON lc.model_course_id = mc.id AND lc.teacher_id = $1
-      WHERE mc.status = 'approved'
-      ORDER BY mc.created_at DESC`,
+      `SELECT lc.*, mc.title, mc.category, mc.level, mc.base_price,
+        (SELECT COUNT(*) FROM lessons WHERE live_course_id = lc.id) AS lessons_count
+      FROM live_courses lc
+      JOIN model_courses mc ON mc.id = lc.model_course_id
+      WHERE lc.teacher_id = $1 AND lc.status = 'active'
+      ORDER BY lc.created_at DESC`,
       [user.uid]
     );
 
