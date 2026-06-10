@@ -156,3 +156,89 @@ CREATE TABLE IF NOT EXISTS teacher_earnings (
   amount NUMERIC(10,2) NOT NULL,
   status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'paid'))
 );
+
+-- المجتمع (Community Posts – حائط الإنجازات)
+CREATE TABLE community_posts (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  gender VARCHAR(10) NOT NULL CHECK (gender IN ('male', 'female')),
+  type VARCHAR(20) NOT NULL CHECK (type IN ('achievement', 'manual')),
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- تعليقات الحائط
+CREATE TABLE community_comments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- إعجابات الحائط (حتى لا تتكرر)
+CREATE TABLE community_likes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  post_id UUID NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(post_id, user_id)
+);
+
+-- منتدى الأسئلة والأجوبة
+CREATE TABLE forum_questions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  gender VARCHAR(10) NOT NULL CHECK (gender IN ('male', 'female')),
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  upvotes INT NOT NULL DEFAULT 0,
+  downvotes INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE forum_answers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  question_id UUID NOT NULL REFERENCES forum_questions(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  upvotes INT NOT NULL DEFAULT 0,
+  downvotes INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- جدول التصويتات على الأسئلة والأجوبة (لتجنب التصويت المزدوج)
+CREATE TABLE forum_votes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  question_id UUID REFERENCES forum_questions(id) ON DELETE CASCADE,
+  answer_id UUID REFERENCES forum_answers(id) ON DELETE CASCADE,
+  vote_type VARCHAR(10) NOT NULL CHECK (vote_type IN ('upvote', 'downvote')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT target_check CHECK (
+    (question_id IS NOT NULL AND answer_id IS NULL) OR
+    (question_id IS NULL AND answer_id IS NOT NULL)
+  ),
+  UNIQUE(user_id, question_id, answer_id)
+);
+
+-- التحديات
+CREATE TABLE challenges (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  gender VARCHAR(10) NOT NULL CHECK (gender IN ('male', 'female')),
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  badge_id UUID REFERENCES badges(id) ON DELETE SET NULL,
+  created_by UUID NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE challenge_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  challenge_id UUID NOT NULL REFERENCES challenges(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE(challenge_id, user_id)
+);

@@ -85,3 +85,72 @@ export interface FinancialSummary {
   platform_net: number;
   pending_teacher_count: number;
 }
+
+// ---------- أنواع المجتمع ----------
+
+export interface CommunityPost {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  gender: 'male' | 'female';
+  type: 'achievement' | 'manual';
+  content: string;
+  createdAt: string;
+  likes: number;
+  isLiked?: boolean;      // لحالة المستخدم الحالي
+  commentsCount: number;
+}
+
+export interface CommunityComment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface ForumQuestion {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  title: string;
+  content: string;
+  upvotes: number;
+  downvotes: number;
+  userVote?: 'upvote' | 'downvote' | null;
+  answersCount: number;
+  createdAt: string;
+}
+
+export interface ForumAnswer {
+  id: string;
+  questionId: string;
+  userId: string;
+  userName: string;
+  userAvatar?: string;
+  content: string;
+  upvotes: number;
+  downvotes: number;
+  userVote?: 'upvote' | 'downvote' | null;
+  createdAt: string;
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  description: string;
+  gender: 'male' | 'female';
+  startDate: string;
+  endDate: string;
+  badgeId?: string;
+  badgeName?: string;
+  createdBy: string;
+  createdAt: string;
+  participantsCount: number;
+  isJoined?: boolean;
+  status: 'active' | 'ended';
+}
