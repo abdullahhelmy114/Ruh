@@ -1,10 +1,5 @@
-// src/lib/auth.ts
-import { getAuth } from "firebase-admin/auth";
-import { getAdminApp } from "@/lib/firebase/admin";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { sql } from "@/lib/db/client";
-
-// تأكد من تهيئة تطبيق Firebase Admin
-getAdminApp();
 
 export async function getServerSession(req: Request): Promise<{
   uid: string;
@@ -15,7 +10,8 @@ export async function getServerSession(req: Request): Promise<{
     if (!authHeader.startsWith("Bearer ")) return null;
 
     const idToken = authHeader.slice(7);
-    const decoded = await getAuth().verifyIdToken(idToken);
+    const auth = getAdminAuth(); // التهيئة الكسولة هنا عند أول استدعاء فعلي
+    const decoded = await auth.verifyIdToken(idToken);
     if (!decoded.uid) return null;
 
     // جلب الدور من جدول profiles

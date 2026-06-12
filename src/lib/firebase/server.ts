@@ -1,4 +1,4 @@
-import { admin } from "./admin"; // تأكد من وجود هذا التصدير
+import { getAdminAuth } from "@/lib/firebase/admin";
 
 export async function verifyIdToken(req: Request) {
   const authHeader = req.headers.get("authorization") || "";
@@ -13,8 +13,9 @@ export async function verifyIdToken(req: Request) {
   }
 
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
-    return { uid: decoded.uid, role: decoded.role || "teacher" }; // يمكن إضافة role من custom claims
+    const auth = getAdminAuth(); // التهيئة الكسولة هنا
+    const decoded = await auth.verifyIdToken(token);
+    return { uid: decoded.uid, role: decoded.role || "teacher" };
   } catch (error) {
     console.error("Token verification failed:", error);
     return null;

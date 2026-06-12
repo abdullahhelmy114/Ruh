@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAdminApp } from "@/lib/firebase/admin";
-import { getAuth } from "firebase-admin/auth";
+import { getAdminAuth } from "@/lib/firebase/admin";
 
 export async function POST(request: Request) {
   try {
@@ -9,8 +8,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing token" }, { status: 400 });
     }
 
-    const decoded = await getAuth(getAdminApp()).verifyIdToken(idToken);
-    const sessionCookie = await getAuth(getAdminApp()).createSessionCookie(idToken, {
+    const auth = getAdminAuth();
+    const decoded = await auth.verifyIdToken(idToken);
+    const sessionCookie = await auth.createSessionCookie(idToken, {
       expiresIn: 1000 * 60 * 60 * 24 * 14,
     });
 
