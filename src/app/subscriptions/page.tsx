@@ -1,39 +1,16 @@
-import { sql } from '@/lib/db/client';
-import PayPalButton from '@/components/PayPalButton';
-import { Card, CardContent } from '@/components/ui/card';
+"use client";
 
-// دالة جلب الخطط من قاعدة البيانات (أو fallback ثابت)
-async function getPlans() {
-  try {
-    const result = await sql`
-      SELECT id, name, price, duration, max_courses
-      FROM subscription_plans
-      WHERE active = true
-      ORDER BY price ASC
-    `;
-    if (result && result.length > 0) {
-      return result.map((plan: any) => ({
-        id: plan.id,
-        name: plan.name,
-        price: Number(plan.price),
-        duration: plan.duration,
-        max_courses: plan.max_courses || 3,
-      }));
-    }
-    // fallback إذا الجدول فاضي أو غير موجود
-    return [
-      { id: '1', name: 'الخطة الشهرية', price: 99, duration: '3 أشهر', max_courses: 3 },
-      { id: '2', name: 'الخطة النصف سنوية', price: 179, duration: '6 أشهر', max_courses: 5 },
-    ];
-  } catch {
-    return [
-      { id: '1', name: 'الخطة الشهرية', price: 99, duration: '3 أشهر', max_courses: 3 },
-    ];
-  }
-}
+import { useState } from "react";
+import PayPalButton from "@/components/PayPalButton";
+import { Card, CardContent } from "@/components/ui/card";
 
-export default async function SubscriptionsPage() {
-  const plans = await getPlans();
+const defaultPlans = [
+  { id: '1', name: 'الخطة الشهرية', price: 99, duration: '3 أشهر', max_courses: 3 },
+  { id: '2', name: 'الخطة النصف سنوية', price: 179, duration: '6 أشهر', max_courses: 5 },
+];
+
+export default function SubscriptionsPage() {
+  const [plans] = useState(defaultPlans);
 
   return (
     <div className="min-h-screen bg-background py-12">
@@ -52,7 +29,6 @@ export default async function SubscriptionsPage() {
                 <PayPalButton
                   amount={plan.price.toFixed(2)}
                   onSuccess={async (details) => {
-                    'use client'; // هذا السطر ضروري لأنه داخل async callback
                     try {
                       const res = await fetch('/api/payment/capture', {
                         method: 'POST',
@@ -65,8 +41,11 @@ export default async function SubscriptionsPage() {
                         }),
                       });
                       const data = await res.json();
-                      if (data.redirect) window.location.href = data.redirect;
-                      else alert(data.error || 'فشل تأكيد الدفع');
+                      if (data.redirect) {
+                        window.location.href = data.redirect;
+                      } else {
+                        alert(data.error || 'فشل تأكيد الدفع');
+                      }
                     } catch {
                       alert('خطأ في الشبكة');
                     }
