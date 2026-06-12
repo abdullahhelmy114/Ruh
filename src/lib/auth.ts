@@ -10,11 +10,10 @@ export async function getServerSession(req: Request): Promise<{
     if (!authHeader.startsWith("Bearer ")) return null;
 
     const idToken = authHeader.slice(7);
-    const auth = getAdminAuth(); // التهيئة الكسولة هنا عند أول استدعاء فعلي
+    const auth = getAdminAuth();
     const decoded = await auth.verifyIdToken(idToken);
     if (!decoded.uid) return null;
 
-    // جلب الدور من جدول profiles
     const [profile] = await sql`
       SELECT role FROM profiles WHERE firebase_uid = ${decoded.uid}
     `;
