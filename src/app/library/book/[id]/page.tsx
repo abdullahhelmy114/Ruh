@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/firebase/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize } from "lucide-react";
 import { authFetch } from "@/lib/authFetch";
+import { T } from "@/components/TranslatedText";
 import HTMLFlipBook from "react-pageflip";
 
 interface Page {
@@ -76,7 +77,9 @@ export default function BookReader() {
       <div className="flex h-screen items-center justify-center bg-gradient-hero">
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-          <p className="text-secondary-foreground">جاري تحميل الكتاب...</p>
+          <p className="text-secondary-foreground">
+            <T>library.book.loading</T>
+          </p>
         </div>
       </div>
     );
@@ -85,7 +88,9 @@ export default function BookReader() {
   if (!user) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-hero">
-        <p className="text-secondary-foreground text-lg">يجب تسجيل الدخول لقراءة الكتاب.</p>
+        <p className="text-secondary-foreground text-lg">
+          <T>library.book.loginRequired</T>
+        </p>
       </div>
     );
   }
@@ -93,7 +98,9 @@ export default function BookReader() {
   if (pages.length === 0) {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-hero">
-        <p className="text-muted-foreground text-lg">لا توجد صفحات للعرض حالياً.</p>
+        <p className="text-muted-foreground text-lg">
+          <T>library.book.noPages</T>
+        </p>
       </div>
     );
   }
@@ -110,7 +117,7 @@ export default function BookReader() {
           size="icon"
           onClick={prevPage}
           className="text-secondary-foreground hover:text-primary hover:bg-accent/20"
-          title="الصفحة السابقة"
+          title="Previous page"
         >
           <ChevronRight size={20} />
         </Button>
@@ -122,7 +129,7 @@ export default function BookReader() {
           size="icon"
           onClick={nextPage}
           className="text-secondary-foreground hover:text-primary hover:bg-accent/20"
-          title="الصفحة التالية"
+          title="Next page"
         >
           <ChevronLeft size={20} />
         </Button>
@@ -133,7 +140,7 @@ export default function BookReader() {
             size="icon"
             onClick={handleZoomIn}
             className="text-secondary-foreground hover:text-primary hover:bg-accent/20"
-            title="تكبير"
+            title="Zoom in"
           >
             <ZoomIn size={18} />
           </Button>
@@ -142,7 +149,7 @@ export default function BookReader() {
             size="icon"
             onClick={handleZoomOut}
             className="text-secondary-foreground hover:text-primary hover:bg-accent/20"
-            title="تصغير"
+            title="Zoom out"
           >
             <ZoomOut size={18} />
           </Button>
@@ -151,7 +158,7 @@ export default function BookReader() {
             size="icon"
             onClick={toggleFullscreen}
             className="text-secondary-foreground hover:text-primary hover:bg-accent/20"
-            title={fullscreen ? "إنهاء ملء الشاشة" : "ملء الشاشة"}
+            title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
           >
             <Maximize size={18} />
           </Button>
@@ -199,14 +206,14 @@ export default function BookReader() {
               {/* صورة الصفحة */}
               <img
                 src={page.image_url}
-                alt={`صفحة ${page.page_number}`}
+                alt={`Page ${page.page_number}`}
                 className="w-full h-full object-contain pointer-events-none select-none"
                 draggable={false}
               />
               {/* علامة مائية ديناميكية */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none opacity-20 mix-blend-difference z-10">
                 <p className="text-center text-[10px] font-mono text-white rotate-45 whitespace-nowrap">
-                  {user?.email || "مكتبة روح القدس"}
+                  {user?.email || "Ruhulqudus Library"}
                 </p>
               </div>
               {/* طبقة حماية تمنع السحب والتفاعل مع الصورة */}
@@ -218,7 +225,7 @@ export default function BookReader() {
 
       {/* نصائح في الأسفل */}
       <div className="mt-4 text-xs text-secondary-foreground/40 text-center">
-        📖 استخدم الأسهم للتنقل | ⌨️ اضغط Ctrl لأوامر التكبير
+        <T>library.book.helpText</T>
       </div>
     </div>
   );
