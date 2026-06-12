@@ -1,9 +1,8 @@
 export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
-import { getAdminApp } from '@/lib/firebase/admin';
-import { getMessaging } from 'firebase-admin/messaging';
-import { createNotification } from '@/lib/notifications'; // ✅
+import { getAdminMessaging } from '@/lib/firebase/admin';
+import { createNotification } from '@/lib/notifications';
 
 // POST: إرسال رسالة جديدة
 export async function POST(request: Request) {
@@ -18,7 +17,7 @@ export async function POST(request: Request) {
       VALUES (${senderUid}, ${receiverUid}, ${message})
     `;
 
-    // ✅ إشعار داخلي للمستقبل
+    // إشعار داخلي للمستقبل
     const [sender] = await sql`SELECT full_name FROM profiles WHERE firebase_uid = ${senderUid}`;
     const senderName = sender?.full_name || 'Someone';
     await createNotification(
@@ -31,7 +30,7 @@ export async function POST(request: Request) {
     const [receiver] = await sql`SELECT fcm_token FROM profiles WHERE firebase_uid = ${receiverUid}`;
     if (receiver?.fcm_token) {
       try {
-        await getMessaging(getAdminApp()).send({
+        await getAdminMessaging().send({
           token: receiver.fcm_token,
           notification: {
             title: 'New Message',

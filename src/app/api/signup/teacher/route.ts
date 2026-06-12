@@ -1,14 +1,12 @@
 // app/api/signup/teacher/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminApp } from "@/lib/firebase/admin";
-import { getAuth } from "firebase-admin/auth";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { sql } from "@/lib/db/client";
 import { sendEmailVerificationCode } from "@/lib/email";
 import { uploadFile } from "@/lib/upload-file";
 
 async function createFirebaseUser(email: string, password: string) {
-  const adminApp = getAdminApp();
-  const auth = getAuth(adminApp);
+  const auth = getAdminAuth();
   return auth.createUser({ email, password, emailVerified: false });
 }
 

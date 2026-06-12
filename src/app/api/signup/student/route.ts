@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminApp } from "@/lib/firebase/admin";
-import { getAuth } from "firebase-admin/auth";
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { sql } from "@/lib/db/client";
 import { sendEmailVerificationCode } from "@/lib/email";
 
@@ -13,8 +12,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "Missing required fields" }, { status: 400 });
     }
 
-    const adminApp = getAdminApp();
-    const auth = getAuth(adminApp);
+    const auth = getAdminAuth();
     const userRecord = await auth.createUser({ email, password, emailVerified: false });
 
     await sql`
@@ -34,7 +32,7 @@ export async function POST(req: NextRequest) {
         ${optionalFields.whatsapp || null},
         ${interests || null},
         'student',
-        'inactive',   // سيتم تفعيله بعد التحقق
+        'inactive',
         NOW()
       )
     `;
