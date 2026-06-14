@@ -17,6 +17,5 @@ export async function uploadFileToFirebaseStorage(
     public: true,
   });
 
-  const publicUrl = `https://storage.googleapis.com/${bucket.name}/${destination}`;
-  return publicUrl;
+  return `https://storage.googleapis.com/${bucket.name}/${destination}`;
 }

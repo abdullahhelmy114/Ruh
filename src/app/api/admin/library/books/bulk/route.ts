@@ -20,10 +20,7 @@ export async function POST(req: Request) {
     const results = [];
     for (const file of files) {
       if (!file || typeof file.arrayBuffer !== "function") continue;
-
-      // استخراج اسم الكتاب من اسم الملف بدون امتداد
       const fileName = file.name.replace(/\.[^/.]+$/, "");
-
       const buffer = Buffer.from(await file.arrayBuffer());
       const pdfUrl = await uploadFileToFirebaseStorage(buffer, file.name, "library/pdfs");
 

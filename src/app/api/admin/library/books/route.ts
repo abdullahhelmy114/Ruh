@@ -4,14 +4,12 @@ import { getServerSession } from "@/lib/auth";
 import { uploadFileToFirebaseStorage } from "@/lib/firebase/admin-storage";
 
 export async function POST(req: Request) {
-  // 1. تحقق من الجلسة وصلاحية الأدمن
   const session = await getServerSession(req);
   if (!session || session.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
   try {
-    // 2. استقبال البيانات من FormData
     const formData = await req.formData();
     const title = formData.get("title") as string;
     const author = (formData.get("author") as string) || "";
@@ -26,19 +24,16 @@ export async function POST(req: Request) {
     let coverUrl = "";
     let pdfUrl = "";
 
-    // 3. رفع صورة الغلاف إلى Firebase Storage
-    if (coverFile) {
+    if (coverFile && typeof coverFile.arrayBuffer === "function") {
       const buffer = Buffer.from(await coverFile.arrayBuffer());
       coverUrl = await uploadFileToFirebaseStorage(buffer, coverFile.name, "library/covers");
     }
 
-    // 4. رفع ملف PDF إلى Firebase Storage (اختياري حالياً)
-    if (pdfFile) {
+    if (pdfFile && typeof pdfFile.arrayBuffer === "function") {
       const buffer = Buffer.from(await pdfFile.arrayBuffer());
       pdfUrl = await uploadFileToFirebaseStorage(buffer, pdfFile.name, "library/pdfs");
     }
 
-    // 5. إدراج الكتاب في قاعدة البيانات
     const [book] = await sql`
       INSERT INTO library_books (title, author, description, cover_url, pdf_url)
       VALUES (${title}, ${author}, ${description}, ${coverUrl}, ${pdfUrl})
