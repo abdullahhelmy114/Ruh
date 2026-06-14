@@ -8,7 +8,7 @@ export async function uploadFileToFirebaseStorage(
 ): Promise<string> {
   const storage = getAdminStorage();
   const bucket = storage.bucket();
-  const ext = fileName.split(".").pop();
+  const ext = fileName.split(".").pop() || "bin";
   const destination = `${folder}/${uuidv4()}.${ext}`;
   const file = bucket.file(destination);
 

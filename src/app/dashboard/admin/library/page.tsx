@@ -7,14 +7,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { authFetch } from "@/lib/authFetch";
 import { T } from "@/components/TranslatedText";
+import { Loader2, Pencil, Trash2 } from "lucide-react";
 
 interface Book {
   id: string;
   title: string;
   author: string;
+  description?: string;
   cover_url: string;
   created_at: string;
 }
@@ -28,6 +37,20 @@ export default function AdminLibraryPage() {
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+
+  // حالة الرفع المجمع
+  const [bulkFiles, setBulkFiles] = useState<FileList | null>(null);
+  const [bulkDialogOpen, setBulkDialogOpen] = useState(false);
+  const [bulkUploading, setBulkUploading] = useState(false);
+
+  // حالة التعديل
+  const [editBook, setEditBook] = useState<Book | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editAuthor, setEditAuthor] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   const fetchBooks = async () => {
     try {
@@ -65,7 +88,6 @@ export default function AdminLibraryPage() {
       const res = await authFetch("/api/admin/library/books", {
         method: "POST",
         body: formData,
-        headers: { "Content-Type": undefined } as any,
       });
 
       if (res.ok) {
@@ -87,8 +109,80 @@ export default function AdminLibraryPage() {
     }
   };
 
+  const handleBulkUpload = async () => {
+    if (!bulkFiles || bulkFiles.length === 0) {
+      toast.error("يرجى اختيار ملفات PDF");
+      return;
+    }
+
+    setBulkUploading(true);
+    const formData = new FormData();
+    for (let i = 0; i < bulkFiles.length; i++) {
+      formData.append("files", bulkFiles[i]);
+    }
+
+    try {
+      const res = await authFetch("/api/admin/library/books/bulk", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`تم إضافة ${data.books.length} كتب`);
+        setBulkFiles(null);
+        setBulkDialogOpen(false);
+        fetchBooks();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "فشل الرفع المجمع");
+      }
+    } catch {
+      toast.error("خطأ في الشبكة");
+    } finally {
+      setBulkUploading(false);
+    }
+  };
+
+  const handleEditClick = (book: Book) => {
+    setEditBook(book);
+    setEditTitle(book.title);
+    setEditAuthor(book.author || "");
+    setEditDescription(book.description || "");
+    setEditCoverFile(null);
+    setEditDialogOpen(true);
+  };
+
+  const handleEditSave = async () => {
+    if (!editBook) return;
+    setEditSaving(true);
+    const formData = new FormData();
+    formData.append("title", editTitle);
+    formData.append("author", editAuthor);
+    formData.append("description", editDescription);
+    if (editCoverFile) formData.append("cover", editCoverFile);
+
+    try {
+      const res = await authFetch(`/api/admin/library/books/${editBook.id}`, {
+        method: "PUT",
+        body: formData,
+      });
+      if (res.ok) {
+        toast.success("تم تحديث الكتاب");
+        setEditDialogOpen(false);
+        fetchBooks();
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "فشل التحديث");
+      }
+    } catch {
+      toast.error("خطأ في الشبكة");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this book?")) return;
+    if (!confirm("هل تريد حذف هذا الكتاب؟")) return;
     try {
       const res = await authFetch(`/api/admin/library/books/${id}`, {
         method: "DELETE",
@@ -98,7 +192,7 @@ export default function AdminLibraryPage() {
         fetchBooks();
       } else {
         const err = await res.json();
-        toast.error(err.error || "Failed");
+        toast.error(err.error || "فشل الحذف");
       }
     } catch {
       toast.error(<T>admin.library.deleteError</T>);
@@ -108,17 +202,19 @@ export default function AdminLibraryPage() {
   if (loading) {
     return (
       <div className="p-6 text-center text-muted-foreground">
+        <Loader2 className="mx-auto animate-spin h-8 w-8" />
         <T>library.loading</T>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-8">
+    <div className="max-w-6xl mx-auto p-6 space-y-8" dir="rtl">
       <h1 className="text-3xl font-bold text-secondary-foreground">
         <T>admin.library.title</T>
       </h1>
 
+      {/* إضافة فردية */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl"><T>admin.library.addBook</T></CardTitle>
@@ -147,13 +243,19 @@ export default function AdminLibraryPage() {
                 <Input type="file" accept=".pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
               </div>
             </div>
-            <Button type="submit" disabled={uploading} className="bg-primary text-primary-foreground hover:bg-primary/90">
-              {uploading ? <T>admin.library.uploading</T> : <T>admin.library.addBookButton</T>}
-            </Button>
+            <div className="flex gap-4">
+              <Button type="submit" disabled={uploading} className="bg-primary text-primary-foreground">
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <T>admin.library.addBookButton</T>}
+              </Button>
+              <Button type="button" variant="outline" onClick={() => setBulkDialogOpen(true)}>
+                <T>admin.library.bulkUpload</T>
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>
 
+      {/* جدول الكتب */}
       <Card>
         <CardHeader>
           <CardTitle className="text-xl"><T>admin.library.existingBooks</T> ({books.length})</CardTitle>
@@ -186,9 +288,14 @@ export default function AdminLibraryPage() {
                     <TableCell>{book.author || "—"}</TableCell>
                     <TableCell>{new Date(book.created_at).toLocaleDateString("ar-EG")}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(book.id)}>
-                        <T>admin.library.delete</T>
-                      </Button>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="ghost" size="sm" onClick={() => handleEditClick(book)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete(book.id)}>
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -197,6 +304,68 @@ export default function AdminLibraryPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* حوار الرفع المجمع */}
+      <Dialog open={bulkDialogOpen} onOpenChange={setBulkDialogOpen}>
+        <DialogContent className="bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-xl"><T>admin.library.bulkUploadTitle</T></DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <Label><T>admin.library.selectPdfFiles</T></Label>
+            <Input
+              type="file"
+              accept=".pdf"
+              multiple
+              onChange={(e) => setBulkFiles(e.target.files)}
+            />
+            {bulkFiles && <p className="text-sm text-muted-foreground">تم اختيار {bulkFiles.length} ملف</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setBulkDialogOpen(false)}>
+              <T>library.cancel</T>
+            </Button>
+            <Button onClick={handleBulkUpload} disabled={bulkUploading} className="bg-primary text-primary-foreground">
+              {bulkUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <T>admin.library.uploadBulk</T>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* حوار تعديل كتاب */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-xl"><T>admin.library.editBook</T></DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label><T>admin.library.bookTitle</T></Label>
+              <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+            </div>
+            <div>
+              <Label><T>admin.library.author</T></Label>
+              <Input value={editAuthor} onChange={(e) => setEditAuthor(e.target.value)} />
+            </div>
+            <div>
+              <Label><T>admin.library.description</T></Label>
+              <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value)} rows={3} />
+            </div>
+            <div>
+              <Label><T>admin.library.coverImage</T></Label>
+              <Input type="file" accept="image/*" onChange={(e) => setEditCoverFile(e.target.files?.[0] || null)} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setEditDialogOpen(false)}>
+              <T>library.cancel</T>
+            </Button>
+            <Button onClick={handleEditSave} disabled={editSaving} className="bg-primary text-primary-foreground">
+              {editSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <T>admin.library.saveChanges</T>}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
