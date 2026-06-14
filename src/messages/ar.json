@@ -47,6 +47,7 @@
   "Site Settings": "إعدادات الموقع",
   "Pages": "الصفحات",
   "Marketing": "التسويق",
+  "Library": "المكتبة",
   "Instructor Portal": "بوابة المعلم",
   "Your students await your wisdom today.": "\"طلابك ينتظرون حكمتك اليوم.\"",
   "New Course": "دورة جديدة",
@@ -397,6 +398,78 @@
     "loadingAI": "جارٍ تحميل رد الذكاء الاصطناعي..."
   },
 
+  "library": {
+    "title": "مكتبة روح القدس",
+    "loading": "جاري تحميل المكتبة...",
+    "loginRequired": "يجب تسجيل الدخول للوصول إلى المكتبة.",
+    "login": "تسجيل الدخول",
+    "subscriptionRequired": "هذه المكتبة حصرية للمشتركين في المنصة.",
+    "subscribe": "اشترك الآن للوصول",
+    "booksCount": "عدد الكتب في المكتبة",
+    "instructions": "🖱️ اسحب للتدوير | 🔍 مرر للتكبير",
+    "subscribeTitle": "اشترك في المكتبة",
+    "subscribeDescription": "اختر خطتك للوصول إلى جميع كتب المكتبة.",
+    "monthly": "شهري",
+    "lifetime": "مدى الحياة",
+    "cancel": "إلغاء",
+    "book": {
+      "loading": "جاري تحميل الكتاب...",
+      "loginRequired": "يجب تسجيل الدخول لقراءة الكتاب.",
+      "noPages": "لا توجد صفحات للعرض حالياً.",
+      "helpText": "📖 استخدم الأسهم للتنقل | ⌨️ اضغط Ctrl لأوامر التكبير",
+      "noAccess": "يجب أن تكون مشتركًا لقراءة هذا الكتاب.",
+      "backToLibrary": "العودة إلى المكتبة"
+    }
+  },
+
+  "admin": {
+    "library": {
+      "title": "إدارة المكتبة",
+      "addBook": "إضافة كتاب جديد",
+      "bookTitle": "عنوان الكتاب",
+      "author": "المؤلف",
+      "description": "الوصف",
+      "coverImage": "صورة الغلاف",
+      "pdfFile": "ملف PDF",
+      "addBookButton": "إضافة الكتاب",
+      "uploading": "جاري الرفع...",
+      "existingBooks": "الكتب الموجودة",
+      "noBooks": "لا توجد كتب حالياً.",
+      "cover": "الغلاف",
+      "date": "تاريخ الإضافة",
+      "actions": "إجراءات",
+      "delete": "حذف",
+      "titleRequired": "عنوان الكتاب مطلوب",
+      "bookAdded": "تمت إضافة الكتاب بنجاح",
+      "uploadError": "حدث خطأ أثناء الرفع",
+      "bookDeleted": "تم حذف الكتاب",
+      "deleteError": "فشل الحذف"
+    }
+  },
+
+  "subscription": {
+    "title": "اشترك الآن",
+    "comingSoon": "صفحة الاشتراك قيد الإنشاء.",
+    "backHome": "العودة للرئيسية"
+  },
+
+  "certificate": {
+    "studentName": "اسم الطالب",
+    "courseName": "اسم الدورة",
+    "date": "التاريخ",
+    "teacherName": "اسم المعلم",
+    "certificateId": "رقم الشهادة",
+    "download": "تحميل الشهادة"
+  },
+
+  "curriculum": {
+    "availableCourses": "الكورسات المتاحة للتدريس",
+    "applyToTeach": "طلب تدريس هذا الكورس",
+    "applied": "تم تقديم الطلب",
+    "alreadyApplied": "لقد قدمت طلباً بالفعل",
+    "noCourses": "لا توجد كورسات متاحة حالياً."
+  },
+
   "Become a Teacher": "كن معلماً",
   "Complete your profile to start teaching": "أكمل ملفك الشخصي لبدء التدريس",
   "First Name": "الاسم الأول",
@@ -452,7 +525,7 @@
   "Please select a valid gender": "يرجى اختيار جنس صحيح",
   "At least one language is required": "يجب إضافة لغة واحدة على الأقل",
   "You must select at least one native language": "يجب اختيار لغة أم واحدة على الأقل",
-  "Invalid email": "بريد إلكتروني غير صالح",
+  "Invalid email": "بريد إلكتروني غير صحيح",
   "WhatsApp number is required": "رقم الواتساب مطلوب",
   "Password must be at least 6 characters": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
   "Password confirmation is required": "تأكيد كلمة المرور مطلوب",
@@ -469,18 +542,18 @@
   "Missing required data": "بيانات ناقصة",
   "Application Submitted": "تم تقديم الطلب",
   "Join Ruhulqudus Academy": "انضم إلى أكاديمية روح القدس",
-"Choose your path and start your journey with the best Arabic teachers and resources.": "اختر مسارك وابدأ رحلتك مع أفضل معلمي وموارد العربية.",
-"Access to hundreds of Arabic courses": "الوصول إلى مئات دورات اللغة العربية",
-"Live sessions with certified teachers": "جلسات مباشرة مع معلمين معتمدين",
-"Interactive quizzes & certificates": "اختبارات تفاعلية وشهادات",
-"Community of learners worldwide": "مجتمع من المتعلمين حول العالم",
-"Join as Student": "انضم كطالب",
-"Learn more about student experience": "تعرف على المزيد عن تجربة الطالب",
-"Create and sell your courses": "أنشئ دوراتك وقم ببيعها",
-"Earn competitive commissions": "احصل على عمولات تنافسية",
-"Access to teaching tools & analytics": "الوصول إلى أدوات التدريس والتحليلات",
-"Join a network of top Arabic instructors": "انضم إلى شبكة من أفضل معلمي العربية",
-"Join as Teacher": "انضم كمعلم",
-"Learn more about teaching": "تعرف على المزيد عن التدريس",
-"Create Student Account": "إنشاء حساب طالب"
+  "Choose your path and start your journey with the best Arabic teachers and resources.": "اختر مسارك وابدأ رحلتك مع أفضل معلمي وموارد العربية.",
+  "Access to hundreds of Arabic courses": "الوصول إلى مئات دورات اللغة العربية",
+  "Live sessions with certified teachers": "جلسات مباشرة مع معلمين معتمدين",
+  "Interactive quizzes & certificates": "اختبارات تفاعلية وشهادات",
+  "Community of learners worldwide": "مجتمع من المتعلمين حول العالم",
+  "Join as Student": "انضم كطالب",
+  "Learn more about student experience": "تعرف على المزيد عن تجربة الطالب",
+  "Create and sell your courses": "أنشئ دوراتك وقم ببيعها",
+  "Earn competitive commissions": "احصل على عمولات تنافسية",
+  "Access to teaching tools & analytics": "الوصول إلى أدوات التدريس والتحليلات",
+  "Join a network of top Arabic instructors": "انضم إلى شبكة من أفضل معلمي العربية",
+  "Join as Teacher": "انضم كمعلم",
+  "Learn more about teaching": "تعرف على المزيد عن التدريس",
+  "Create Student Account": "إنشاء حساب طالب"
 }

@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "sonner";
 import { authFetch } from "@/lib/authFetch";
+import { T } from "@/components/TranslatedText";
 
 interface Book {
   id: string;
@@ -48,7 +49,7 @@ export default function AdminLibraryPage() {
   const handleAddBook = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title) {
-      toast.error("عنوان الكتاب مطلوب");
+      toast.error(<T>admin.library.titleRequired</T>);
       return;
     }
 
@@ -64,11 +65,11 @@ export default function AdminLibraryPage() {
       const res = await authFetch("/api/admin/library/books", {
         method: "POST",
         body: formData,
-        headers: { "Content-Type": undefined } as any, // لإرسال multipart
+        headers: { "Content-Type": undefined } as any,
       });
 
       if (res.ok) {
-        toast.success("تمت إضافة الكتاب بنجاح");
+        toast.success(<T>admin.library.bookAdded</T>);
         setTitle("");
         setAuthor("");
         setDescription("");
@@ -77,122 +78,98 @@ export default function AdminLibraryPage() {
         fetchBooks();
       } else {
         const err = await res.json();
-        toast.error(err.error || "فشل في إضافة الكتاب");
+        toast.error(err.error || "Failed");
       }
     } catch {
-      toast.error("حدث خطأ أثناء الرفع");
+      toast.error(<T>admin.library.uploadError</T>);
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("هل تريد حذف هذا الكتاب؟")) return;
+    if (!confirm("Delete this book?")) return;
     try {
       const res = await authFetch(`/api/admin/library/books/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
-        toast.success("تم حذف الكتاب");
+        toast.success(<T>admin.library.bookDeleted</T>);
         fetchBooks();
       } else {
         const err = await res.json();
-        toast.error(err.error || "فشل الحذف");
+        toast.error(err.error || "Failed");
       }
     } catch {
-      toast.error("خطأ في الاتصال");
+      toast.error(<T>admin.library.deleteError</T>);
     }
   };
 
   if (loading) {
     return (
-      <div className="p-6 text-center text-muted-foreground">جاري تحميل المكتبة...</div>
+      <div className="p-6 text-center text-muted-foreground">
+        <T>library.loading</T>
+      </div>
     );
   }
 
   return (
     <div className="max-w-6xl mx-auto p-6 space-y-8">
-      <h1 className="text-3xl font-bold text-secondary-foreground">إدارة المكتبة</h1>
+      <h1 className="text-3xl font-bold text-secondary-foreground">
+        <T>admin.library.title</T>
+      </h1>
 
-      {/* نموذج إضافة كتاب */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">إضافة كتاب جديد</CardTitle>
+          <CardTitle className="text-xl"><T>admin.library.addBook</T></CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleAddBook} className="space-y-4">
             <div>
-              <Label>عنوان الكتاب</Label>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="اسم الكتاب"
-                required
-              />
+              <Label><T>admin.library.bookTitle</T></Label>
+              <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
             </div>
             <div>
-              <Label>المؤلف</Label>
-              <Input
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-                placeholder="المؤلف"
-              />
+              <Label><T>admin.library.author</T></Label>
+              <Input value={author} onChange={(e) => setAuthor(e.target.value)} />
             </div>
             <div>
-              <Label>الوصف</Label>
-              <Textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="وصف مختصر"
-                rows={3}
-              />
+              <Label><T>admin.library.description</T></Label>
+              <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <Label>صورة الغلاف</Label>
-                <Input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => setCoverFile(e.target.files?.[0] || null)}
-                />
+                <Label><T>admin.library.coverImage</T></Label>
+                <Input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] || null)} />
               </div>
               <div>
-                <Label>ملف PDF (اختياري)</Label>
-                <Input
-                  type="file"
-                  accept=".pdf"
-                  onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
-                />
+                <Label><T>admin.library.pdfFile</T></Label>
+                <Input type="file" accept=".pdf" onChange={(e) => setPdfFile(e.target.files?.[0] || null)} />
               </div>
             </div>
-            <Button
-              type="submit"
-              disabled={uploading}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {uploading ? "جاري الرفع..." : "إضافة الكتاب"}
+            <Button type="submit" disabled={uploading} className="bg-primary text-primary-foreground hover:bg-primary/90">
+              {uploading ? <T>admin.library.uploading</T> : <T>admin.library.addBookButton</T>}
             </Button>
           </form>
         </CardContent>
       </Card>
 
-      {/* قائمة الكتب */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-xl">الكتب الموجودة ({books.length})</CardTitle>
+          <CardTitle className="text-xl"><T>admin.library.existingBooks</T> ({books.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {books.length === 0 ? (
-            <p className="text-muted-foreground text-center">لا توجد كتب حالياً.</p>
+            <p className="text-muted-foreground text-center"><T>admin.library.noBooks</T></p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>الغلاف</TableHead>
-                  <TableHead>العنوان</TableHead>
-                  <TableHead>المؤلف</TableHead>
-                  <TableHead>تاريخ الإضافة</TableHead>
-                  <TableHead className="text-right">إجراءات</TableHead>
+                  <TableHead><T>admin.library.cover</T></TableHead>
+                  <TableHead><T>admin.library.bookTitle</T></TableHead>
+                  <TableHead><T>admin.library.author</T></TableHead>
+                  <TableHead><T>admin.library.date</T></TableHead>
+                  <TableHead className="text-right"><T>admin.library.actions</T></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -200,27 +177,17 @@ export default function AdminLibraryPage() {
                   <TableRow key={book.id}>
                     <TableCell>
                       {book.cover_url ? (
-                        <img
-                          src={book.cover_url}
-                          alt={book.title}
-                          className="w-10 h-14 object-cover rounded"
-                        />
+                        <img src={book.cover_url} alt={book.title} className="w-10 h-14 object-cover rounded" />
                       ) : (
                         <div className="w-10 h-14 bg-muted rounded" />
                       )}
                     </TableCell>
                     <TableCell className="font-medium">{book.title}</TableCell>
                     <TableCell>{book.author || "—"}</TableCell>
-                    <TableCell>
-                      {new Date(book.created_at).toLocaleDateString("ar-EG")}
-                    </TableCell>
+                    <TableCell>{new Date(book.created_at).toLocaleDateString("ar-EG")}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(book.id)}
-                      >
-                        حذف
+                      <Button variant="destructive" size="sm" onClick={() => handleDelete(book.id)}>
+                        <T>admin.library.delete</T>
                       </Button>
                     </TableCell>
                   </TableRow>

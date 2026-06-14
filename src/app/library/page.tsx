@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useState, useRef, Suspense } from "react";
+import { useEffect, useState, useRef, useCallback, Suspense } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { OrbitControls, Text } from "@react-three/drei";
+import { OrbitControls, Text, useCursor } from "@react-three/drei";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { authFetch } from "@/lib/authFetch";
 import { T } from "@/components/TranslatedText";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import * as THREE from "three";
 
+// ---------- Types ----------
 interface Book {
   id: string;
   title: string;
@@ -17,11 +26,23 @@ interface Book {
   cover_url: string;
 }
 
-// ─── مكون الكتاب ثلاثي الأبعاد ───
-function Book3D({ book, position, index }: { book: Book; position: [number, number, number]; index: number }) {
+// ---------- Book 3D Component ----------
+function Book3D({
+  book,
+  position,
+  index,
+  onClick,
+}: {
+  book: Book;
+  position: [number, number, number];
+  index: number;
+  onClick: (book: Book) => void;
+}) {
   const meshRef = useRef<THREE.Mesh>(null);
   const [hovered, setHovered] = useState(false);
   const [texture, setTexture] = useState<THREE.Texture | null>(null);
+
+  useCursor(hovered);
 
   useEffect(() => {
     if (book.cover_url) {
@@ -29,14 +50,15 @@ function Book3D({ book, position, index }: { book: Book; position: [number, numb
         book.cover_url,
         (tex) => setTexture(tex),
         undefined,
-        () => console.log("فشل تحميل غلاف:", book.title)
+        () => console.log("Failed to load cover:", book.title)
       );
     }
   }, [book.cover_url, book.title]);
 
-  useFrame((state) => {
+  useFrame((state: any) => {
     if (meshRef.current) {
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime + index) * 0.05;
+      meshRef.current.position.y =
+        position[1] + Math.sin(state.clock.elapsedTime + index) * 0.05;
       if (hovered) {
         meshRef.current.scale.lerp(new THREE.Vector3(1.1, 1.1, 1.1), 0.1);
       } else {
@@ -49,6 +71,10 @@ function Book3D({ book, position, index }: { book: Book; position: [number, numb
     <group position={position}>
       <mesh
         ref={meshRef}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick(book);
+        }}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         castShadow
@@ -83,8 +109,16 @@ function Book3D({ book, position, index }: { book: Book; position: [number, numb
   );
 }
 
-// ─── مكون الرف الخشبي ───
-function Shelf({ position, books }: { position: [number, number, number]; books: Book[] }) {
+// ---------- Shelf Component ----------
+function Shelf({
+  position,
+  books,
+  onBookClick,
+}: {
+  position: [number, number, number];
+  books: Book[];
+  onBookClick: (book: Book) => void;
+}) {
   return (
     <group position={position}>
       <mesh receiveShadow position={[0, -0.1, 0]}>
@@ -105,14 +139,21 @@ function Shelf({ position, books }: { position: [number, number, number]; books:
           book={book}
           position={[idx * 0.6 - 2.8, 0.5, 0]}
           index={idx}
+          onClick={onBookClick}
         />
       ))}
     </group>
   );
 }
 
-// ─── مشهد المكتبة الكامل ───
-function LibraryScene({ books }: { books: Book[] }) {
+// ---------- Library Scene ----------
+function LibraryScene({
+  books,
+  onBookClick,
+}: {
+  books: Book[];
+  onBookClick: (book: Book) => void;
+}) {
   const shelves: Book[][] = [];
   for (let i = 0; i < books.length; i += 8) {
     shelves.push(books.slice(i, i + 8));
@@ -135,7 +176,12 @@ function LibraryScene({ books }: { books: Book[] }) {
         <meshStandardMaterial color="#2a1f14" roughness={0.9} />
       </mesh>
       {shelves.map((shelfBooks, idx) => (
-        <Shelf key={idx} books={shelfBooks} position={[0, idx * 2.2 - 1, 0]} />
+        <Shelf
+          key={idx}
+          books={shelfBooks}
+          position={[0, idx * 2.2 - 1, 0]}
+          onBookClick={onBookClick}
+        />
       ))}
       <OrbitControls
         enablePan={true}
@@ -149,12 +195,17 @@ function LibraryScene({ books }: { books: Book[] }) {
   );
 }
 
-// ─── الصفحة الرئيسية ───
+// ---------- Main Page ----------
 export default function LibraryPage() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [books, setBooks] = useState<Book[]>([]);
   const [hasAccess, setHasAccess] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAccess, setCheckingAccess] = useState(true);
+  const [selectedBook, setSelectedBook] = useState<Book | null>(null);
+  const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
+  const [subscribing, setSubscribing] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -166,6 +217,7 @@ export default function LibraryPage() {
       .then((r) => r.json())
       .then((data) => {
         setHasAccess(data.hasAccess);
+        setIsAdmin(data.isAdmin || false);
         if (data.hasAccess) {
           return fetch("/api/library/books").then((r) => r.json());
         }
@@ -176,6 +228,42 @@ export default function LibraryPage() {
       })
       .finally(() => setCheckingAccess(false));
   }, [user]);
+
+  const handleBookClick = useCallback(
+    (book: Book) => {
+      if (isAdmin || hasAccess) {
+        router.push(`/library/book/${book.id}`);
+      } else {
+        setSelectedBook(book);
+        setShowSubscribeDialog(true);
+      }
+    },
+    [isAdmin, hasAccess, router]
+  );
+
+  const handleMockPurchase = async (plan: "monthly" | "lifetime") => {
+    setSubscribing(true);
+    try {
+      const res = await authFetch("/api/library/mock-purchase", {
+        method: "POST",
+        body: JSON.stringify({ plan }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setHasAccess(true);
+        setShowSubscribeDialog(false);
+        if (selectedBook) {
+          router.push(`/library/book/${selectedBook.id}`);
+        }
+      } else {
+        alert(data.error || "Purchase failed");
+      }
+    } catch {
+      alert("Network error");
+    } finally {
+      setSubscribing(false);
+    }
+  };
 
   if (isLoading || checkingAccess) {
     return (
@@ -208,24 +296,6 @@ export default function LibraryPage() {
     );
   }
 
-  if (!hasAccess) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center bg-gradient-hero text-center gap-6 px-4">
-        <h1 className="text-4xl font-bold text-secondary-foreground">
-          <T>library.title</T>
-        </h1>
-        <p className="text-lg text-secondary-foreground/80">
-          <T>library.subscriptionRequired</T>
-        </p>
-        <Link href="/subscription">
-          <Button className="bg-accent text-accent-foreground hover:bg-accent/90 px-8 py-3 text-lg">
-            <T>library.subscribe</T>
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gradient-hero">
       <div className="absolute top-0 left-0 right-0 z-10 p-6 text-center pointer-events-none">
@@ -249,13 +319,58 @@ export default function LibraryPage() {
           shadows
           gl={{ antialias: true, alpha: true }}
         >
-          <LibraryScene books={books} />
+          <LibraryScene books={books} onBookClick={handleBookClick} />
         </Canvas>
       </Suspense>
 
       <div className="absolute bottom-4 right-4 z-10 text-xs text-secondary-foreground/40 pointer-events-none">
         <T>library.instructions</T>
       </div>
+
+      {/* Subscribe Dialog */}
+      <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
+        <DialogContent className="bg-card border-border text-foreground">
+          <DialogHeader>
+            <DialogTitle className="text-xl">
+              <T>library.subscribeTitle</T>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-muted-foreground">
+              <T>library.subscribeDescription</T>
+            </p>
+            <div className="grid grid-cols-2 gap-4">
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2 border-primary/30 hover:bg-primary/10"
+                onClick={() => handleMockPurchase("monthly")}
+                disabled={subscribing}
+              >
+                <span className="text-lg font-bold">$9.99</span>
+                <span className="text-xs text-muted-foreground">
+                  <T>library.monthly</T>
+                </span>
+              </Button>
+              <Button
+                variant="outline"
+                className="h-24 flex-col gap-2 border-accent/30 hover:bg-accent/10"
+                onClick={() => handleMockPurchase("lifetime")}
+                disabled={subscribing}
+              >
+                <span className="text-lg font-bold">$49.99</span>
+                <span className="text-xs text-muted-foreground">
+                  <T>library.lifetime</T>
+                </span>
+              </Button>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowSubscribeDialog(false)}>
+              <T>library.cancel</T>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
