@@ -99,7 +99,7 @@ export default function BookReader() {
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-secondary-foreground">
-            <T>library.book.loading</T>
+            <T>Book Loading</T>
           </p>
         </div>
       </div>
@@ -110,7 +110,7 @@ export default function BookReader() {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-hero">
         <p className="text-secondary-foreground text-lg">
-          <T>library.book.loginRequired</T>
+          <T>Book Login Required</T>
         </p>
       </div>
     );
@@ -120,11 +120,11 @@ export default function BookReader() {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gradient-hero gap-4">
         <p className="text-secondary-foreground text-lg">
-          <T>library.book.noAccess</T>
+          <T>Book No Access</T>
         </p>
         <Link href="/library">
           <Button className="bg-primary text-primary-foreground">
-            <T>library.book.backToLibrary</T>
+            <T>Back to Library</T>
           </Button>
         </Link>
       </div>
@@ -135,7 +135,7 @@ export default function BookReader() {
     return (
       <div className="flex h-screen items-center justify-center bg-gradient-hero">
         <p className="text-muted-foreground text-lg">
-          <T>library.book.noPages</T>
+          <T>Book No Pages Available</T>
         </p>
       </div>
     );
@@ -222,7 +222,7 @@ export default function BookReader() {
       </div>
 
       <div className="mt-4 text-xs text-secondary-foreground/40 text-center">
-        <T>library.book.helpText</T>
+        <T>Book Help Text</T>
       </div>
     </div>
   );

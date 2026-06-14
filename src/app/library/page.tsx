@@ -16,20 +16,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Search,
   BookOpen,
   Box,
   Grid3X3,
   Check,
-  Filter,
-  X,
 } from "lucide-react";
 
 // ---------- أنواع ----------
@@ -119,10 +110,8 @@ export default function LibraryPage() {
       .finally(() => setCheckingAccess(false));
   }, [user]);
 
-  // فلترة الكتب حسب البحث والتصنيف
   const filteredBooks = useMemo(() => {
     let result = books;
-
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       result = result.filter(
@@ -131,15 +120,12 @@ export default function LibraryPage() {
           (b.author && b.author.toLowerCase().includes(query))
       );
     }
-
     if (selectedCategory !== "all") {
       result = result.filter((b) => b.category === selectedCategory);
     }
-
     return result;
   }, [books, searchQuery, selectedCategory]);
 
-  // التصنيفات الفريدة الموجودة في الكتب
   const categories = useMemo(() => {
     const cats = new Set<string>();
     books.forEach((b) => {
@@ -190,7 +176,7 @@ export default function LibraryPage() {
         <div className="text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
           <p className="text-muted-foreground">
-            <T>library.loading</T>
+            <T>Loading</T>
           </p>
         </div>
       </div>
@@ -201,14 +187,14 @@ export default function LibraryPage() {
     return (
       <div className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center bg-background text-center gap-6 px-4">
         <h1 className="text-4xl font-bold text-foreground">
-          <T>library.title</T>
+          <T>Ruhulqudus Library</T>
         </h1>
         <p className="text-lg text-muted-foreground">
-          <T>library.loginRequired</T>
+          <T>Login Required</T>
         </p>
         <Link href="/login">
           <Button className="bg-primary text-primary-foreground hover:bg-primary/90 px-8 py-3 text-lg">
-            <T>library.login</T>
+            <T>Login</T>
           </Button>
         </Link>
       </div>
@@ -217,23 +203,19 @@ export default function LibraryPage() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-background" dir="rtl">
-      {/* الهيدر */}
       <div className="border-b border-border bg-[var(--gradient-hero)] text-[#FDFBF7]">
         <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
             <div>
-              <div className="text-xs uppercase tracking-[0.3em] opacity-70">
-                Ruhulqudus
-              </div>
+              <div className="text-xs uppercase tracking-[0.3em] opacity-70">Ruhulqudus</div>
               <h1 className="mt-2 font-serif text-4xl md:text-5xl">
-                <T>library.title</T>
+                <T>Ruhulqudus Library</T>
               </h1>
               <p className="mt-2 max-w-xl text-sm opacity-80">
-                <T>library.description</T>
+                <T>Elegant shelves housing the most important Islamic books — browse in three dimensions, and open the book to flip through its pages as if you were in an old library.</T>
               </p>
             </div>
             <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-              {/* بحث */}
               <div className="relative">
                 <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
                 <Input
@@ -243,14 +225,11 @@ export default function LibraryPage() {
                   className="w-full rounded-full border border-[#FDFBF7]/20 bg-[#FDFBF7]/10 pl-4 pr-10 py-2.5 text-sm placeholder:text-[#FDFBF7]/50 focus:border-[#FDFBF7]/50 focus:outline-none sm:w-80 text-[#FDFBF7]"
                 />
               </div>
-              {/* مبدل العرض */}
               <div className="flex rounded-full border border-[#FDFBF7]/20 bg-[#FDFBF7]/10 p-1">
                 <button
                   onClick={() => setViewMode("3d")}
                   className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs transition ${
-                    viewMode === "3d"
-                      ? "bg-[#FDFBF7] text-[#0B1D3A]"
-                      : ""
+                    viewMode === "3d" ? "bg-[#FDFBF7] text-[#0B1D3A]" : ""
                   }`}
                 >
                   <Box className="h-3.5 w-3.5" /> 3D
@@ -258,32 +237,24 @@ export default function LibraryPage() {
                 <button
                   onClick={() => setViewMode("grid")}
                   className={`flex items-center gap-2 rounded-full px-4 py-1.5 text-xs transition ${
-                    viewMode === "grid"
-                      ? "bg-[#FDFBF7] text-[#0B1D3A]"
-                      : ""
+                    viewMode === "grid" ? "bg-[#FDFBF7] text-[#0B1D3A]" : ""
                   }`}
                 >
-                  <Grid3X3 className="h-3.5 w-3.5" /> <T>library.grid</T>
+                  <Grid3X3 className="h-3.5 w-3.5" /> <T>Grid</T>
                 </button>
               </div>
             </div>
           </div>
-
-          {/* شريط حالة الاشتراك */}
           {hasAccess && (
             <div className="mt-6 flex flex-wrap items-center gap-3 rounded-xl border border-[#FDFBF7]/15 bg-[#FDFBF7]/5 px-4 py-3 text-sm">
               <Check className="h-4 w-4 text-emerald-300" />
-              <span>
-                <T>library.subscriptionActive</T>
-              </span>
+              <span><T>Subscription Active</T></span>
             </div>
           )}
         </div>
       </div>
 
-      {/* المحتوى الرئيسي */}
       <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
-        {/* شريط التصنيفات */}
         {categories.length > 0 && (
           <div className="mb-6 flex flex-wrap items-center gap-2">
             <Button
@@ -292,7 +263,7 @@ export default function LibraryPage() {
               onClick={() => setSelectedCategory("all")}
               className="rounded-full"
             >
-              <T>library.allCategories</T>
+              <T>All Categories</T>
             </Button>
             {categories.map((cat) => (
               <Button
@@ -308,12 +279,11 @@ export default function LibraryPage() {
           </div>
         )}
 
-        {/* عرض الكتب */}
         {filteredBooks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
             <BookOpen className="h-16 w-16 mb-4 opacity-30" />
             <p className="text-lg">
-              <T>library.noBooks</T>
+              <T>No Books Available Yet</T>
             </p>
           </div>
         ) : viewMode === "grid" ? (
@@ -324,7 +294,6 @@ export default function LibraryPage() {
                 onClick={() => handleBookClick(book)}
                 className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card text-right shadow-sm transition-all hover:-translate-y-1 hover:shadow-elegant"
               >
-                {/* غلاف الكتاب */}
                 <div
                   className="relative aspect-[3/4] w-full overflow-hidden"
                   style={{
@@ -339,53 +308,38 @@ export default function LibraryPage() {
                         {getCategoryArabicName(book.category || "default")}
                       </div>
                       <div className="absolute inset-x-4 bottom-4 text-[#FDFBF7]">
-                        <div className="font-serif text-lg leading-tight">
-                          {book.title}
-                        </div>
+                        <div className="font-serif text-lg leading-tight">{book.title}</div>
                         {book.author && (
-                          <div className="mt-1 text-xs opacity-80">
-                            {book.author}
-                          </div>
+                          <div className="mt-1 text-xs opacity-80">{book.author}</div>
                         )}
                       </div>
                       <div className="absolute right-0 top-0 h-full w-1.5 bg-black/30" />
                     </>
                   )}
                 </div>
-                {/* معلومات الكتاب */}
                 <div className="flex items-center justify-between gap-2 px-3 py-2.5">
-                  <span className="text-[11px] text-muted-foreground">
-                    {book.year || ""}
-                  </span>
+                  <span className="text-[11px] text-muted-foreground">{book.year || ""}</span>
                   <span className="inline-flex items-center gap-1 text-xs font-medium text-primary">
-                    <BookOpen className="h-3.5 w-3.5" /> <T>library.read</T>
+                    <BookOpen className="h-3.5 w-3.5" /> <T>Read</T>
                   </span>
                 </div>
               </button>
             ))}
           </div>
         ) : (
-          /* عرض ثلاثي الأبعاد بسيط كبديل */
           <div className="flex items-center justify-center py-20 text-muted-foreground">
-            <p>
-              <T>library.view3DComingSoon</T>
-            </p>
+            <p><T>View 3D Coming Soon</T></p>
           </div>
         )}
       </div>
 
-      {/* نافذة الاشتراك */}
       <Dialog open={showSubscribeDialog} onOpenChange={setShowSubscribeDialog}>
         <DialogContent className="bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle className="text-xl">
-              <T>library.subscribeTitle</T>
-            </DialogTitle>
+            <DialogTitle className="text-xl"><T>Subscribe to Library</T></DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-4">
-            <p className="text-muted-foreground">
-              <T>library.subscribeDescription</T>
-            </p>
+            <p className="text-muted-foreground"><T>Subscribe Description</T></p>
             <div className="grid grid-cols-2 gap-4">
               <Button
                 variant="outline"
@@ -394,9 +348,7 @@ export default function LibraryPage() {
                 disabled={subscribing}
               >
                 <span className="text-lg font-bold">$9.99</span>
-                <span className="text-xs text-muted-foreground">
-                  <T>library.monthly</T>
-                </span>
+                <span className="text-xs text-muted-foreground"><T>Monthly</T></span>
               </Button>
               <Button
                 variant="outline"
@@ -405,18 +357,13 @@ export default function LibraryPage() {
                 disabled={subscribing}
               >
                 <span className="text-lg font-bold">$49.99</span>
-                <span className="text-xs text-muted-foreground">
-                  <T>library.lifetime</T>
-                </span>
+                <span className="text-xs text-muted-foreground"><T>Lifetime</T></span>
               </Button>
             </div>
           </div>
           <DialogFooter>
-            <Button
-              variant="ghost"
-              onClick={() => setShowSubscribeDialog(false)}
-            >
-              <T>library.cancel</T>
+            <Button variant="ghost" onClick={() => setShowSubscribeDialog(false)}>
+              <T>Cancel</T>
             </Button>
           </DialogFooter>
         </DialogContent>
