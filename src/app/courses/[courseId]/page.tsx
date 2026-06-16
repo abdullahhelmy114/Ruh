@@ -12,7 +12,6 @@ import {
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
 import { StarRating } from "@/components/StarRating";
 import { T } from "@/components/TranslatedText";
-import PayPalButton from "@/components/PayPalButton"; // ✅ إضافة مكون PayPal
 
 interface Lesson {
   id: string;
@@ -58,34 +57,33 @@ export default function CourseDetailPage() {
       .catch(() => setLoading(false));
   }, [params.courseId]);
 
-  // الدفع عبر PayPal (يحل محل التسجيل التقليدي للكورسات المدفوعة)
-  const handlePaymentSuccess = async (details: { orderID: string; payerID: string }) => {
-    if (!user || !course) return;
+  // الشراء عبر Shopier
+  const handleBuy = async () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+    if (!course) return;
 
     setEnrolling(true);
     setMessage("");
 
     try {
-      const res = await fetch("/api/payment/capture", {
+      const res = await fetch("/api/shopier/create-payment-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderID: details.orderID,
-          payerID: details.payerID,
-          type: "course",
-          course_id: course.id,
-        }),
+        body: JSON.stringify({ liveCourseId: course.id }),
       });
 
       const data = await res.json();
 
-      if (data.success) {
-        router.push(data.redirect || "/payment/success");
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, "_blank");
       } else {
-        setMessage(data.error || "Payment verification failed");
+        setMessage(data.error || "حدث خطأ أثناء إنشاء رابط الدفع");
       }
-    } catch (err) {
-      setMessage("Network error during payment verification");
+    } catch {
+      setMessage("خطأ في الشبكة");
     } finally {
       setEnrolling(false);
     }
@@ -98,7 +96,6 @@ export default function CourseDetailPage() {
       return;
     }
     if (course!.price > 0) {
-      // الكورسات المدفوعة تتعامل معها عبر PayPal فقط
       return;
     }
 
@@ -245,14 +242,24 @@ export default function CourseDetailPage() {
               </div>
             )}
 
-            {/* زر الشراء - يختلف حسب السعر */}
+            {/* زر الشراء - Shopier */}
             {course.price > 0 ? (
               <div className="mt-4">
                 {user ? (
-                  <PayPalButton
-                    amount={course.price.toFixed(2)}
-                    onSuccess={handlePaymentSuccess}
-                  />
+                  <button
+                    onClick={handleBuy}
+                    disabled={enrolling}
+                    className="w-full rounded-full bg-accent py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {enrolling ? (
+                      <Loader2 size={16} className="animate-spin" />
+                    ) : (
+                      <>
+                        <CreditCard size={16} />
+                        <T>Buy Now</T>
+                      </>
+                    )}
+                  </button>
                 ) : (
                   <button
                     onClick={() => router.push("/login")}

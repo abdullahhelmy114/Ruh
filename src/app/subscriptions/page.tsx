@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import PayPalButton from "@/components/PayPalButton";
 import { Card, CardContent } from "@/components/ui/card";
+import { CreditCard, Loader2 } from "lucide-react";
 
 const defaultPlans = [
   { id: '1', name: 'الخطة الشهرية', price: 99, duration: '3 أشهر', max_courses: 3 },
@@ -11,6 +11,33 @@ const defaultPlans = [
 
 export default function SubscriptionsPage() {
   const [plans] = useState(defaultPlans);
+  const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
+
+  const handleBuyPlan = async (plan: typeof defaultPlans[0]) => {
+    setLoadingPlanId(plan.id);
+    try {
+      const res = await fetch('/api/shopier/create-payment-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'subscription',
+          planId: plan.id,
+          title: plan.name,
+          price: plan.price,
+        }),
+      });
+      const data = await res.json();
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, '_blank');
+      } else {
+        alert(data.error || 'فشل في إنشاء رابط الدفع');
+      }
+    } catch {
+      alert('خطأ في الشبكة');
+    } finally {
+      setLoadingPlanId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background py-12">
@@ -26,31 +53,20 @@ export default function SubscriptionsPage() {
                 <p className="text-muted-foreground mb-6">
                   وصول لـ {plan.max_courses} كورسات من اختيارك
                 </p>
-                <PayPalButton
-                  amount={plan.price.toFixed(2)}
-                  onSuccess={async (details) => {
-                    try {
-                      const res = await fetch('/api/payment/capture', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                          orderID: details.orderID,
-                          payerID: details.payerID,
-                          type: 'subscription',
-                          plan_id: plan.id,
-                        }),
-                      });
-                      const data = await res.json();
-                      if (data.redirect) {
-                        window.location.href = data.redirect;
-                      } else {
-                        alert(data.error || 'فشل تأكيد الدفع');
-                      }
-                    } catch {
-                      alert('خطأ في الشبكة');
-                    }
-                  }}
-                />
+                <button
+                  onClick={() => handleBuyPlan(plan)}
+                  disabled={loadingPlanId === plan.id}
+                  className="w-full rounded-full bg-accent py-3 text-sm font-semibold text-accent-foreground hover:bg-accent/90 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {loadingPlanId === plan.id ? (
+                    <Loader2 size={16} className="animate-spin" />
+                  ) : (
+                    <>
+                      <CreditCard size={16} />
+                      اشتر الآن
+                    </>
+                  )}
+                </button>
               </CardContent>
             </Card>
           ))}

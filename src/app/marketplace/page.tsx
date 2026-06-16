@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { T } from "@/components/TranslatedText";
-import PayPalButton from "@/components/PayPalButton";
 
 interface Course {
   id: string;
@@ -143,30 +142,34 @@ export default function MarketplacePage() {
     }
   };
 
-  // ✅ نجاح الدفع بـ PayPal
-  const handlePaymentSuccess = async (details: { orderID: string; payerID: string }, courseId: string) => {
+  // ✅ الشراء عبر Shopier (للكورسات المدفوعة)
+  const handleBuy = async (course: Course) => {
     if (!user) return;
+    setEnrolling(course.id);
+    setMessage("");
+
     try {
-      const res = await fetch("/api/payment/capture", {
+      const res = await fetch("/api/shopier/create-payment-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderID: details.orderID,
-          payerID: details.payerID,
-          type: "course",
-          course_id: courseId,
+          liveCourseId: course.id,
         }),
       });
+
       const data = await res.json();
-      if (data.success) {
-        router.push(data.redirect || "/payment/success");
+
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, "_blank");
       } else {
-        setMessage(data.error || "Payment verification failed");
+        setMessage(data.error || "Failed to create payment link");
         setMessageType("error");
       }
     } catch {
       setMessage("Network error");
       setMessageType("error");
+    } finally {
+      setEnrolling(null);
     }
   };
 
@@ -432,14 +435,24 @@ export default function MarketplacePage() {
                       </button>
                     </div>
 
-                    {/* ✅ زر الشراء أو التسجيل المجاني - بعد التعديل */}
+                    {/* ✅ زر الشراء أو التسجيل المجاني - Shopier */}
                     <div className="ml-2">
                       {course.price > 0 ? (
                         user ? (
-                          <PayPalButton
-                            amount={(hasDiscount ? finalPrice : course.price).toFixed(2)}
-                            onSuccess={(details) => handlePaymentSuccess(details, course.id)}
-                          />
+                          <button
+                            onClick={() => handleBuy(course)}
+                            disabled={enrolling === course.id}
+                            className="rounded-full bg-accent px-4 py-2 text-xs font-semibold text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition inline-flex items-center gap-1"
+                          >
+                            {enrolling === course.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <>
+                                <CreditCard size={14} />
+                                <T>Buy Now</T>
+                              </>
+                            )}
+                          </button>
                         ) : (
                           <button
                             onClick={() => router.push("/login")}

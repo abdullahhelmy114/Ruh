@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Star, Clock, Video, BookOpen, Loader2, CheckCircle, ShieldCheck } from "lucide-react";
+import { Star, Clock, Video, BookOpen, Loader2, CheckCircle, ShieldCheck, CreditCard } from "lucide-react";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
-import PayPalButton from "@/components/PayPalButton";
 
 interface Course {
   id: string;
@@ -44,7 +43,6 @@ export function CourseGrid() {
         if (data.courses?.length) {
           setCourses(data.courses);
         } else {
-          // بيانات وهمية كاحتياط
           setCourses([
             { id: "1", title: "Foundations of Arabic — A1", type: "Recorded", price: 49, level: "A1", rating: 4.9, duration: "12h" },
             { id: "2", title: "Conversational Mastery — B1", type: "Live Online", price: 100, level: "B1", rating: 5.0, duration: "8 weeks" },
@@ -56,7 +54,6 @@ export function CourseGrid() {
         }
       })
       .catch(() => {
-        // بيانات وهمية عند فشل الجلب
         setCourses([
           { id: "1", title: "Foundations of Arabic — A1", type: "Recorded", price: 49, level: "A1", rating: 4.9, duration: "12h" },
           { id: "2", title: "Conversational Mastery — B1", type: "Live Online", price: 100, level: "B1", rating: 5.0, duration: "8 weeks" },
@@ -122,9 +119,24 @@ export function CourseGrid() {
     }
   };
 
-  const handlePaymentSuccess = (details: { orderID: string; payerID: string }, courseId: string) => {
-    // توجيه إلى صفحة النجاح (الـ API سيتولى الالتقاط)
-    window.location.href = `/payment/success?orderID=${details.orderID}&payerID=${details.payerID}`;
+  // ✅ الشراء عبر Shopier
+  const handleBuy = async (courseId: string) => {
+    if (!user) return;
+    try {
+      const res = await fetch("/api/shopier/create-payment-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ liveCourseId: courseId }),
+      });
+      const data = await res.json();
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, "_blank");
+      } else {
+        alert(data.error || "فشل في إنشاء رابط الدفع");
+      }
+    } catch {
+      alert("خطأ في الشبكة");
+    }
   };
 
   if (loading) {
@@ -244,14 +256,17 @@ export function CourseGrid() {
                 ) : c.price > 0 ? (
                   <div className="mt-4">
                     {user ? (
-                      <PayPalButton
-                        amount={c.price.toFixed(2)}
-                        onSuccess={(details) => handlePaymentSuccess(details, c.id)}
-                      />
+                      <button
+                        onClick={() => handleBuy(c.id)}
+                        className="w-full rounded-full bg-accent py-2.5 text-xs font-semibold text-accent-foreground transition hover:bg-accent/90 flex items-center justify-center gap-2"
+                      >
+                        <CreditCard size={14} />
+                        اشتر الآن
+                      </button>
                     ) : (
                       <button
                         onClick={() => router.push("/login")}
-                        className="w-full rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground transition group-hover:bg-gradient-gold group-hover:text-accent-foreground"
+                        className="w-full rounded-full bg-primary py-2.5 text-xs font-semibold text-primary-foreground transition"
                       >
                         سجّل الدخول للشراء
                       </button>

@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { T } from "@/components/TranslatedText";
-import { Package, Check, Sparkles, UserPlus, ArrowRight, Loader2 } from "lucide-react";
+import { Package, Check, Sparkles, UserPlus, ArrowRight, Loader2, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/lib/firebase/AuthProvider";
-import PayPalButton from "@/components/PayPalButton";
 import { useRouter } from "next/navigation";
 
 interface Bundle {
@@ -45,24 +44,25 @@ export default function BundlesPage() {
       .finally(() => setLoading(false));
   }, []);
 
-  const handlePaymentSuccess = async (details: { orderID: string; payerID: string }, bundleId: string) => {
+  const handleBuyBundle = async (bundle: Bundle) => {
     if (!user) return;
     try {
-      const res = await fetch("/api/payment/capture", {
+      // TODO: سنقوم بتعديل API ليدعم الحزم (حالياً يستخدم liveCourseId)
+      const res = await fetch("/api/shopier/create-payment-link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderID: details.orderID,
-          payerID: details.payerID,
+          liveCourseId: bundle.id, // مؤقتاً: نرسل bundleId وسنعالجه في API
           type: "bundle",
-          bundle_id: bundleId,
+          title: bundle.title,
+          price: bundle.price,
         }),
       });
       const data = await res.json();
-      if (data.success) {
-        router.push(data.redirect || "/payment/success");
+      if (data.paymentUrl) {
+        window.open(data.paymentUrl, "_blank");
       } else {
-        alert(data.error || "Payment verification failed");
+        alert(data.error || "Failed to create payment link");
       }
     } catch {
       alert("Network error");
@@ -127,10 +127,13 @@ export default function BundlesPage() {
               </ul>
               <div className="mt-5">
                 {user ? (
-                  <PayPalButton
-                    amount={bundle.price.toFixed(2)}
-                    onSuccess={(details) => handlePaymentSuccess(details, bundle.id)}
-                  />
+                  <button
+                    onClick={() => handleBuyBundle(bundle)}
+                    className="inline-flex items-center justify-center gap-2 w-full rounded-full bg-accent text-accent-foreground py-2.5 text-sm font-semibold hover:bg-accent/90 transition"
+                  >
+                    <CreditCard size={16} />
+                    <T>Buy Now</T>
+                  </button>
                 ) : (
                   <Link
                     href="/login"
