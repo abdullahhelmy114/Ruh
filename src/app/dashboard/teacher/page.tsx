@@ -1,7 +1,7 @@
 "use client";
 
 import { T } from "@/components/TranslatedText";
-import { useAuth } from "@/lib/firebase/AuthProvider";
+import { useAuth, ADMIN_EMAILS } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
@@ -164,9 +164,25 @@ export default function TeacherDashboard() {
   }, [user]);
 
   // Auth guard
-  useEffect(() => {
-    if (!isLoading && (!user || (role !== "teacher" && role !== "admin"))) router.push("/login");
-  }, [user, isLoading, role, router]);
+useEffect(() => {
+  if (!isLoading && user) {
+    if (ADMIN_EMAILS.includes(user.email || "")) {
+      return;
+    }
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.profile?.role === "teacher" || d?.profile?.role === "admin") {
+          // مسموح
+        } else {
+          router.push("/dashboard/student");
+        }
+      })
+      .catch(() => router.push("/login"));
+  } else if (!isLoading && !user) {
+    router.push("/login");
+  }
+}, [user, isLoading, role, router]);
 
   // Email verification check
   useEffect(() => {

@@ -154,7 +154,7 @@ export function teacherApprovedEmail(name: string) {
       <p>Dear <strong>${name}</strong>,</p>
       <p>Congratulations! Your application to become a teacher at Ruhulqudus Academy has been approved.</p>
       <p>You can now log in and start creating courses.</p>
-      <a href="https://ruhulqudus.net/login" class="button">Log In</a>
+      <a href="https://ruhulqudus.net/dashboard/teacher" class="button">Go to Teacher Dashboard</a>
     `
   );
 }

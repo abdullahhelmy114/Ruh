@@ -1,7 +1,7 @@
 "use client";
 
 import { T } from "@/components/TranslatedText";
-import { useAuth } from "@/lib/firebase/AuthProvider";
+import { useAuth, ADMIN_EMAILS } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -65,12 +65,23 @@ export default function StudentDashboard() {
   }, [user]);
 
   // حماية المسار
-  useEffect(() => {
-    if (!isLoading) {
-      if (!user) router.push("/login");
-      else if (role !== "student" && role !== "admin") router.push("/login");
+useEffect(() => {
+  if (!isLoading && user) {
+    if (ADMIN_EMAILS.includes(user.email || "")) {
+      return;
     }
-  }, [user, isLoading, role, router]);
+    fetch(`/api/user?uid=${user.uid}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d?.profile?.role !== "student" && !ADMIN_EMAILS.includes(user.email || "")) {
+          router.push("/dashboard/teacher");
+        }
+      })
+      .catch(() => router.push("/login"));
+  } else if (!isLoading && !user) {
+    router.push("/login");
+  }
+}, [user, isLoading, role, router]);
 
   // جلب الكورسات المسجل بها
   useEffect(() => {
