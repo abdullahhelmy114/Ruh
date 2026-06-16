@@ -18,6 +18,7 @@ export default function SubscriptionsPage() {
     try {
       const res = await fetch('/api/shopier/create-payment-link', {
         method: 'POST',
+        credentials: 'include', // ✅ تمت الإضافة هنا
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'subscription',

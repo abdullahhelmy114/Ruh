@@ -125,6 +125,7 @@ export function CourseGrid() {
     try {
       const res = await fetch("/api/shopier/create-payment-link", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ liveCourseId: courseId }),
       });

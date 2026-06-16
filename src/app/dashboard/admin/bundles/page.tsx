@@ -50,6 +50,7 @@ export default function BundlesPage() {
       // TODO: سنقوم بتعديل API ليدعم الحزم (حالياً يستخدم liveCourseId)
       const res = await fetch("/api/shopier/create-payment-link", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           liveCourseId: bundle.id, // مؤقتاً: نرسل bundleId وسنعالجه في API

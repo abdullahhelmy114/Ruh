@@ -59,35 +59,36 @@ export default function CourseDetailPage() {
 
   // الشراء عبر Shopier
   const handleBuy = async () => {
-    if (!user) {
-      router.push("/login");
-      return;
+  if (!user) {
+    router.push("/login");
+    return;
+  }
+  if (!course) return;
+
+  setEnrolling(true);
+  setMessage("");
+
+  try {
+    const res = await fetch("/api/shopier/create-payment-link", {
+      method: "POST",
+      credentials: "include", // <-- أضف هذا
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ liveCourseId: course.id }),
+    });
+
+    const data = await res.json();
+
+    if (data.paymentUrl) {
+      window.open(data.paymentUrl, "_blank");
+    } else {
+      setMessage(data.error || "حدث خطأ أثناء إنشاء رابط الدفع");
     }
-    if (!course) return;
-
-    setEnrolling(true);
-    setMessage("");
-
-    try {
-      const res = await fetch("/api/shopier/create-payment-link", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ liveCourseId: course.id }),
-      });
-
-      const data = await res.json();
-
-      if (data.paymentUrl) {
-        window.open(data.paymentUrl, "_blank");
-      } else {
-        setMessage(data.error || "حدث خطأ أثناء إنشاء رابط الدفع");
-      }
-    } catch {
-      setMessage("خطأ في الشبكة");
-    } finally {
-      setEnrolling(false);
-    }
-  };
+  } catch {
+    setMessage("خطأ في الشبكة");
+  } finally {
+    setEnrolling(false);
+  }
+};
 
   // التسجيل المجاني (للكورسات بدون سعر)
   const handleFreeEnroll = async () => {
