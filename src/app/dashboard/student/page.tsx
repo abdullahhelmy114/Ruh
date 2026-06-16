@@ -131,7 +131,7 @@ useEffect(() => {
       </div>
 
       {/* Live Sessions */}
-      {data.sessions.length > 0 && (
+      {data.sessions?.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -247,7 +247,7 @@ useEffect(() => {
           </section>
 
           {/* Completed Courses with Recording */}
-          {data.completed.length > 0 && (
+          {data.completed?.length > 0 && (
             <section>
               <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
                 <T>Your milestones</T>

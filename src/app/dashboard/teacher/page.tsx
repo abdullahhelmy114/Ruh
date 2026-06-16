@@ -436,7 +436,7 @@ const handleSaveLesson = async () => {
       )}
 
       {/* Live Sessions */}
-      {data.sessions.length > 0 && (
+      {data.sessions?.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
