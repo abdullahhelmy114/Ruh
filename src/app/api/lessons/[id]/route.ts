@@ -3,9 +3,8 @@ export const runtime = 'nodejs';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 import { sendEmail } from '@/lib/email';
-import { createNotification } from '@/lib/notifications'; // ✅ أضف هذا
 
-// ─── دوال Zoom ──────────────────────────────────────────────
+// ─── دوال Zoom (بدون تغيير) ──────────────────────────────
 async function getZoomAccessToken(): Promise<string> {
   const { ZOOM_ACCOUNT_ID, ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET } = process.env;
   if (!ZOOM_ACCOUNT_ID || !ZOOM_CLIENT_ID || !ZOOM_CLIENT_SECRET) {
@@ -105,7 +104,7 @@ export async function PUT(
       }
     }
 
-    // تحديث الدرس في قاعدة البيانات
+    // تحديث الدرس
     const result = await sql`
       UPDATE lessons
       SET
@@ -121,12 +120,12 @@ export async function PUT(
       return NextResponse.json({ error: 'Lesson not found' }, { status: 404 });
     }
 
-    // ✅ إرسال إيميل وإشعار للمعلم عند الموافقة
+    // إشعار وإيميل للمعلم عند الموافقة
     if (status === 'approved') {
       const [lessonInfo] = await sql`
-        SELECT l.teacher_uid, l.title, l.course_id, p.email, p.full_name
+        SELECT l.teacher_uid, l.title, l.course_id, u.email, u.first_name, u.last_name
         FROM lessons l
-        JOIN profiles p ON l.teacher_uid = p.firebase_uid
+        JOIN users u ON l.teacher_uid = u.uid
         WHERE l.id = ${lessonId}
       `;
 
@@ -142,12 +141,16 @@ export async function PUT(
           );
         }
 
-        // إشعار داخلي
-        await createNotification(
-          lessonInfo.teacher_uid,
-          `Your lesson "${lessonInfo.title}" has been approved!`,
-          `/dashboard/teacher/courses/${lessonInfo.course_id}`
-        );
+        // إشعار داخلي (إدراج مباشر)
+        const teacherName = `${lessonInfo.first_name || ''} ${lessonInfo.last_name || ''}`.trim();
+        await sql`
+          INSERT INTO notifications (user_uid, message, link)
+          VALUES (
+            ${lessonInfo.teacher_uid},
+            ${'Your lesson "' + lessonInfo.title + '" has been approved!'},
+            ${'/live/' + lessonId}
+          )
+        `;
       }
     }
 
