@@ -163,26 +163,11 @@ export default function TeacherDashboard() {
     fetchAllLessons();
   }, [user]);
 
-  // Auth guard
 useEffect(() => {
-  if (!isLoading && user) {
-    if (ADMIN_EMAILS.includes(user.email || "")) {
-      return;
-    }
-    fetch(`/api/user?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d?.profile?.role === "teacher" || d?.profile?.role === "admin") {
-          // مسموح
-        } else {
-          router.push("/dashboard/student");
-        }
-      })
-      .catch(() => router.push("/login"));
-  } else if (!isLoading && !user) {
+  if (!isLoading && !user) {
     router.push("/login");
   }
-}, [user, isLoading, role, router]);
+}, [user, isLoading, router]);
 
   // Email verification check
   useEffect(() => {

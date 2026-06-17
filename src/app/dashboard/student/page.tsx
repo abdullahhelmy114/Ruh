@@ -66,22 +66,10 @@ export default function StudentDashboard() {
 
   // حماية المسار
 useEffect(() => {
-  if (!isLoading && user) {
-    if (ADMIN_EMAILS.includes(user.email || "")) {
-      return;
-    }
-    fetch(`/api/user?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => {
-        if (d?.profile?.role !== "student" && !ADMIN_EMAILS.includes(user.email || "")) {
-          router.push("/dashboard/teacher");
-        }
-      })
-      .catch(() => router.push("/login"));
-  } else if (!isLoading && !user) {
+  if (!isLoading && !user) {
     router.push("/login");
   }
-}, [user, isLoading, role, router]);
+}, [user, isLoading, router]);
 
   // جلب الكورسات المسجل بها
   useEffect(() => {
