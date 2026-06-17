@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { Suspense, useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
 
-export default function VerifyEmailPage() {
+// المكون الداخلي الذي يستخدم useSearchParams
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const email = searchParams.get("email") || "";
@@ -60,7 +61,6 @@ export default function VerifyEmailPage() {
         throw new Error(data.error || "Verification failed.");
       }
 
-      // تخزين الدور من الخادم
       const role = data.role as string;
       localStorage.setItem("userRole", role);
 
@@ -177,5 +177,20 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// الصفحة المصدرة مع Suspense
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <Loader2 className="h-10 w-10 animate-spin" />
+        </div>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
