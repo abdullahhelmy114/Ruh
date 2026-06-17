@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   Users,Plus, Upload, Loader2, Video, Clock, ArrowRight,
-  Star, BookOpen, FileText, Play, TrendingUp
+  Star, BookOpen, FileText, Play, TrendingUp, AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -71,6 +71,7 @@ export default function TeacherDashboard() {
   const [data, setData] = useState<TeacherData | null>(null);
   const [ratingData, setRatingData] = useState<RatingData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(""); 
   const [pendingLessons, setPendingLessons] = useState<PendingLesson[]>([]);
   const [allLessons, setAllLessons] = useState<PendingLesson[]>([]);
   const [lessonsLoading, setLessonsLoading] = useState(true);
@@ -99,31 +100,38 @@ export default function TeacherDashboard() {
   const [newCourseImage, setNewCourseImage] = useState('');
   const [newCourseTrailer, setNewCourseTrailer] = useState('');
   // Fetch initial teacher data
+  // ✅ جلب بيانات الداشبورد – بدون شرط role
   useEffect(() => {
-    if (!user || !user.uid || role !== "teacher") return;
+    if (!user || !user.uid) return;
     const fetchData = async () => {
       try {
+        setFetchError("");
         const [teacherRes, coursesRes, ratingRes] = await Promise.all([
           fetch(`/api/teacher/dashboard?uid=${user.uid}`),
           fetch(`/api/teacher/courses?uid=${user.uid}`),
           fetch(`/api/teacher/rating?uid=${user.uid}`),
         ]);
+
+        if (!teacherRes.ok) {
+          const err = await teacherRes.json();
+          throw new Error(err.error || "Failed to load dashboard data");
+        }
+
         const teacherJson = await teacherRes.json();
         const coursesJson = await coursesRes.json();
         const ratingJson = await ratingRes.json();
 
-        if (teacherRes.ok && coursesRes.ok) {
-          setData({ ...teacherJson, courses: coursesJson.courses || [] });
-          setRatingData(ratingJson);
-        }
-      } catch (err) {
-        console.error(err);
+        setData({ ...teacherJson, courses: coursesJson.courses || [] });
+        setRatingData(ratingJson);
+      } catch (err: any) {
+        console.error("Dashboard fetch error:", err);
+        setFetchError(err.message || "Could not load dashboard data.");
       } finally {
         setLoading(false);
       }
     };
     fetchData();
-  }, [user, role]);
+  }, [user]);
 
   // Fetch pending lessons
   useEffect(() => {
@@ -163,11 +171,12 @@ export default function TeacherDashboard() {
     fetchAllLessons();
   }, [user]);
 
-useEffect(() => {
-  if (!isLoading && !user) {
-    router.push("/login");
-  }
-}, [user, isLoading, router]);
+  // Auth guard – فقط للتحقق من وجود مستخدم
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading, router]);
 
   // Email verification check
   useEffect(() => {
@@ -181,9 +190,9 @@ useEffect(() => {
       });
   }, [user, router]);
 
-  // Auto-refresh on window focus
+  // Auto-refresh on window focus – بدون شرط role
   useEffect(() => {
-    if (!user || !user.uid || role !== "teacher") return;
+    if (!user || !user.uid) return;
     const onFocus = () => {
       fetch(`/api/teacher/courses?uid=${user.uid}`)
         .then(r => r.json())
@@ -194,7 +203,7 @@ useEffect(() => {
     };
     window.addEventListener('focus', onFocus);
     return () => window.removeEventListener('focus', onFocus);
-  }, [user, role]);
+  }, [user]);
 
   const handleLessonAction = async (lessonId: string, newStatus: string) => {
     try {
@@ -212,11 +221,32 @@ useEffect(() => {
     }
   };
 
+  // ✅ عرض رسالة خطأ مع زر إعادة محاولة
+  if (fetchError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center flex-col gap-4">
+        <div className="rounded-3xl border bg-card p-8 text-center shadow-elegant">
+          <AlertCircle className="mx-auto h-10 w-10 text-red-500 mb-4" />
+          <h2 className="font-serif text-xl text-red-600">Dashboard Error</h2>
+          <p className="mt-2 text-sm text-muted-foreground">{fetchError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-full bg-amber-500 px-6 py-2 text-sm font-semibold text-black"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ مؤشر التحميل
   if (isLoading || loading) return (
     <div className="flex min-h-screen items-center justify-center">
       <Loader2 className="h-10 w-10 animate-spin text-primary" />
     </div>
   );
+
   if (!data) return null;
 
   const commissionRate = ratingData

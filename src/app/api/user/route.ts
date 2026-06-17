@@ -1,16 +1,15 @@
-export const runtime = 'nodejs'; // أفضل من edge لتجنب مشاكل الاتصال
+export const runtime = 'nodejs';
 
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 
-// GET: جلب بيانات المستخدم
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const uid = searchParams.get('uid');
   if (!uid) return NextResponse.json({ error: 'Missing uid' }, { status: 400 });
 
   try {
-    const [user] = await sql`SELECT first_name, last_name, email, role, is_verified, email_verified FROM users WHERE uid = ${uid}`;
+    const [user] = await sql`SELECT first_name, last_name, email, role, is_verified FROM users WHERE uid = ${uid}`;
     return NextResponse.json({ profile: user });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
