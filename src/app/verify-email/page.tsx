@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
 import { T } from "@/components/TranslatedText";
-import { auth } from "@/lib/firebase/client";
-import { createUserWithEmailAndPassword } from "firebase/auth";
 import { ResendVerificationButton } from "@/components/ResendVerificationButton";
 import Link from "next/link";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const email = searchParams.get("email") || "";
+
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -38,84 +39,50 @@ export default function VerifyEmailPage() {
       return;
     }
 
+    if (!email) {
+      setError("No email found. Please sign up again.");
+      return;
+    }
+
     setLoading(true);
     setError("");
 
-    const storedEmail = sessionStorage.getItem("signup_email") || "";
-    const storedPassword = sessionStorage.getItem("signup_password") || "";
-    const storedName = sessionStorage.getItem("signup_name") || "";
-    const storedRole = sessionStorage.getItem("signup_role") || "student";
-    const storedReferral = sessionStorage.getItem("referral_code") || null;
-
-    if (!storedEmail || !storedPassword) {
-      setError("Session expired. Please sign up again.");
-      setLoading(false);
-      return;
-    }
-
-    // 1. التحقق من الرمز
-    const res = await fetch("/api/verify-email-code", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: storedEmail, code: fullCode }),
-    });
-
-    if (!res.ok) {
-      const err = await res.json();
-      setError(err.error || "Verification failed.");
-      setDigits(Array(6).fill(""));
-      hiddenInputRef.current?.focus();
-      setLoading(false);
-      return;
-    }
-
-    // 2. إنشاء حساب Firebase
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        storedEmail,
-        storedPassword
-      );
-
-      // 3. إنشاء الملف الشخصي
-      await fetch("/api/user", {
+      const res = await fetch("/api/verify-email-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          uid: userCredential.user.uid,
-          email: storedEmail,
-          fullName: storedName,
-          role: storedRole,
-          email_verified: true,
-          referred_by: storedReferral,
-        }),
+        body: JSON.stringify({ email, code: fullCode }),
       });
 
-      // 4. تنظيف sessionStorage
-      sessionStorage.removeItem("signup_name");
-      sessionStorage.removeItem("signup_email");
-      sessionStorage.removeItem("signup_password");
-      sessionStorage.removeItem("signup_role");
-      sessionStorage.removeItem("referral_code");
+      const data = await res.json();
 
-      // 5. نجاح
+      if (!res.ok) {
+        throw new Error(data.error || "Verification failed.");
+      }
+
+      // تخزين الدور من الخادم
+      const role = data.role as string;
+      localStorage.setItem("userRole", role);
+
       setSuccess(true);
-      localStorage.setItem("userRole", storedRole);
 
       setTimeout(() => {
         if (
-          storedEmail === "abdullahhelmy114@gmail.com" ||
-          storedEmail === "info@ruhulqudus.com"
+          email === "abdullahhelmy114@gmail.com" ||
+          email === "info@ruhulqudus.com"
         ) {
           router.push("/dashboard/admin");
-        } else if (storedRole === "teacher") {
+        } else if (role === "teacher") {
           router.push("/dashboard/teacher");
         } else {
           router.push("/dashboard/student");
         }
       }, 2000);
     } catch (err: any) {
-      setError(err.message || "Failed to create account. Please try again.");
+      setError(err.message);
+      setDigits(Array(6).fill(""));
+      hiddenInputRef.current?.focus();
+    } finally {
       setLoading(false);
     }
   };

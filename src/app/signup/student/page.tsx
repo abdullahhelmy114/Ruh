@@ -71,28 +71,27 @@ export default function StudentSignupPage() {
     name: "languages",
   });
 
-  const onVerifyCaptcha = async (token: string) => {
-    const data = watch();
-    try {
-      // إرسال بيانات التسجيل إلى API الطالب
-      const res = await fetch("/api/signup/student", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
+ const onVerifyCaptcha = async (token: string) => {
+  const data = watch();
+  try {
+    const res = await fetch("/api/signup/student", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    });
 
-      if (!res.ok) {
-        const result = await res.json();
-        throw new Error(result.message || "Something went wrong");
-      }
-
-      // الانتقال إلى صفحة التحقق
-      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
-    } catch (err: any) {
-      setError(err.message || "Something went wrong");
-      setShowCaptcha(false);
+    if (!res.ok) {
+      const result = await res.json();
+      throw new Error(result.message || "Something went wrong");
     }
-  };
+
+    // ✅ توجيه مباشر بدون sessionStorage
+    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+  } catch (err: any) {
+    setError(err.message || "Something went wrong");
+    setShowCaptcha(false);
+  }
+};
 
   const onSubmit = async (data: StudentSignupData) => {
     setError("");

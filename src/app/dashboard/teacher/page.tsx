@@ -570,7 +570,7 @@ const handleSaveLesson = async () => {
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4 your-courses">
           <h2 className="font-serif text-2xl"><T>Your Courses</T></h2>
-          {data.courses.length === 0 ? (
+          {data.courses?.length === 0 ? (
             <div className="rounded-3xl border bg-card p-8 text-center text-muted-foreground">
               <BookOpen className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
               <p><T>You haven't created any courses yet.</T></p>

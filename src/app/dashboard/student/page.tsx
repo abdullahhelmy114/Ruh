@@ -295,7 +295,7 @@ useEffect(() => {
             <h2 className="font-serif text-2xl">
               <T>Achievements</T>
             </h2>
-            {data.completed.length === 0 ? (
+            {data.completed?.length === 0 ? (
               <div className="mt-4 rounded-4xl border bg-card p-6 text-center text-muted-foreground">
                 <Award className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
                 <p>
