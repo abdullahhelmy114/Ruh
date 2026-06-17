@@ -1,4 +1,4 @@
-export const runtime = 'edge';
+export const runtime = 'nodejs'; // أفضل من edge لتجنب مشاكل الاتصال
 
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
@@ -9,33 +9,35 @@ export async function GET(request: Request) {
   const uid = searchParams.get('uid');
   if (!uid) return NextResponse.json({ error: 'Missing uid' }, { status: 400 });
 
-  const [profile] = await sql`SELECT * FROM profiles WHERE firebase_uid = ${uid}`;
-  return NextResponse.json({ profile });
+  try {
+    const [user] = await sql`SELECT first_name, last_name, email, role, is_verified, email_verified FROM users WHERE uid = ${uid}`;
+    return NextResponse.json({ profile: user });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
-// POST: إنشاء ملف شخصي جديد (ويُستخدم أيضًا من صفحة التسجيل) – نسخة متسامحة
+// POST: إنشاء ملف شخصي جديد (يُستخدم من صفحة التحقق القديمة، ولكن الأفضل استخدام API مخصص)
 export async function POST(request: Request) {
   try {
-    // استخراج البيانات بأمان، مع قبول JSON فارغ
     const body = await request.json().catch(() => ({}));
     const uid = body.uid || "";
     const email = body.email || "";
 
-    // إذا كانت البيانات ناقصة، نتجاوز دون خطأ
     if (!uid || !email) {
       return NextResponse.json({ skipped: true });
     }
 
-    // ✅ نستقبل email_verified من body (إن وُجد)، وإلا false
     const emailVerified = body.email_verified === true;
-
-    // ✅ استخراج كود الإحالة إن وُجد
     const referredBy = body.referred_by || null;
+    const fullName = body.fullName || '';
+    const [firstName, ...lastNameArr] = fullName.split(' ');
+    const lastName = lastNameArr.join(' ') || '';
 
     await sql`
-      INSERT INTO profiles (firebase_uid, email, full_name, role, email_verified, referred_by)
-      VALUES (${uid}, ${email}, ${body.fullName || email.split('@')[0]}, ${body.role || 'student'}, ${emailVerified}, ${referredBy})
-      ON CONFLICT (firebase_uid) DO UPDATE SET email = ${email}
+      INSERT INTO users (uid, email, first_name, last_name, role, is_verified, referred_by)
+      VALUES (${uid}, ${email}, ${firstName}, ${lastName}, ${body.role || 'student'}, ${emailVerified}, ${referredBy})
+      ON CONFLICT (uid) DO UPDATE SET email = ${email}, is_verified = ${emailVerified}
     `;
     return NextResponse.json({ success: true });
   } catch (error: any) {
