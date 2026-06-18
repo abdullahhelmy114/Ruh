@@ -17,7 +17,7 @@ import {
 import { toast } from "sonner";
 import { authFetch } from "@/lib/authFetch";
 import { T } from "@/components/TranslatedText";
-import { Loader2, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Trash2, ImageIcon } from "lucide-react";
 
 interface Book {
   id: string;
@@ -26,6 +26,7 @@ interface Book {
   description?: string;
   cover_url: string;
   created_at: string;
+  pages_count?: number;
 }
 
 export default function AdminLibraryPage() {
@@ -49,6 +50,9 @@ export default function AdminLibraryPage() {
   const [editDescription, setEditDescription] = useState("");
   const [editCoverFile, setEditCoverFile] = useState<File | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+
+  // حالة التحويل
+  const [convertingId, setConvertingId] = useState<string | null>(null);
 
   const fetchBooks = async () => {
     try {
@@ -191,6 +195,29 @@ export default function AdminLibraryPage() {
     }
   };
 
+  const handleConvertToImages = async (bookId: string) => {
+    if (convertingId === bookId) return; // يمنع النقر المتكرر
+    setConvertingId(bookId);
+    try {
+      const res = await authFetch("/api/admin/library/books/convert", {
+        method: "POST",
+        body: JSON.stringify({ bookId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        toast.success(`تم تحويل ${data.pages_count} صفحة`);
+        fetchBooks(); // تحديث عرض عدد الصفحات
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "فشل التحويل");
+      }
+    } catch {
+      toast.error("خطأ في الشبكة");
+    } finally {
+      setConvertingId(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="p-6 text-center text-muted-foreground">
@@ -279,6 +306,20 @@ export default function AdminLibraryPage() {
                     <TableCell>{new Date(book.created_at).toLocaleDateString("ar-EG")}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
+                        {/* زر التحويل إلى صور */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleConvertToImages(book.id)}
+                          disabled={convertingId === book.id}
+                          title="Convert to images"
+                        >
+                          {convertingId === book.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <ImageIcon className="h-4 w-4" />
+                          )}
+                        </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleEditClick(book)}>
                           <Pencil className="h-4 w-4" />
                         </Button>

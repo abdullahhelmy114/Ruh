@@ -1,9 +1,8 @@
+// app/api/admin/library/books/bulk/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db/client";
 import { getServerSession } from "@/lib/auth";
-import { uploadFileToFirebaseStorage } from "@/lib/firebase/admin-storage";
-
-export async function POST(req: Request) {
+import { uploadFileToGoogleDrive, driveUrlToCdnUrl } from "@/lib/google-drive";export async function POST(req: Request) {
   const session = await getServerSession(req);
   if (!session || session.role !== "admin") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -20,9 +19,13 @@ export async function POST(req: Request) {
     const results = [];
     for (const file of files) {
       if (!file || typeof file.arrayBuffer !== "function") continue;
+
+      // استخراج اسم الكتاب من اسم الملف (بدون امتداد)
       const fileName = file.name.replace(/\.[^/.]+$/, "");
+
       const buffer = Buffer.from(await file.arrayBuffer());
-      const pdfUrl = await uploadFileToFirebaseStorage(buffer, file.name, "library/pdfs");
+      const driveUrl = await uploadFileToGoogleDrive(buffer, file.name, file.type || "application/pdf");
+      const pdfUrl = await driveUrlToCdnUrl(driveUrl);
 
       const [book] = await sql`
         INSERT INTO library_books (title, author, description, cover_url, pdf_url)

@@ -1,7 +1,8 @@
+// app/api/admin/library/books/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db/client";
 import { getServerSession } from "@/lib/auth";
-import { uploadFileToFirebaseStorage } from "@/lib/firebase/admin-storage";
+import { uploadFileToGoogleDrive, driveUrlToCdnUrl } from "@/lib/google-drive";
 
 export async function POST(req: Request) {
   const session = await getServerSession(req);
@@ -26,14 +27,16 @@ export async function POST(req: Request) {
 
     if (coverFile && typeof coverFile.arrayBuffer === "function") {
       const buffer = Buffer.from(await coverFile.arrayBuffer());
-      coverUrl = await uploadFileToFirebaseStorage(buffer, coverFile.name, "library/covers");
+      const driveUrl = await uploadFileToGoogleDrive(buffer, coverFile.name, coverFile.type || "image/png");
+      coverUrl = driveUrlToCdnUrl(driveUrl);
     }
 
     if (pdfFile && typeof pdfFile.arrayBuffer === "function") {
       const buffer = Buffer.from(await pdfFile.arrayBuffer());
-      pdfUrl = await uploadFileToFirebaseStorage(buffer, pdfFile.name, "library/pdfs");
+      const driveUrl = await uploadFileToGoogleDrive(buffer, pdfFile.name, pdfFile.type || "application/pdf");
+      pdfUrl = driveUrlToCdnUrl(driveUrl);
     }
-
+    // إدراج الكتاب في قاعدة البيانات
     const [book] = await sql`
       INSERT INTO library_books (title, author, description, cover_url, pdf_url)
       VALUES (${title}, ${author}, ${description}, ${coverUrl}, ${pdfUrl})
