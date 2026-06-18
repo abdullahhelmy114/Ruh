@@ -27,7 +27,6 @@ interface ProfileState {
   instagram: string;
 }
 
-// مفتاح التخزين المحلي
 const STORAGE_KEY = "studentProfileData";
 
 export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
@@ -36,20 +35,40 @@ export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
   const [errors, setErrors] = React.useState<Partial<Record<keyof ProfileState, string>>>({});
   const [save, setSave] = React.useState<"idle" | "loading" | "success">("idle");
 
-  // تحميل البيانات الأولية (من localStorage أو من Firebase Auth)
+  // ✅ جلب بيانات التسجيل من الخادم
   React.useEffect(() => {
-    if (authLoading) return;
-    if (user) {
-      // محاولة استرجاع بيانات محفوظة
+    if (authLoading || !user) return;
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/user?uid=${user.uid}`);
+        const data = await res.json();
+        if (data.profile) {
+          const p = data.profile;
+          const nativeLang = p.languages?.length ? p.languages[0].code : "";
+          const otherLangs = p.languages?.slice(1).map((l: any) => l.code) || [];
+          setS({
+            fullName: `${p.first_name || ""} ${p.last_name || ""}`.trim() || user.displayName || user.email?.split("@")[0] || "",
+            email: p.email || user.email || "",
+            avatar: user.photoURL || null,
+            gender: p.gender || "",
+            nationality: p.nationality || "",
+            age: p.age || "",
+            nativeLanguage: nativeLang,
+            otherLanguages: otherLangs,
+            residence: p.country_of_residence || "",
+            whatsapp: p.whatsapp || "",
+            telegram: p.telegram || "",
+            facebook: "",
+            instagram: "",
+          });
+          return;
+        }
+      } catch {}
+      // fallback إلى localStorage
       const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setS(parsed);
-          return;
-        } catch {}
+        try { setS(JSON.parse(stored)); return; } catch {}
       }
-      // لا توجد بيانات محفوظة -> حالة افتراضية
       const name = user.displayName || user.email?.split("@")[0] || "";
       setS({
         fullName: name,
@@ -66,7 +85,8 @@ export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
         facebook: "",
         instagram: "",
       });
-    }
+    };
+    fetchProfile();
   }, [user, authLoading]);
 
   const set = React.useCallback(<K extends keyof ProfileState>(k: K, v: ProfileState[K]) => {
@@ -81,7 +101,6 @@ export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
 
   const submit = React.useCallback(async () => {
     if (!s) return;
-    // التحقق من صحة البيانات
     const e: typeof errors = {};
     if (!s.nativeLanguage.trim()) e.nativeLanguage = "Required field";
     setErrors(e);
@@ -90,7 +109,6 @@ export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
       return;
     }
     setSave("loading");
-    // حفظ في localStorage
     setTimeout(() => {
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
@@ -163,13 +181,16 @@ export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
         </Section>
 
         <Section step={2} title="Languages" arabic="اللغات" icon={<Languages size={20} />}>
-        <div className="grid gap-5 md:grid-cols-2">
-          <Field label="Other Languages" arabic="لغات أخرى">
-        <div className="profile-other-languages">
-          <MultiInput values={s.otherLanguages} onChange={(v) => set("otherLanguages", v)} placeholder="Add a language" />
-        </div>
-          </Field>
-        </div>
+          <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Native Language" arabic="اللغة الأم" required error={errors.nativeLanguage}>
+              <Input className="profile-native-language" value={s.nativeLanguage} onChange={(e) => set("nativeLanguage", e.target.value)} placeholder="Arabic" />
+            </Field>
+            <Field label="Other Languages" arabic="لغات أخرى">
+              <div className="profile-other-languages">
+                <MultiInput values={s.otherLanguages} onChange={(v) => set("otherLanguages", v)} placeholder="Add a language" />
+              </div>
+            </Field>
+          </div>
         </Section>
 
         <Section step={3} title="Contact" arabic="وسائل التواصل" icon={<Phone size={20} />} defaultOpen={false}>
@@ -182,12 +203,6 @@ export function StudentProfile({ readOnly = false }: { readOnly?: boolean }) {
             </Field>
             <Field label="Telegram" arabic="تيليجرام" icon={<MessageCircle size={14} />}>
               <Input className="profile-telegram" value={s.telegram} onChange={(e) => set("telegram", e.target.value)} placeholder="@username" />
-            </Field>
-            <Field label="Facebook" arabic="فيسبوك">
-              <Input className="profile-facebook" value={s.facebook} onChange={(e) => set("facebook", e.target.value)} />
-            </Field>
-            <Field label="Instagram" arabic="إنستغرام">
-              <Input className="profile-instagram" value={s.instagram} onChange={(e) => set("instagram", e.target.value)} placeholder="@handle" />
             </Field>
           </div>
         </Section>

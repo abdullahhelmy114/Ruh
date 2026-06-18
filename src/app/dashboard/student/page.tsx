@@ -49,8 +49,8 @@ export default function StudentDashboard() {
     fetch(`/api/user?uid=${user.uid}`)
       .then(r => r.json())
       .then(d => {
-        if (d.profile && !d.profile.email_verified) {
-          router.push("/verify-email");
+        if (d.profile && !d.profile.is_verified) {
+          router.push(`/verify-email?email=${encodeURIComponent(d.profile.email)}`);
         }
       });
   }, [user, router]);

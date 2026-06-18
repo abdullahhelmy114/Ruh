@@ -9,14 +9,15 @@ export async function GET(request: Request) {
   if (!uid) return NextResponse.json({ error: 'Missing uid' }, { status: 400 });
 
   try {
-    const [user] = await sql`SELECT first_name, last_name, email, role, is_verified FROM users WHERE uid = ${uid}`;
+    const [user] = await sql`SELECT * FROM users WHERE uid = ${uid}`;
+    if (!user) return NextResponse.json({ profile: null });
     return NextResponse.json({ profile: user });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// POST: إنشاء ملف شخصي جديد (يُستخدم من صفحة التحقق القديمة، ولكن الأفضل استخدام API مخصص)
+// POST: يبقى كما هو بالضبط
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));

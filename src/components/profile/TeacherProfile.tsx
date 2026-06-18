@@ -44,16 +44,39 @@ export function TeacherProfile() {
   const [save, setSave] = React.useState<"idle" | "loading" | "success">("idle");
   const cvRef = React.useRef<HTMLInputElement>(null);
 
+  // ✅ جلب بيانات التسجيل من الخادم
   React.useEffect(() => {
-    if (authLoading) return;
-    if (user) {
+    if (authLoading || !user) return;
+    const fetchProfile = async () => {
+      try {
+        const res = await fetch(`/api/user?uid=${user.uid}`);
+        const data = await res.json();
+        if (data.profile) {
+          const p = data.profile;
+          const nativeLang = p.languages?.length ? p.languages[0].code : "Arabic";
+          const allLangs = p.languages?.map((l: any) => l.code) || ["Arabic", "English"];
+          setS({
+            fullName: `${p.first_name || ""} ${p.last_name || ""}`.trim() || user.displayName || user.email?.split("@")[0] || "",
+            email: p.email || user.email || "",
+            gender: p.gender || "",
+            nationality: p.nationality || "",
+            residence: p.country_of_residence || "",
+            nativeLanguage: nativeLang,
+            languages: allLangs,
+            whatsapp: p.whatsapp || "",
+            telegram: p.telegram || "",
+            socials: p.social_links || [],
+            bio: p.bio || "",
+            cv: p.cv_url || null,
+            avatar: user.photoURL || null,
+          });
+          return;
+        }
+      } catch {}
+      // fallback إلى localStorage
       const stored = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
       if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          setS(parsed);
-          return;
-        } catch {}
+        try { setS(JSON.parse(stored)); return; } catch {}
       }
       const name = user.displayName || user.email?.split("@")[0] || "";
       setS({
@@ -71,7 +94,8 @@ export function TeacherProfile() {
         cv: null,
         avatar: user.photoURL || null,
       });
-    }
+    };
+    fetchProfile();
   }, [user, authLoading]);
 
   const set = React.useCallback(<K extends keyof TeacherProfileState>(k: K, v: TeacherProfileState[K]) => {
@@ -163,12 +187,15 @@ export function TeacherProfile() {
 
         <Section step={2} title="Languages" arabic="اللغات" icon={<Languages size={20} />}>
           <div className="grid gap-5 md:grid-cols-2">
+            <Field label="Native Language" arabic="اللغة الأم" required error={errors.nativeLanguage}>
+              <Input className="profile-native-language" value={s.nativeLanguage} onChange={(e) => set("nativeLanguage", e.target.value)} placeholder="Arabic" />
+            </Field>
             <Field label="Languages Spoken" arabic="اللغات التي تجيدها" required error={errors.languages}>
-          <div className="profile-languages">
-            <MultiInput values={s.languages} onChange={(v) => set("languages", v)} placeholder="Add a language and press Enter" />
-         </div>
-          </Field>
-        </div>
+              <div className="profile-languages">
+                <MultiInput values={s.languages} onChange={(v) => set("languages", v)} placeholder="Add a language and press Enter" />
+              </div>
+            </Field>
+          </div>
         </Section>
 
         <Section step={3} title="Contact" arabic="وسائل التواصل" icon={<Phone size={20} />}>
@@ -195,16 +222,20 @@ export function TeacherProfile() {
               <p className="mb-2 text-sm font-medium text-foreground">
                 CV Upload <span dir="rtl" className="font-arabic text-xs text-muted-foreground">(السيرة الذاتية)</span>
               </p>
-              <button type="button" onClick={() => cvRef.current?.click()} className="group flex w-full items-center justify-between rounded-2xl border border-dashed border-gold/40 bg-background/30 px-5 py-6 text-left transition hover:border-gold hover:bg-gold/5">
-                <div className="flex items-center gap-4">
-                  <span className="grid h-12 w-12 place-items-center rounded-xl bg-gold/15 text-gold"><FileText size={20} /></span>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">{s.cv ? s.cv : "Drop your CV (PDF) or click to browse"}</p>
-                    <p className="text-xs text-muted-foreground">PDF · max 10 MB</p>
+              {s.cv ? (
+                <a href={s.cv} target="_blank" className="text-sm text-blue-600 underline">{s.cv}</a>
+              ) : (
+                <button type="button" onClick={() => cvRef.current?.click()} className="group flex w-full items-center justify-between rounded-2xl border border-dashed border-gold/40 bg-background/30 px-5 py-6 text-left transition hover:border-gold hover:bg-gold/5">
+                  <div className="flex items-center gap-4">
+                    <span className="grid h-12 w-12 place-items-center rounded-xl bg-gold/15 text-gold"><FileText size={20} /></span>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Drop your CV (PDF) or click to browse</p>
+                      <p className="text-xs text-muted-foreground">PDF · max 10 MB</p>
+                    </div>
                   </div>
-                </div>
-                <Upload size={16} className="text-muted-foreground transition group-hover:text-gold" />
-              </button>
+                  <Upload size={16} className="text-muted-foreground transition group-hover:text-gold" />
+                </button>
+              )}
               <input ref={cvRef} type="file" accept="application/pdf" className="hidden" onChange={(e) => set("cv", e.target.files?.[0]?.name ?? null)} />
             </div>
           </div>

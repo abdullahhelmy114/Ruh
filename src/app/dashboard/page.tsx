@@ -17,25 +17,37 @@ export default function DashboardRedirect() {
       return;
     }
 
-    // الأدمن يذهب مباشرة
     if (ADMIN_EMAILS.includes(user.email || "")) {
       router.replace("/dashboard/admin");
       return;
     }
 
-    // جلب الدور من الخادم فقط
+    // جلب بيانات المستخدم للتحقق من الحالة والدور
     fetch(`/api/user?uid=${user.uid}`)
       .then(r => r.json())
       .then(d => {
-        const serverRole = d?.profile?.role;
-        if (serverRole === "teacher") {
+        const profile = d?.profile;
+        if (!profile) {
+          router.replace("/login");
+          return;
+        }
+
+        // إذا لم يتم التحقق، أرسله إلى صفحة التحقق مع البريد
+        if (!profile.is_verified) {
+          router.replace(`/verify-email?email=${encodeURIComponent(profile.email)}`);
+          return;
+        }
+
+        // توجيه حسب الدور
+        const role = profile.role;
+        if (role === "teacher") {
           router.replace("/dashboard/teacher");
         } else {
           router.replace("/dashboard/student");
         }
       })
       .catch(() => {
-        // في حالة الفشل، نعتمد على localStorage كملاذ أخير
+        // في حالة الفشل، استخدم localStorage كملاذ أخير
         const fallbackRole = localStorage.getItem("userRole");
         if (fallbackRole === "teacher") {
           router.replace("/dashboard/teacher");

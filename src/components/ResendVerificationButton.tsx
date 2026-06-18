@@ -11,7 +11,7 @@ export function ResendVerificationButton() {
 
   const handleResend = async () => {
     if (!email) {
-      setMessage("No user email found. Please sign up again.");
+      setMessage("No email found. Please go back to sign up.");
       return;
     }
     setLoading(true);
