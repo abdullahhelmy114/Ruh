@@ -1,11 +1,10 @@
-// app/api/library/books/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db/client";
 
 export async function GET() {
   try {
     const books = await sql`
-      SELECT id, title, author, description, cover_url, category, year, created_at
+      SELECT id, title, author, description, cover_url, created_at
       FROM library_books
       ORDER BY created_at DESC
     `;
