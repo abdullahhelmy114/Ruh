@@ -392,7 +392,7 @@ const handleSaveLesson = async () => {
           </button>
           <button
             onClick={() => {
-              if (data.courses.filter(c => c.status === 'published').length === 0) {
+              if (!data.courses || data.courses.filter(c => c.status === 'published').length === 0) {
                 alert('You need to create a course first. Use "New Course".');
               } else {
                 setShowLessonModal(true);
