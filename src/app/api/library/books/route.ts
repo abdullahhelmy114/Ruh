@@ -1,48 +1,17 @@
+// app/api/library/books/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db/client";
-import { getServerSession } from "@/lib/auth";
-import { uploadFileToFirebaseStorage } from "@/lib/firebase/admin-storage";
 
-export async function POST(req: Request) {
-  const session = await getServerSession(req);
-  if (!session || session.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
-  }
-
+export async function GET() {
   try {
-    const formData = await req.formData();
-    const title = formData.get("title") as string;
-    const author = (formData.get("author") as string) || "";
-    const description = (formData.get("description") as string) || "";
-    const coverFile = formData.get("cover") as File | null;
-    const pdfFile = formData.get("pdf") as File | null;
-
-    if (!title) {
-      return NextResponse.json({ error: "Book title is required" }, { status: 400 });
-    }
-
-    let coverUrl = "";
-    let pdfUrl = "";
-
-    if (coverFile && typeof coverFile.arrayBuffer === "function") {
-      const buffer = Buffer.from(await coverFile.arrayBuffer());
-      coverUrl = await uploadFileToFirebaseStorage(buffer, coverFile.name, "library/covers");
-    }
-
-    if (pdfFile && typeof pdfFile.arrayBuffer === "function") {
-      const buffer = Buffer.from(await pdfFile.arrayBuffer());
-      pdfUrl = await uploadFileToFirebaseStorage(buffer, pdfFile.name, "library/pdfs");
-    }
-
-    const [book] = await sql`
-      INSERT INTO library_books (title, author, description, cover_url, pdf_url)
-      VALUES (${title}, ${author}, ${description}, ${coverUrl}, ${pdfUrl})
-      RETURNING id
+    const books = await sql`
+      SELECT id, title, author, description, cover_url, category, year, created_at
+      FROM library_books
+      ORDER BY created_at DESC
     `;
-
-    return NextResponse.json({ success: true, bookId: book.id });
+    return NextResponse.json({ books });
   } catch (error) {
-    console.error("Add book error:", error);
+    console.error("Library books fetch error:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
