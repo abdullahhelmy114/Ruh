@@ -10,6 +10,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   }
 
   try {
+    // حذف الصفحات المرتبطة أولاً ثم الكتاب
     await sql`DELETE FROM library_pages WHERE book_id = ${params.id}`;
     await sql`DELETE FROM library_books WHERE id = ${params.id}`;
     return NextResponse.json({ success: true });

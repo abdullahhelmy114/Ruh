@@ -177,23 +177,23 @@ export default function AdminLibraryPage() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!confirm("هل تريد حذف هذا الكتاب؟")) return;
-    try {
-      const res = await authFetch(`/api/admin/library/books/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        toast.success(<T>Book Deleted</T>);
-        fetchBooks();
-      } else {
-        const err = await res.json();
-        toast.error(err.error || "فشل الحذف");
-      }
-    } catch {
-      toast.error(<T>Delete Error</T>);
+const handleDelete = async (id: string) => {
+  if (!confirm("هل تريد حذف هذا الكتاب؟")) return;
+  try {
+    const res = await authFetch(`/api/admin/library/books/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      toast.success(<T>Book Deleted</T>);
+      fetchBooks(); // <-- تأكد من وجود هذا السطر
+    } else {
+      const err = await res.json();
+      toast.error(err.error || "فشل الحذف");
     }
-  };
+  } catch {
+    toast.error(<T>Delete Error</T>);
+  }
+};
 
   const handleConvertToImages = async (bookId: string) => {
     if (convertingId === bookId) return; // يمنع النقر المتكرر
