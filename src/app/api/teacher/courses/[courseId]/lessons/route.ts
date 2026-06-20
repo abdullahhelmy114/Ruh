@@ -1,18 +1,18 @@
-// app/api/teacher/courses/[id]/lessons/route.ts
+// app/api/teacher/courses/[courseId]/lessons/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db/client";
 import { getServerSession } from "@/lib/auth";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: { courseId: string } }
 ) {
   const session = await getServerSession(req);
   if (!session || session.role !== "teacher") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  const courseId = params.id;
+  const courseId = params.courseId;
   const { type, scheduled_at, scenario } = await req.json();
 
   // التحقق من أن الكورس الحي يخص هذا المعلم
