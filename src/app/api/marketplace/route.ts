@@ -1,25 +1,27 @@
-export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const search = searchParams.get('search') || '';
-  const level = searchParams.get('level') || '';
-  const minPrice = searchParams.get('minPrice') || '';
-  const maxPrice = searchParams.get('maxPrice') || '';
+  const level = searchParams.get('level');
+  const search = searchParams.get('search');
+  const minPrice = searchParams.get('minPrice');
+  const maxPrice = searchParams.get('maxPrice');
 
-  const courses = await sql`
-    SELECT c.*, p.full_name AS teacher_name
-    FROM courses c
-    JOIN profiles p ON c.teacher_uid = p.firebase_uid
-    WHERE c.status = 'published'
-    ${search ? sql`AND (c.title ILIKE ${'%' + search + '%'} OR c.description ILIKE ${'%' + search + '%'})` : sql``}
-    ${level ? sql`AND c.level = ${level}` : sql``}
-    ${minPrice ? sql`AND c.price >= ${parseInt(minPrice)}` : sql``}
-    ${maxPrice ? sql`AND c.price <= ${parseInt(maxPrice)}` : sql``}
-    ORDER BY c.created_at DESC
+  let query = sql`
+    SELECT lc.id, lc.title, lc.description, lc.level, lc.price,
+           lc.lessons_count, lc.status, lc.teacher_id,
+           p.full_name AS teacher_name, p.firebase_uid AS teacher_uid
+    FROM live_courses lc
+    JOIN profiles p ON lc.teacher_id = p.id
+    WHERE lc.status = 'active'
   `;
 
+  if (level) query = sql`${query} AND lc.level = ${level}`;
+  if (search) query = sql`${query} AND lc.title ILIKE ${'%' + search + '%'}`;
+  if (minPrice) query = sql`${query} AND lc.price >= ${parseFloat(minPrice)}`;
+  if (maxPrice) query = sql`${query} AND lc.price <= ${parseFloat(maxPrice)}`;
+
+  const courses = await query;
   return NextResponse.json({ courses });
 }
