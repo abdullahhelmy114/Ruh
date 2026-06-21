@@ -14,6 +14,7 @@ export async function getServerSession(req: Request): Promise<{
     const decoded = await auth.verifyIdToken(idToken);
     if (!decoded.uid) return null;
 
+    // جلب الدور من جدول profiles
     const [profile] = await sql`
       SELECT role FROM profiles WHERE firebase_uid = ${decoded.uid}
     `;

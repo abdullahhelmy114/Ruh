@@ -25,7 +25,7 @@ interface PendingLesson {
 }
 
 export default function PendingLessonsPage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, role, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [lessons, setLessons] = useState<PendingLesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ export default function PendingLessonsPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.push("/login"); return; }
-    if (user.email !== "abdullahhelmy114@gmail.com") { router.push("/"); return; }
+    if (role !== "admin") { router.push("/"); return; }
     fetchLessons();
   }, [authLoading, user, router]);
 
