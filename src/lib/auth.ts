@@ -6,10 +6,26 @@ export async function getServerSession(req: Request): Promise<{
   role: "student" | "teacher" | "admin";
 } | null> {
   try {
-    const authHeader = req.headers.get("Authorization") || "";
-    if (!authHeader.startsWith("Bearer ")) return null;
+    let idToken = "";
 
-    const idToken = authHeader.slice(7);
+    // 1. محاولة استخراج التوكن من هيدر Authorization (للتوافق)
+    const authHeader = req.headers.get("Authorization") || "";
+    if (authHeader.startsWith("Bearer ")) {
+      idToken = authHeader.slice(7);
+    }
+
+    // 2. إذا لم يوجد، نقرأ التوكن من الكوكيز (Cookie __session)
+    if (!idToken) {
+      const cookieHeader = req.headers.get("cookie") || "";
+      const match = cookieHeader.match(/__session=([^;]+)/);
+      if (match) {
+        idToken = match[1];
+      }
+    }
+
+    // لا توكن → لا جلسة
+    if (!idToken) return null;
+
     const auth = getAdminAuth();
     const decoded = await auth.verifyIdToken(idToken);
     if (!decoded.uid) return null;
