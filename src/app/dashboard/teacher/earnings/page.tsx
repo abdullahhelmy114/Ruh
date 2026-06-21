@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { T } from "@/components/TranslatedText";
 
 interface Earning {
   id: string;
@@ -17,7 +18,7 @@ export default function TeacherEarningsPage() {
   const [totalConfirmed, setTotalConfirmed] = useState(0);
 
   useEffect(() => {
-    fetch("/api/teacher/earnings")
+    fetch("/api/teacher/earnings", { credentials: "include" })
       .then((r) => r.json())
       .then((data) => {
         const rows = data || [];
@@ -47,15 +48,15 @@ export default function TeacherEarningsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto">
-      <h1 className="text-3xl font-bold text-foreground mb-8">أرباحي</h1>
+      <h1 className="text-3xl font-bold text-foreground mb-8"><T>أرباحي</T></h1>
 
       <div className="grid grid-cols-2 gap-4 mb-8">
         <div className="bg-card p-6 rounded-xl border border-border">
-          <p className="text-muted-foreground">الأرباح المؤكدة</p>
+          <p className="text-muted-foreground"><T>الأرباح المؤكدة</T></p>
           <p className="text-3xl font-bold text-primary">${totalConfirmed.toFixed(2)}</p>
         </div>
         <div className="bg-card p-6 rounded-xl border border-border">
-          <p className="text-muted-foreground">قيد الانتظار</p>
+          <p className="text-muted-foreground"><T>قيد الانتظار</T></p>
           <p className="text-3xl font-bold text-accent-foreground">${totalPending.toFixed(2)}</p>
         </div>
       </div>
@@ -64,9 +65,9 @@ export default function TeacherEarningsPage() {
         <table className="w-full">
           <thead className="bg-secondary/50">
             <tr>
-              <th className="p-3 text-left text-foreground">الكورس</th>
-              <th className="p-3 text-left text-foreground">العمولة</th>
-              <th className="p-3 text-left text-foreground">الحالة</th>
+              <th className="p-3 text-left text-foreground"><T>الكورس</T></th>
+              <th className="p-3 text-left text-foreground"><T>العمولة</T></th>
+              <th className="p-3 text-left text-foreground"><T>الحالة</T></th>
             </tr>
           </thead>
           <tbody>
@@ -82,7 +83,7 @@ export default function TeacherEarningsPage() {
                         : "bg-accent/20 text-accent-foreground"
                     }`}
                   >
-                    {earning.status === "confirmed" ? "مؤكد" : "معلق"}
+                    <T>{earning.status === "confirmed" ? "مؤكد" : "معلق"}</T>
                   </span>
                 </td>
               </tr>
@@ -90,7 +91,7 @@ export default function TeacherEarningsPage() {
             {earnings.length === 0 && (
               <tr>
                 <td colSpan={3} className="p-6 text-center text-muted-foreground">
-                  لا توجد أرباح بعد
+                  <T>لا توجد أرباح بعد</T>
                 </td>
               </tr>
             )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Library } from "lucide-react";
+import { FileSearch, Library, Package } from "lucide-react";
 import { T } from "@/components/TranslatedText";
 import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useState, useEffect } from "react";
@@ -16,7 +16,7 @@ import {
   Ticket, HelpCircle, BarChart3, Layers, Book,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Megaphone } from "lucide-react";
+import { Megaphone, Plus } from "lucide-react";
 
 // ─── Types ─────────────────────────────────────────────
 type TabKey =
@@ -33,9 +33,11 @@ type TabKey =
   | "settings"
   | "pages"
   | "marketing"
-  | "library";
+  | "library"
+  | "model-courses"
+  | "bundles"
+  | "applications";
 
-// إزالة التعريف الصريح للسماح لـ as const باستنتاج الأنواع الدقيقة
 const TABS = [
   { key: "overview", label: "Overview", icon: TrendingUp },
   { key: "teachers", label: "Teacher Verification", icon: ShieldCheck },
@@ -51,6 +53,9 @@ const TABS = [
   { key: "marketing", label: "Marketing", icon: Megaphone },
   { key: "pages", label: "Pages", icon: FileText },
   { key: "library", label: "Library", icon: Book },
+  { key: "model-courses", label: "Model Courses", icon: BookOpen },
+  { key: "bundles", label: "Bundles", icon: Package },
+  { key: "applications", label: "Teaching Requests", icon: FileSearch },
 ] as const;
 
 // استيراد ديناميكي لمحتوى إدارة المكتبة
@@ -172,6 +177,9 @@ export default function AdminDashboard() {
         {tab === "marketing" && <MarketingTab />}
         {tab === "pages" && <PagesTab />}
         {tab === "library" && <LibraryTab />}
+        {tab === "model-courses" && <ModelCoursesTab />}
+        {tab === "bundles" && <BundlesTab />}
+        {tab === "applications" && <ApplicationsTab />}
       </div>
     </div>
   );
@@ -324,6 +332,7 @@ function OverviewTab() {
     </div>
   );
 }
+
 /* ─────────── Teacher Verification Tab ─────────── */
 function TeacherVerificationTab() {
   const [apps, setApps] = useState<any[]>([]);
@@ -1711,3 +1720,307 @@ function PagesTab() {
     </div>
   );
 }
+
+/* ─────────── NEW TABS (Model Courses, Bundles, Applications) ─────────── */
+
+/* ─────────── Model Courses Tab ─────────── */
+function ModelCoursesTab() {
+  const [courses, setCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState("");
+  const [level, setLevel] = useState("A1");
+  const [price, setPrice] = useState(0);
+  const [category, setCategory] = useState("");
+  const [description, setDescription] = useState("");
+  const [scenario, setScenario] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const fetchCourses = () => {
+    fetch("/api/admin/model-courses", { credentials: "include" })
+      .then((r) => r.json())
+      .then((data) => setCourses(data.courses || []))
+      .catch(() => setError("فشل جلب الكورسات"))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    fetchCourses();
+  }, []);
+
+  const handleCreate = async () => {
+    if (!title.trim()) return;
+    setSubmitting(true);
+    setError("");
+    const res = await fetch("/api/admin/model-courses", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, level, price, category, description, scenario }),
+    });
+    if (res.ok) {
+      setSuccessMsg("تم إنشاء النموذج بنجاح");
+      setTitle("");
+      setLevel("A1");
+      setPrice(0);
+      setCategory("");
+      setDescription("");
+      setScenario("");
+      fetchCourses();
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } else {
+      const err = await res.json();
+      setError(err.error || "فشل الإنشاء");
+    }
+    setSubmitting(false);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("هل أنت متأكد من حذف هذا النموذج؟")) return;
+    await fetch(`/api/admin/model-courses/${id}`, { method: "DELETE", credentials: "include" });
+    fetchCourses();
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-serif text-2xl"><T>Model Courses</T></h2>
+      {successMsg && (
+        <div className="flex items-center gap-2 bg-primary/10 text-primary p-3 rounded-xl text-sm">
+          <CheckCircle2 size={16} /> <T>{successMsg}</T>
+        </div>
+      )}
+      <div className="glass rounded-2xl p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Title" className="rounded-full border bg-background px-4 py-2 text-sm" />
+        <select value={level} onChange={(e) => setLevel(e.target.value)} className="rounded-full border bg-background px-4 py-2 text-sm">
+          {["A1","A2","B1","B2","C1","C2"].map(l => <option key={l} value={l}>{l}</option>)}
+        </select>
+        <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="Price" className="rounded-full border bg-background px-4 py-2 text-sm" />
+        <button onClick={handleCreate} disabled={submitting} className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+          {submitting ? <Loader2 size={14} className="animate-spin" /> : <><Plus size={14} /> <T>Create</T></>}
+        </button>
+      </div>
+      <div className="space-y-2">
+        {courses.map((c) => (
+          <div key={c.id} className="flex items-center justify-between glass rounded-2xl p-4">
+            <div>
+              <span className="font-bold">{c.title}</span>
+              <span className="ml-4 text-sm text-muted-foreground">{c.level} · ${c.price}</span>
+            </div>
+            <button onClick={() => handleDelete(c.id)} className="text-destructive text-sm"><Trash2 size={16} /></button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────── Bundles Tab ─────────── */
+function BundlesTab() {
+  const [bundles, setBundles] = useState<any[]>([]);
+  const [modelCourses, setModelCourses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [title, setTitle] = useState("");
+  const [price, setPrice] = useState(0);
+  const [selectedCourses, setSelectedCourses] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
+
+  const fetchData = async () => {
+    setLoading(true);
+    const [modelRes, bundleRes] = await Promise.all([
+      fetch("/api/admin/model-courses", { credentials: "include" }),
+      fetch("/api/bundles", { credentials: "include" }),
+    ]);
+    const modelData = await modelRes.json();
+    const bundleData = await bundleRes.json();
+    setModelCourses(modelData.courses || []);
+    setBundles(bundleData.bundles || []);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchData(); }, []);
+
+  const toggleCourse = (id: string) => {
+    setSelectedCourses(prev =>
+      prev.includes(id) ? prev.filter(c => c !== id) : prev.length < 3 ? [...prev, id] : prev
+    );
+  };
+
+  const handleCreate = async () => {
+    if (!title.trim() || selectedCourses.length !== 3) {
+      setError("يجب إدخال عنوان واختيار 3 كورسات");
+      return;
+    }
+    setSubmitting(true);
+    setError("");
+    const res = await fetch("/api/admin/bundles", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, price, model_course_ids: selectedCourses }),
+    });
+    if (res.ok) {
+      setSuccessMsg("تم إنشاء الحزمة بنجاح");
+      setTitle("");
+      setPrice(0);
+      setSelectedCourses([]);
+      fetchData();
+      setTimeout(() => setSuccessMsg(""), 3000);
+    } else {
+      const err = await res.json();
+      setError(err.error || "فشل إنشاء الحزمة");
+    }
+    setSubmitting(false);
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-serif text-2xl"><T>Bundles</T></h2>
+      {successMsg && (
+        <div className="flex items-center gap-2 bg-primary/10 text-primary p-3 rounded-xl text-sm">
+          <CheckCircle2 size={16} /> <T>{successMsg}</T>
+        </div>
+      )}
+      <div className="glass rounded-2xl p-4 space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Bundle Title" className="rounded-full border bg-background px-4 py-2 text-sm" />
+          <input type="number" value={price} onChange={(e) => setPrice(Number(e.target.value))} placeholder="Price" className="rounded-full border bg-background px-4 py-2 text-sm" />
+          <button onClick={handleCreate} disabled={submitting || selectedCourses.length !== 3} className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50">
+            {submitting ? <Loader2 size={14} className="animate-spin" /> : <><Package size={14} /> <T>Create Bundle</T></>}
+          </button>
+        </div>
+        <div>
+          <label className="text-xs font-semibold uppercase text-muted-foreground"><T>Select 3 Model Courses</T> ({selectedCourses.length}/3)</label>
+          <div className="mt-2 grid gap-2 max-h-48 overflow-y-auto border border-border rounded-xl p-2">
+            {modelCourses.map(course => (
+              <div
+                key={course.id}
+                onClick={() => toggleCourse(course.id)}
+                className={`flex items-center justify-between rounded-lg p-2 cursor-pointer border transition ${
+                  selectedCourses.includes(course.id) ? "bg-primary/10 border-primary" : "hover:bg-secondary"
+                }`}
+              >
+                <span className="text-sm">{course.title} ({course.level})</span>
+                {selectedCourses.includes(course.id) && <CheckCircle2 size={16} className="text-primary" />}
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="space-y-2">
+        {bundles.map((b) => (
+          <div key={b.id} className="glass rounded-2xl p-4">
+            <div className="flex justify-between">
+              <span className="font-bold">{b.title}</span>
+              <span className="font-bold text-primary">${b.price}</span>
+            </div>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {b.model_course_ids?.map((id: string) => {
+                const course = modelCourses.find(c => c.id === id);
+                return (
+                  <span key={id} className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">
+                    {course?.title || id.slice(0,8)}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─────────── Applications Tab ─────────── */
+function ApplicationsTab() {
+  const [applications, setApplications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const fetchApplications = async () => {
+    try {
+      const res = await fetch("/api/admin/applications", { credentials: "include" });
+      const data = await res.json();
+      if (res.ok) setApplications(data);
+    } catch {
+      console.error("Failed to fetch applications");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchApplications(); }, []);
+
+  const handleApprove = async (applicationId: string) => {
+    setApprovingId(applicationId);
+    const res = await fetch("/api/admin/applications/approve", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ application_id: applicationId }),
+    });
+    if (res.ok) {
+      fetchApplications();
+    } else {
+      alert("فشلت الموافقة");
+    }
+    setApprovingId(null);
+  };
+
+  if (loading)
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="animate-spin text-primary" />
+      </div>
+    );
+
+  return (
+    <div className="space-y-6">
+      <h2 className="font-serif text-2xl"><T>Teaching Requests</T></h2>
+      {applications.length === 0 ? (
+        <div className="rounded-3xl border bg-card p-12 text-center text-muted-foreground">
+          <T>No pending applications</T>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {applications.map((app) => (
+            <div key={app.id} className="glass rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <span className="font-bold">{app.teacher_name}</span>
+                <span className="mx-4 text-sm text-muted-foreground">{app.course_title}</span>
+                <span className="text-xs text-muted-foreground">{app.level}</span>
+              </div>
+              <button
+                onClick={() => handleApprove(app.id)}
+                disabled={approvingId === app.id}
+                className="rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 flex items-center gap-1"
+              >
+                {approvingId === app.id ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
+                <T>Approve</T>
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// تصدير Plus لاستخدامه في ModelCoursesTab (قد تحتاج لإضافته في imports)
+// تم إضافة Plus في قسم imports من lucide-react

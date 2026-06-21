@@ -1,84 +1,67 @@
 "use client";
 
 import { T } from "@/components/TranslatedText";
-import { useAuth, ADMIN_EMAILS } from "@/lib/firebase/AuthProvider";
+import { useAuth } from "@/lib/firebase/AuthProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   Award, Copy, GraduationCap, Trophy, ChevronRight,
   BookOpen, Loader2, Video, Clock, Play,
+  Users, BarChart3, DollarSign,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { YouTubeEmbed } from "@/components/ui/YouTubeEmbed";
-import { OnboardingTour } from "@/components/OnboardingTour";
+
+interface EnrolledCourse {
+  id: string; // live_course_id
+  title: string;
+  level: string;
+  total_lessons: number;
+  completed_lessons: number;
+  teacher_name: string;
+}
 
 interface LiveSession {
-  id: string; title: string; scheduled_at: string; meeting_url: string;
-  course_id: string; course_title: string; teacher_name: string;
+  id: string;
+  title: string;
+  scheduled_at: string;
+  course_title: string;
+  teacher_name: string;
 }
 
 interface DashboardData {
   firstName: string;
   streak: number;
-  inProgress: { title: string; next: string; progress: number; courseId: string }[];
-  completed: { title: string; date: string; courseId: string; recording_url?: string }[];
-  referral: { code: string; count: number; credits: number };
+  enrolledCourses: EnrolledCourse[];
+  completedCourses: { title: string; date: string; recording_url?: string }[];
   sessions: LiveSession[];
-}
-
-interface EnrolledCourse {
-  id: string;
-  title: string;
-  level: string;
-  total_lessons: number;
-  completed_lessons: number;
+  referral: { code: string; count: number; credits: number };
 }
 
 export default function StudentDashboard() {
-  const [enrolledCourses, setEnrolledCourses] = useState<EnrolledCourse[]>([]);
-  const { user, isLoading, role } = useAuth();
+  const { user, isLoading } = useAuth();
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedRecording, setSelectedRecording] = useState<{ url: string; title: string } | null>(null);
 
-  // فحص البريد الإلكتروني المؤكد
   useEffect(() => {
     if (!user) return;
-    fetch(`/api/user?uid=${user.uid}`)
+    fetch("/api/student/dashboard", { credentials: "include" })
       .then(r => r.json())
       .then(d => {
-        if (d.profile && !d.profile.is_verified) {
-          router.push(`/verify-email?email=${encodeURIComponent(d.profile.email)}`);
-        }
-      });
-  }, [user, router]);
-
-  // جلب بيانات الداشبورد
-  useEffect(() => {
-    if (!user || !user.uid) return;
-    fetch(`/api/student/dashboard?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => { setData(d); setLoading(false); })
-      .catch(() => setLoading(false));
+        setData(d);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, [user]);
 
-  // حماية المسار
-useEffect(() => {
-  if (!isLoading && !user) {
-    router.push("/login");
-  }
-}, [user, isLoading, router]);
-
-  // جلب الكورسات المسجل بها
   useEffect(() => {
-    if (!user) return;
-    fetch(`/api/student/courses?uid=${user.uid}`)
-      .then(r => r.json())
-      .then(d => setEnrolledCourses(d.courses || []))
-      .catch(console.error);
-  }, [user]);
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading, router]);
 
   if (isLoading || loading) {
     return (
@@ -87,6 +70,7 @@ useEffect(() => {
       </div>
     );
   }
+
   if (!user || !data) return null;
 
   const isJoinable = (scheduledAt: string) => {
@@ -96,25 +80,25 @@ useEffect(() => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 md:px-8 min-h-screen">
+    <div className="mx-auto max-w-7xl space-y-8 px-4 py-10 md:px-8 min-h-screen bg-background">
       {/* Banner */}
-      <div className="relative overflow-hidden rounded-4xl border border-border bg-card p-8 shadow-elegant flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-        <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-amber-500/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-4xl border border-border bg-card p-8 shadow-lg flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+        <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-accent/10 blur-3xl" />
         <div className="relative z-10">
           <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground">
-            <T>As‑salāmu ʿalaykum</T>
+            <T>السلام عليكم</T>
           </div>
-          <h1 className="mt-1 font-serif text-3xl md:text-4xl">
-            <T>Welcome back,</T> {data.firstName}
+          <h1 className="mt-1 font-serif text-3xl md:text-4xl text-foreground">
+            <T>مرحباً بعودتك،</T> {data.firstName}
           </h1>
           <p className="mt-2 text-sm italic text-muted-foreground">
-            <T>Continue where you left off — every word is a victory.</T>
+            <T>واصل من حيث توقفت — كل كلمة انتصار.</T>
           </p>
         </div>
-        <div className="flex items-center gap-3 rounded-full border border-amber-500/20 bg-background/50 px-5 py-2.5 text-sm font-semibold">
-          <Trophy className="h-5 w-5 animate-bounce text-secondary-foreground" />
+        <div className="flex items-center gap-3 rounded-full border border-accent/20 bg-background/50 px-5 py-2.5 text-sm font-semibold">
+          <Trophy className="h-5 w-5 text-accent" />
           {data.streak}
-          <T>-day streak</T>
+          <T>-أيام متتالية</T>
         </div>
       </div>
 
@@ -126,9 +110,9 @@ useEffect(() => {
           className="live-sessions glass rounded-3xl p-6"
         >
           <div className="flex items-center gap-2 mb-4">
-            <Video className="h-5 w-5 text-secondary-foreground" />
-            <h2 className="font-serif text-xl">
-              <T>Upcoming Live Sessions</T>
+            <Video className="h-5 w-5 text-accent-foreground" />
+            <h2 className="font-serif text-xl text-foreground">
+              <T>جلسات مباشرة قادمة</T>
             </h2>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
@@ -140,13 +124,13 @@ useEffect(() => {
                   className="flex items-center justify-between bg-background/50 rounded-2xl p-4 border"
                 >
                   <div>
-                    <h3 className="font-serif text-sm font-semibold">{s.title}</h3>
+                    <h3 className="font-serif text-sm font-semibold text-foreground">{s.title}</h3>
                     <p className="text-xs text-muted-foreground">
                       {s.course_title} · {s.teacher_name}
                     </p>
                     <div className="flex items-center gap-1 text-[10px] text-muted-foreground mt-1">
                       <Clock size={12} />
-                      {new Date(s.scheduled_at).toLocaleString("en-US", {
+                      {new Date(s.scheduled_at).toLocaleString("ar-EG", {
                         dateStyle: "medium",
                         timeStyle: "short",
                       })}
@@ -156,17 +140,17 @@ useEffect(() => {
                     href={`/live/${s.id}`}
                     className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition ${
                       joinable
-                        ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                        ? "bg-primary text-primary-foreground hover:bg-primary/90"
                         : "bg-muted text-muted-foreground pointer-events-none"
                     }`}
                   >
                     {joinable ? (
                       <>
-                        <ChevronRight size={14} /> <T>Join Now</T>
+                        <ChevronRight size={14} /> <T>انضم الآن</T>
                       </>
                     ) : (
                       <>
-                        <Clock size={14} /> <T>Waiting</T>
+                        <Clock size={14} /> <T>انتظار</T>
                       </>
                     )}
                   </Link>
@@ -183,36 +167,36 @@ useEffect(() => {
           {/* My Courses */}
           <section className="your-courses">
             <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
-              <T>My Courses</T>
+              <T>كورساتي</T>
             </div>
-            <h2 className="font-serif text-2xl">
-              <T>Enrolled Courses</T>
+            <h2 className="font-serif text-2xl text-foreground">
+              <T>الكورسات المسجل بها</T>
             </h2>
             <div className="mt-4 space-y-4">
-              {enrolledCourses.length === 0 ? (
+              {data.enrolledCourses.length === 0 ? (
                 <div className="rounded-4xl border bg-card p-8 text-center text-muted-foreground">
-                  <BookOpen className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
+                  <BookOpen className="mx-auto h-8 w-8 text-accent-foreground/50 mb-3" />
                   <p>
-                    <T>You haven't enrolled in any courses yet.</T>
+                    <T>لم تلتحق بأي كورس بعد.</T>
                   </p>
                   <Link
                     href="/marketplace"
-                    className="mt-3 inline-block text-sm font-medium text-accent-foreground hover:underline"
+                    className="mt-3 inline-block text-sm font-medium text-primary hover:underline"
                   >
-                    <T>Browse Courses →</T>
+                    <T>تصفح السوق ←</T>
                   </Link>
                 </div>
               ) : (
-                enrolledCourses.map(c => (
-                  <div key={c.id} className="rounded-3xl border bg-card p-5 shadow-elegant">
-                    <h3 className="font-serif text-lg">{c.title}</h3>
+                data.enrolledCourses.map(c => (
+                  <div key={c.id} className="rounded-3xl border bg-card p-5 shadow-lg">
+                    <h3 className="font-serif text-lg text-foreground">{c.title}</h3>
                     <p className="text-sm text-muted-foreground">
-                      <T>Level</T> {c.level}
+                      <T>المستوى</T> {c.level} · <T>المعلم</T>: {c.teacher_name}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <div className="h-2 flex-1 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-emerald-500"
+                          className="h-full bg-primary"
                           style={{
                             width: `${(c.completed_lessons / c.total_lessons) * 100 || 0}%`,
                           }}
@@ -224,9 +208,9 @@ useEffect(() => {
                     </div>
                     <Link
                       href={`/dashboard/student/courses/${c.id}`}
-                      className="mt-3 inline-block text-sm font-semibold text-accent-foreground hover:underline"
+                      className="mt-3 inline-block text-sm font-semibold text-primary hover:underline"
                     >
-                      <T>View Course →</T>
+                      <T>عرض الكورس ←</T>
                     </Link>
                   </div>
                 ))
@@ -234,28 +218,28 @@ useEffect(() => {
             </div>
           </section>
 
-          {/* Completed Courses with Recording */}
-          {data.completed?.length > 0 && (
+          {/* Completed Courses */}
+          {data.completedCourses?.length > 0 && (
             <section>
               <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
-                <T>Your milestones</T>
+                <T>إنجازاتك</T>
               </div>
-              <h2 className="font-serif text-2xl">
-                <T>Completed</T>
+              <h2 className="font-serif text-2xl text-foreground">
+                <T>مكتملة</T>
               </h2>
               <div className="mt-4 space-y-3">
-                {data.completed.map(c => (
+                {data.completedCourses.map(c => (
                   <div
-                    key={c.courseId}
+                    key={c.title}
                     className="flex items-center gap-3 rounded-2xl border bg-card p-4"
                   >
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-700">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-accent/20 text-accent-foreground">
                       <Award className="h-5 w-5" />
                     </div>
                     <div className="flex-1">
                       <div className="font-serif text-sm">{c.title}</div>
                       <div className="text-xs text-muted-foreground">
-                        <T>Completed</T> {c.date}
+                        <T>أكملت</T> {c.date}
                       </div>
                     </div>
                     {c.recording_url && (
@@ -263,9 +247,9 @@ useEffect(() => {
                         onClick={() =>
                           setSelectedRecording({ url: c.recording_url!, title: c.title })
                         }
-                        className="rounded-full bg-emerald-600 px-3 py-1 text-xs font-medium text-white flex items-center gap-1"
+                        className="rounded-full bg-primary px-3 py-1 text-xs font-medium text-primary-foreground flex items-center gap-1"
                       >
-                        <Play size={12} /> <T>Watch</T>
+                        <Play size={12} /> <T>مشاهدة</T>
                       </button>
                     )}
                   </div>
@@ -275,85 +259,55 @@ useEffect(() => {
           )}
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-8">
-          <section>
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.25em] text-accent-foreground">
-              <T>Your milestones</T>
+          {/* Stats */}
+          <div className="rounded-4xl border bg-card p-6 shadow-lg">
+            <div className="text-xs font-semibold uppercase tracking-widest text-accent-foreground">
+              <T>إحصائيات</T>
             </div>
-            <h2 className="font-serif text-2xl">
-              <T>Achievements</T>
-            </h2>
-            {data.completed?.length === 0 ? (
-              <div className="mt-4 rounded-4xl border bg-card p-6 text-center text-muted-foreground">
-                <Award className="mx-auto h-8 w-8 text-secondary-foreground mb-3" />
-                <p>
-                  <T>No completed courses yet.</T>
-                </p>
+            <div className="mt-4 space-y-3">
+              <div className="flex justify-between">
+                <span className="text-muted-foreground"><T>الكورسات</T></span>
+                <span className="font-semibold text-foreground">{data.enrolledCourses.length}</span>
               </div>
-            ) : (
-              <div className="mt-4 space-y-3">
-                {data.completed.map(c => (
-                  <div
-                    key={c.courseId}
-                    className="flex items-center gap-3 rounded-2xl border bg-card p-4"
-                  >
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/20 text-amber-700">
-                      <Award className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="font-serif text-sm">{c.title}</div>
-                      <div className="text-xs text-muted-foreground">
-                        <T>Completed</T> {c.date}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground"><T>مكتملة</T></span>
+                <span className="font-semibold text-foreground">{data.completedCourses.length}</span>
               </div>
-            )}
-          </section>
-
-          <div className="placement-test group relative overflow-hidden rounded-4xl border-2 border-amber-500/30 bg-card p-8 shadow-elegant">
-            <GraduationCap className="mb-4 h-10 w-10 text-secondary-foreground" />
-            <h3 className="font-serif text-2xl">
-              <T>Placement Test</T>
-            </h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              <T>Discover your level — get a tailored learning path from our experts.</T>
-            </p>
-            <button className="mt-6 w-full rounded-full bg-amber-500 py-3 text-sm font-bold text-black shadow-lg">
-              <T>Launch Assessment</T>
-            </button>
+            </div>
           </div>
 
-          <div className="rounded-4xl border bg-card p-8 shadow-elegant">
+          {/* Referral */}
+          <div className="rounded-4xl border bg-card p-6 shadow-lg">
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-accent-foreground">
-              <T>Referral Center</T>
+              <T>الإحالات</T>
             </div>
-            <h3 className="mt-2 font-serif text-xl">
-              <T>Share the Academy</T>
+            <h3 className="mt-2 font-serif text-xl text-foreground">
+              <T>شارك الأكاديمية</T>
             </h3>
             <p className="mt-2 text-xs text-muted-foreground">
-              <T>Earn credits for every friend who joins.</T>
+              <T>اربح أرصدة عن كل صديق ينضم.</T>
             </p>
-            <div className="mt-5 flex items-center gap-2 rounded-xl border bg-background p-2 text-[10px]">
+            <div className="mt-5 flex items-center gap-2 rounded-xl border bg-background p-2 text-xs">
               <code className="flex-1 truncate px-2">{data.referral.code}</code>
               <button className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-                <Copy className="h-4 w-4" />
+                <Copy size={14} />
               </button>
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 text-center">
               <div className="rounded-2xl border bg-background p-4">
                 <div className="font-serif text-2xl">{data.referral.count}</div>
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  <T>Referrals</T>
+                  <T>إحالات</T>
                 </div>
               </div>
               <div className="rounded-2xl border bg-background p-4">
-                <div className="font-serif text-2xl text-accent-foreground">
+                <div className="font-serif text-2xl text-primary">
                   ${data.referral.credits}
                 </div>
                 <div className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-                  <T>Credits</T>
+                  <T>أرصدة</T>
                 </div>
               </div>
             </div>
@@ -361,9 +315,9 @@ useEffect(() => {
 
           <Link
             href="/marketplace"
-            className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-amber-500/40 bg-amber-500/5 p-4 text-sm font-bold text-accent-foreground hover:bg-amber-500/10"
+            className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-accent/40 bg-accent/5 p-4 text-sm font-bold text-accent-foreground hover:bg-accent/10"
           >
-            <T>Explore Marketplace →</T>
+            <T>استكشف السوق ←</T>
           </Link>
         </div>
       </div>
@@ -382,43 +336,13 @@ useEffect(() => {
                 onClick={() => setSelectedRecording(null)}
                 className="text-sm text-muted-foreground hover:underline"
               >
-                <T>Close</T>
+                <T>إغلاق</T>
               </button>
             </div>
             <YouTubeEmbed url={selectedRecording.url} title={selectedRecording.title} />
           </motion.div>
         </div>
       )}
-
-      {/* Onboarding Tour */}
-      {typeof window !== "undefined" &&
-        !localStorage.getItem("student_dashboard_tour") && (
-          <OnboardingTour
-            steps={[
-              {
-                target: ".your-courses",
-                title: "My Courses",
-                content: "Here you can see all the courses you are enrolled in.",
-                placement: "bottom",
-              },
-              {
-                target: ".live-sessions",
-                title: "Live Sessions",
-                content: "When it's time, click 'Join Now' to enter the Zoom meeting.",
-                placement: "top",
-                optional: true,
-              },
-              {
-                target: ".placement-test",
-                title: "Placement Test",
-                content: "Take a test to determine your level.",
-                placement: "left",
-                optional: true,
-              },
-            ]}
-            tourKey="student_dashboard_tour"
-          />
-        )}
     </div>
   );
 }
