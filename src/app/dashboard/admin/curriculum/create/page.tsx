@@ -33,8 +33,9 @@ export default function CreateModelCourse() {
       return;
     }
 
-    const res = await fetch("/api/admin/curriculum", {
+   const res = await fetch("/api/admin/curriculum", {
       method: "POST",
+      credentials: "include", // 👈 هذا هو السطر السحري الذي كان مفقوداً!
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         title,
