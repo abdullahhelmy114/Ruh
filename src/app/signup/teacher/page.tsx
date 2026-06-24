@@ -38,6 +38,7 @@ export default function TeacherSignupStep1Page() {
     defaultValues: {
       firstName: "",
       lastName: "",
+      age: "",                      // ✅ حقل العمر
       countryOfResidence: "",
       nationality: "",
       gender: "",
@@ -83,7 +84,7 @@ export default function TeacherSignupStep1Page() {
           className="glass overflow-hidden rounded-3xl bg-card p-8 shadow-elegant md:p-10"
         >
           <div className="mb-8 text-center">
-            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-accent-foreground">
+            <div className="text-xs font-semibold uppercase tracking-[0.3em] text-amber-600">
               <T>Ruhulqudus Academy</T>
             </div>
             <h1 className="mt-3 font-serif text-3xl md:text-4xl">
@@ -95,7 +96,7 @@ export default function TeacherSignupStep1Page() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* السطر الأول: الاسم الأول والأخير */}
+            {/* الاسم الأول والأخير */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName" className="mb-2 block text-sm font-medium">
@@ -117,7 +118,26 @@ export default function TeacherSignupStep1Page() {
               </div>
             </div>
 
-            {/* السطر الثاني: بلد الإقامة والجنسية */}
+            {/* ✅ حقل العمر الإجباري */}
+            <div>
+              <Label htmlFor="age" className="mb-2 block text-sm font-medium">
+                <T>Age</T> *
+              </Label>
+              <Input
+                id="age"
+                type="number"
+                {...register("age")}
+                placeholder="e.g. 30"
+                className="mt-1"
+                min={18}
+                max={100}
+              />
+              {errors.age?.message && (
+                <p className="text-xs text-red-500 mt-1"><T>{errors.age.message}</T></p>
+              )}
+            </div>
+
+            {/* بلد الإقامة والجنسية */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-2 block text-sm font-medium">
@@ -159,7 +179,7 @@ export default function TeacherSignupStep1Page() {
               </div>
             </div>
 
-            {/* السطر الثالث: الجنس واللغات */}
+            {/* الجنس واللغات */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-2 block text-sm font-medium">
@@ -253,7 +273,7 @@ export default function TeacherSignupStep1Page() {
               </div>
             </div>
 
-            {/* السطر الرابع: البريد ورقم الواتساب */}
+            {/* البريد ورقم الواتساب */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="email" className="mb-2 block text-sm font-medium">
@@ -275,7 +295,7 @@ export default function TeacherSignupStep1Page() {
               </div>
             </div>
 
-            {/* السطر الخامس: كلمة المرور وتأكيدها */}
+            {/* كلمة المرور وتأكيدها */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="password" className="mb-2 block text-sm font-medium">
@@ -317,7 +337,7 @@ export default function TeacherSignupStep1Page() {
 
             <p className="text-center text-xs text-muted-foreground">
               <T>Already have an account?</T>{" "}
-              <Link href="/login" className="text-accent-foreground underline-offset-4 hover:underline">
+              <Link href="/login" className="text-amber-600 underline-offset-4 hover:underline">
                 <T>Sign in</T>
               </Link>
             </p>

@@ -3,6 +3,7 @@ import { z } from "zod";
 export const studentSignupSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
+  age: z.string().min(1, "Age is required"),
   countryOfResidence: z.string().optional(),
   nationality: z.string().optional(),
   gender: z.string().optional(),

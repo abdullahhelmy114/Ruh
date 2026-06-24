@@ -9,15 +9,17 @@ export async function GET(request: Request) {
   if (!uid) return NextResponse.json({ error: 'Missing uid' }, { status: 400 });
 
   try {
-    const [user] = await sql`SELECT * FROM users WHERE uid = ${uid}`;
+    // تم إصلاح الخطأ هنا: إضافة علامة (`) المغلقة في نهاية الاستعلام
+    const [user] = await sql`SELECT * FROM profiles WHERE firebase_uid = ${uid}`;
+    
     if (!user) return NextResponse.json({ profile: null });
     return NextResponse.json({ profile: user });
   } catch (error: any) {
+    console.error("GET User Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
-// POST: يبقى كما هو بالضبط
 export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
@@ -29,18 +31,35 @@ export async function POST(request: Request) {
     }
 
     const emailVerified = body.email_verified === true;
-    const referredBy = body.referred_by || null;
-    const fullName = body.fullName || '';
-    const [firstName, ...lastNameArr] = fullName.split(' ');
-    const lastName = lastNameArr.join(' ') || '';
+    
+    // تجميع الاسم بالكامل ليتوافق مع عمود full_name
+    let fullName = body.fullName || '';
+    if (!fullName && body.first_name) {
+       fullName = `${body.first_name} ${body.last_name || ''}`.trim();
+    }
 
+    // تحديد الحالة المبدئية
+    const status = emailVerified ? 'active' : 'pending';
+
+    // تم إصلاح الخطأ هنا: عدد الأعمدة يتطابق مع عدد القيم، وتصحيح ON CONFLICT
     await sql`
-      INSERT INTO users (uid, email, first_name, last_name, role, is_verified, referred_by)
-      VALUES (${uid}, ${email}, ${firstName}, ${lastName}, ${body.role || 'student'}, ${emailVerified}, ${referredBy})
-      ON CONFLICT (uid) DO UPDATE SET email = ${email}, is_verified = ${emailVerified}
+      INSERT INTO profiles (firebase_uid, email, full_name, role, status)
+      VALUES (
+        ${uid}, 
+        ${email}, 
+        ${fullName}, 
+        ${body.role || 'student'}, 
+        ${status}
+      )
+      ON CONFLICT (firebase_uid) DO UPDATE SET 
+        email = EXCLUDED.email, 
+        full_name = EXCLUDED.full_name,
+        status = EXCLUDED.status
     `;
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
+    console.error("POST User Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

@@ -1,4 +1,3 @@
-// app/signup/student/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -31,7 +30,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// نوع اللغة المستخدم في النموذج (مستوى إتقان)
 type LanguageProficiency = {
   code: string;
   proficiency: "native" | "beginner" | "intermediate" | "advanced";
@@ -54,10 +52,11 @@ export default function StudentSignupPage() {
     defaultValues: {
       firstName: "",
       lastName: "",
+      age: "",                    // ✅ حقل العمر
       countryOfResidence: "",
       nationality: "",
       gender: "",
-      languages: [] as LanguageProficiency[], // مصفوفة فارغة من النوع المطلوب
+      languages: [] as LanguageProficiency[],
       email: "",
       whatsapp: "",
       interests: "",
@@ -71,27 +70,26 @@ export default function StudentSignupPage() {
     name: "languages",
   });
 
- const onVerifyCaptcha = async (token: string) => {
-  const data = watch();
-  try {
-    const res = await fetch("/api/signup/student", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
+  const onVerifyCaptcha = async (token: string) => {
+    const data = watch();
+    try {
+      const res = await fetch("/api/signup/student", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
 
-    if (!res.ok) {
-      const result = await res.json();
-      throw new Error(result.message || "Something went wrong");
+      if (!res.ok) {
+        const result = await res.json();
+        throw new Error(result.message || "Something went wrong");
+      }
+
+      router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+      setShowCaptcha(false);
     }
-
-    // ✅ توجيه مباشر بدون sessionStorage
-    router.push(`/verify-email?email=${encodeURIComponent(data.email)}`);
-  } catch (err: any) {
-    setError(err.message || "Something went wrong");
-    setShowCaptcha(false);
-  }
-};
+  };
 
   const onSubmit = async (data: StudentSignupData) => {
     setError("");
@@ -121,7 +119,7 @@ export default function StudentSignupPage() {
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* الاسم الأول والأخير (إجباري) */}
+            {/* الاسم الأول والأخير */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="firstName" className="mb-2 block text-sm font-medium">
@@ -157,7 +155,28 @@ export default function StudentSignupPage() {
               </div>
             </div>
 
-            {/* بلد الإقامة والجنسية (اختياري) */}
+            {/* ✅ حقل العمر الإجباري */}
+            <div>
+              <Label htmlFor="age" className="mb-2 block text-sm font-medium">
+                <T>Age</T> *
+              </Label>
+              <Input
+                id="age"
+                type="number"
+                {...register("age")}
+                placeholder="e.g. 25"
+                className="mt-1"
+                min={5}
+                max={100}
+              />
+              {errors.age?.message && (
+                <p className="text-xs text-red-500 mt-1">
+                  <T>{errors.age.message}</T>
+                </p>
+              )}
+            </div>
+
+            {/* بلد الإقامة والجنسية */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-2 block text-sm font-medium">
@@ -193,7 +212,7 @@ export default function StudentSignupPage() {
               </div>
             </div>
 
-            {/* الجنس واللغات (اختياري) */}
+            {/* الجنس واللغات */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <Label className="mb-2 block text-sm font-medium">

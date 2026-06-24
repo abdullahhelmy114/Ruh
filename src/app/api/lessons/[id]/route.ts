@@ -123,9 +123,9 @@ export async function PUT(
     // إشعار وإيميل للمعلم عند الموافقة
     if (status === 'approved') {
       const [lessonInfo] = await sql`
-        SELECT l.teacher_uid, l.title, l.course_id, u.email, u.first_name, u.last_name
+        SELECT l.teacher_uid, l.title, l.course_id, u.email, u.full_name
         FROM lessons l
-        JOIN users u ON l.teacher_uid = u.uid
+        JOIN profiles u ON l.teacher_uid = u.firebase_uid
         WHERE l.id = ${lessonId}
       `;
 
