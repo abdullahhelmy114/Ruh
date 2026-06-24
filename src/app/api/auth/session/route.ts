@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminAuth } from "@/lib/firebase/admin";
+import { sql } from "@/lib/db/client";
 
 export async function POST(request: Request) {
   try {
@@ -14,7 +15,13 @@ export async function POST(request: Request) {
       expiresIn: 1000 * 60 * 60 * 24 * 14,
     });
 
-    const response = NextResponse.json({ success: true });
+    // جلب الدور الحقيقي للمستخدم من قاعدة البيانات
+    const [profile] = await sql`SELECT role FROM profiles WHERE firebase_uid = ${decoded.uid}`;
+    const role = profile?.role || "student";
+
+    // إرسال الدور مع الاستجابة لكي تعرف صفحة الدخول أين توجهه
+    const response = NextResponse.json({ success: true, role }); 
+    
     response.cookies.set("__session", sessionCookie, {
       maxAge: 60 * 60 * 24 * 14,
       httpOnly: true,

@@ -46,7 +46,7 @@ export default function TeacherDashboard() {
       try {
         setError("");
         const [statsRes, coursesRes] = await Promise.all([
-          fetch(`/api/teacher/dashboard?uid=${user.uid}`),
+          fetch(`/api/teacher/dashboard?uid=${user.uid}`, { credentials: "include" }),
           fetch("/api/teacher/courses", { credentials: "include" }),
         ]);
 

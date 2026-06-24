@@ -23,15 +23,16 @@ export default function LoginPage() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
-  const redirectAfterLogin = (userEmail: string) => {
+const redirectAfterLogin = (userEmail: string, userRole: string) => {
     const adminEmails = ["abdullahhelmy114@gmail.com", "info@ruhulqudus.com"];
-    const targetPath = adminEmails.includes(userEmail)
-      ? "/dashboard/admin"
-      : (localStorage.getItem("userRole") || "student") === "teacher"
-        ? "/dashboard/teacher"
-        : "/dashboard/student";
-
-    window.location.href = targetPath;
+    
+    if (adminEmails.includes(userEmail) || userRole === "admin") {
+      window.location.href = "/dashboard/admin";
+    } else if (userRole === "teacher") {
+      window.location.href = "/dashboard/teacher";
+    } else {
+      window.location.href = "/dashboard/student";
+    }
   };
 
   const performLogin = async () => {
@@ -39,14 +40,15 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
 
-      // إنشاء جلسة الخادم
-      await fetch("/api/auth/session", {
+      // إنشاء جلسة الخادم واستلام الدور
+      const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
+      const data = await res.json(); // جلب البيانات التي تحتوي على role
 
-      redirectAfterLogin(userCredential.user.email || "");
+      redirectAfterLogin(userCredential.user.email || "", data.role);
     } catch (err: any) {
       setError(err.message || "Login failed");
       setShowCaptcha(false);
@@ -54,6 +56,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +69,8 @@ export default function LoginPage() {
     setShowCaptcha(true);
   };
 
-  // ✅ دوال Google و Facebook معدلة لإنشاء جلسة الخادم
+
+  // ✅ دوال Google و Facebook تم تحديثها
   const handleSocialLogin = async (providerInstance: any) => {
     setLoading(true);
     setError("");
@@ -74,15 +78,15 @@ export default function LoginPage() {
       const result = await signInWithPopup(auth, providerInstance);
       const idToken = await result.user.getIdToken();
 
-      // إنشاء جلسة الخادم
-      await fetch("/api/auth/session", {
+      // إنشاء جلسة الخادم واستلام الدور
+      const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ idToken }),
       });
+      const data = await res.json();
 
-      localStorage.setItem("userRole", "student");
-      redirectAfterLogin(result.user.email || "");
+      redirectAfterLogin(result.user.email || "", data.role);
     } catch (err: any) {
       setError(err.message || "Login failed");
     } finally {
