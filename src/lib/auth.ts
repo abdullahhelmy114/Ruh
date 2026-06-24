@@ -30,7 +30,7 @@ export async function getServerSession(req: Request): Promise<{
     const auth = getAdminAuth();
     let decoded;
 
-    // 3. استخدام دالة التحقق الصحيحة بناءً على نوع التوكن
+    // 3. فك التشفير بالدالة الصحيحة
     if (isSessionCookie) {
       decoded = await auth.verifySessionCookie(token, true);
     } else {
@@ -39,25 +39,19 @@ export async function getServerSession(req: Request): Promise<{
 
     if (!decoded.uid) return null;
 
-    // 4. 🚨 الحل الجذري لمشكلة قواعد البيانات المزدوجة 🚨
-    // البحث أولاً في الجدول الجديد (users)
-    const [userRecord] = await sql`
-      SELECT role FROM users WHERE firebase_uid = ${decoded.uid}
+    // 4. 🔥 الحل النهائي: الاعتماد حصرياً على جدول profiles 🔥
+    const records = await sql`
+      SELECT role FROM profiles WHERE firebase_uid = ${decoded.uid}
     `;
-    
-    let userRole = userRecord?.role;
 
-    // إذا لم يجده في الجدول الجديد، نبحث في الجدول القديم (profiles) لحساب الأدمن
-    if (!userRole) {
-      const [profileRecord] = await sql`
-        SELECT role FROM profiles WHERE firebase_uid = ${decoded.uid}
-      `;
-      userRole = profileRecord?.role;
+    // إذا لم يجد الحساب في قاعدة البيانات
+    if (!records || records.length === 0) {
+      return null; 
     }
 
     return {
       uid: decoded.uid,
-      role: userRole || "student", // إذا لم يجده في أي جدول، يعتبره طالب كإجراء أمني
+      role: records[0].role || "student",
     };
   } catch (error) {
     console.error("Session verification failed:", error);
