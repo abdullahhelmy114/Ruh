@@ -52,21 +52,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
+      // 🔥 السحر هنا: تحديث الكاش الإجباري إذا كان المتصفح يظن أن الإيميل غير مؤكد 🔥
+      if (currentUser && !currentUser.emailVerified) {
+        try {
+          await currentUser.reload();
+        } catch (error) {
+          console.error("Failed to reload user state", error);
+        }
+      }
 
-      if (!currentUser) {
+      // أخذ النسخة الحديثة بعد التحديث
+      const activeUser = auth.currentUser;
+      setUser(activeUser);
+
+      if (!activeUser) {
         setRole(null);
         setIsLoading(false);
         return;
       }
 
-      if (ADMIN_EMAILS.includes(currentUser.email || "")) {
+      if (ADMIN_EMAILS.includes(activeUser.email || "")) {
         setRole("admin");
         setIsLoading(false);
         return;
       }
 
-      const serverRole = await fetchRoleFromServer(currentUser.uid);
+      const serverRole = await fetchRoleFromServer(activeUser.uid);
       if (!serverRole) {
         const stored =
           typeof window !== "undefined"
