@@ -102,7 +102,7 @@ export default function AdminDashboard() {
 
   if (
     user.email !== "abdullahhelmy114@gmail.com" &&
-    user.email !== "info@ruhulqudus.com"
+    user.email !== "noreply@ruhulqudus.net"
   )
     return (
       <div className="flex min-h-screen items-center justify-center">

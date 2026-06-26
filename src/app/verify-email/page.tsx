@@ -69,7 +69,7 @@ function VerifyEmailContent() {
       setTimeout(() => {
         if (
           email === "abdullahhelmy114@gmail.com" ||
-          email === "info@ruhulqudus.com"
+          email === "noreply@ruhulqudus.net"
         ) {
           router.push("/dashboard/admin");
         } else if (role === "teacher") {

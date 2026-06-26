@@ -22,7 +22,7 @@ export default function AdminProfilePage() {
       // السماح فقط للإيميلات المخصصة للأدمن
       const isAdmin =
         user.email === "abdullahhelmy114@gmail.com" ||
-        user.email === "info@ruhulqudus.com";
+        user.email === "noreply@ruhulqudus.net";
 
       if (!isAdmin) {
         const storedRole = localStorage.getItem("userRole");
@@ -47,7 +47,7 @@ export default function AdminProfilePage() {
   // التحقق من صلاحية الأدمن (منع الوميض)
   const isAdmin =
     user.email === "abdullahhelmy114@gmail.com" ||
-    user.email === "info@ruhulqudus.com";
+    user.email === "noreply@ruhulqudus.net";
 
   if (!isAdmin) return null;
 

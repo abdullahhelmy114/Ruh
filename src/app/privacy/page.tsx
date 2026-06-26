@@ -57,7 +57,7 @@ export default function PrivacyPage() {
           <p className="text-muted-foreground flex items-center gap-2">
             <Mail size={16} className="text-accent-foreground" />
             <T>For privacy concerns, contact us at:</T>
-            <a href="mailto:info@ruhulqudus.com" className="text-accent-foreground hover:underline">info@ruhulqudus.com</a>
+            <a href="mailto:noreply@ruhulqudus.net" className="text-accent-foreground hover:underline">noreply@ruhulqudus.net</a>
           </p>
         </section>
       </div>
