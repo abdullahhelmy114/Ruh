@@ -35,7 +35,7 @@ export default function LoginPage() {
     }
   };
 
-  const performLogin = async (e?: React.FormEvent) => {
+const performLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
       setLoading(true);
@@ -45,26 +45,21 @@ export default function LoginPage() {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
 
-      // 🔥 2. السطران السحريان: إجبار فايربيز على جلب الحالة الجديدة فوراً من السيرفر 🔥
-      await user.reload();
+      // 2. جلب التوكن لإرساله للسيرفر
       const freshToken = await user.getIdToken(true);
 
-      // 3. التحقق من البريد وإصلاح رابط التوجيه (لكي لا يظهر No email found)
-      // 3. التحقق من البريد من خلال الكاش المحدث لـ auth.currentUser
-    if (!auth.currentUser?.emailVerified) {
-      router.push(`/verify-email?email=${encodeURIComponent(user.email || "")}`);
-      return;
-    }
-
-      // 4. إنشاء جلسة الخادم واستلام الدور
+      // 3. إرسال التوكن لإنشاء جلسة مشفرة (السيرفر هنا هو من سيتأكد من صلاحياتك من Neon)
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken: freshToken }), // نرسل التوكن المحدث هنا
+        body: JSON.stringify({ idToken: freshToken }),
       });
-      const data = await res.json(); // جلب البيانات التي تحتوي على role
+      
+      const data = await res.json(); 
 
+      // 4. توجيهك فوراً وبدون أي طرد!
       redirectAfterLogin(user.email || "", data.role);
+      
     } catch (err: any) {
       setError(err.message || "Login failed");
       setShowCaptcha(false);
@@ -72,7 +67,7 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
