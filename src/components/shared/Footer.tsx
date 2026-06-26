@@ -89,7 +89,7 @@ export function Footer() {
             </li>
             <li className="flex items-center gap-1">
               <Mail size={12} className="text-secondary-foreground" />
-              <a href="mailto:noreply@ruhulqudus.net" className="hover:text-foreground transition-colors">
+              <a href="mailto:info@ruhulqudus.net" className="hover:text-foreground transition-colors">
                 <T>Contact</T>
               </a>
             </li>

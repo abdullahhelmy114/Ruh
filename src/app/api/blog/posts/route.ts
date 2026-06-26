@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     }
 
     const [admin] = await sql`SELECT email FROM profiles WHERE firebase_uid = ${adminUid}`;
-    if (!admin || (admin.email !== 'abdullahhelmy114@gmail.com' && admin.email !== 'noreply@ruhulqudus.net')) {
+    if (!admin || (admin.email !== 'abdullahhelmy114@gmail.com' && admin.email !== 'info@ruhulqudus.net')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 
@@ -63,7 +63,7 @@ export async function DELETE(request: Request) {
     }
 
     const [admin] = await sql`SELECT email FROM profiles WHERE firebase_uid = ${adminUid}`;
-    if (!admin || (admin.email !== 'abdullahhelmy114@gmail.com' && admin.email !== 'noreply@ruhulqudus.net')) {
+    if (!admin || (admin.email !== 'abdullahhelmy114@gmail.com' && admin.email !== 'info@ruhulqudus.net')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
 

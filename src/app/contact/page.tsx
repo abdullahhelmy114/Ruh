@@ -98,7 +98,7 @@ export default function ContactPage() {
             <Mail className="h-5 w-5 text-secondary-foreground mt-0.5" />
             <div>
               <h3 className="font-medium"><T>Email</T></h3>
-              <a href="mailto:noreply@ruhulqudus.net" className="text-sm text-accent-foreground hover:underline">noreply@ruhulqudus.net</a>
+              <a href="mailto:info@ruhulqudus.net" className="text-sm text-accent-foreground hover:underline">noreply@ruhulqudus.net</a>
             </div>
           </div>
           <div className="flex items-start gap-3">

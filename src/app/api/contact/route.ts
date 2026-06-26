@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
     // إرسال الإيميل للإدارة
     await sendEmail(
-      'noreply@ruhulqudus.net',
+      'info@ruhulqudus.net',
       'New Contact Message',
       contactFormEmail(name, email, message)
     );

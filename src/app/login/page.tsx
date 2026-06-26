@@ -24,7 +24,7 @@ export default function LoginPage() {
   const router = useRouter();
 
 const redirectAfterLogin = (userEmail: string, userRole: string) => {
-    const adminEmails = ["abdullahhelmy114@gmail.com", "noreply@ruhulqudus.net"];
+    const adminEmails = ["abdullahhelmy114@gmail.com", "info@ruhulqudus.net"];
     
     if (adminEmails.includes(userEmail) || userRole === "admin") {
       window.location.href = "/dashboard/admin";

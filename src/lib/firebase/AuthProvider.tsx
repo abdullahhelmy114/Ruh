@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "./client";
 
-export const ADMIN_EMAILS = ["abdullahhelmy114@gmail.com", "noreply@ruhulqudus.net"];
+export const ADMIN_EMAILS = ["abdullahhelmy114@gmail.com", "info@ruhulqudus.net"];
 
 type AuthContextType = {
   user: User | null;
