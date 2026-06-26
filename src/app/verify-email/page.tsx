@@ -65,26 +65,36 @@ const handleSubmit = async () => {
       const role = data.role as string;
       localStorage.setItem("userRole", role);
 
-      // 🔥 هنا تم إضافة كود تحديث حالة فايربيز 🔥
+      // 🔥 الحل السحري: تحديث حالة فايربيز + تحديث الكوكي للسيرفر 🔥
       if (auth.currentUser) {
         await auth.currentUser.reload();
-        await auth.currentUser.getIdToken(true);
+        // استخراج توكن جديد يحتوي على حالة التأكيد الجديدة
+        const freshToken = await auth.currentUser.getIdToken(true);
+
+        // إرساله للسيرفر لتحديث الـ Cookie الخاص بـ Middleware
+        await fetch("/api/auth/session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ idToken: freshToken }),
+        });
       }
 
       setSuccess(true);
 
+      // 🔥 استخدام window.location لعمل Hard Reload يقرأ الكوكي الجديد ويعبر من الحارس 🔥
       setTimeout(() => {
         if (
           email === "abdullahhelmy114@gmail.com" ||
           email === "info@ruhulqudus.net"
         ) {
-          router.push("/dashboard/admin");
+          window.location.href = "/dashboard/admin";
         } else if (role === "teacher") {
-          router.push("/dashboard/teacher");
+          window.location.href = "/dashboard/teacher";
         } else {
-          router.push("/dashboard/student");
+          window.location.href = "/dashboard/student";
         }
       }, 2000);
+
     } catch (err: any) {
       setError(err.message);
       setDigits(Array(6).fill(""));

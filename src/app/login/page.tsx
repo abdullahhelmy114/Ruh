@@ -50,10 +50,11 @@ export default function LoginPage() {
       const freshToken = await user.getIdToken(true);
 
       // 3. التحقق من البريد وإصلاح رابط التوجيه (لكي لا يظهر No email found)
-      if (!user.emailVerified) {
-        router.push(`/verify-email?email=${encodeURIComponent(user.email || "")}`);
-        return; // نوقف الدالة هنا حتى لا يدخل للوحة التحكم
-      }
+      // 3. التحقق من البريد من خلال الكاش المحدث لـ auth.currentUser
+    if (!auth.currentUser?.emailVerified) {
+      router.push(`/verify-email?email=${encodeURIComponent(user.email || "")}`);
+      return;
+    }
 
       // 4. إنشاء جلسة الخادم واستلام الدور
       const res = await fetch("/api/auth/session", {
