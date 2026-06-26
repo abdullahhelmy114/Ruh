@@ -23,7 +23,7 @@ export default function LoginPage() {
   const [showCaptcha, setShowCaptcha] = useState(false);
   const router = useRouter();
 
-const redirectAfterLogin = (userEmail: string, userRole: string) => {
+  const redirectAfterLogin = (userEmail: string, userRole: string) => {
     const adminEmails = ["abdullahhelmy114@gmail.com", "info@ruhulqudus.net"];
     
     if (adminEmails.includes(userEmail) || userRole === "admin") {
@@ -35,20 +35,35 @@ const redirectAfterLogin = (userEmail: string, userRole: string) => {
     }
   };
 
-  const performLogin = async () => {
+  const performLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     try {
+      setLoading(true);
+      setError("");
+      
+      // 1. تسجيل الدخول
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const idToken = await userCredential.user.getIdToken();
+      const user = userCredential.user;
 
-      // إنشاء جلسة الخادم واستلام الدور
+      // 🔥 2. السطران السحريان: إجبار فايربيز على جلب الحالة الجديدة فوراً من السيرفر 🔥
+      await user.reload();
+      const freshToken = await user.getIdToken(true);
+
+      // 3. التحقق من البريد وإصلاح رابط التوجيه (لكي لا يظهر No email found)
+      if (!user.emailVerified) {
+        router.push(`/verify-email?email=${encodeURIComponent(user.email || "")}`);
+        return; // نوقف الدالة هنا حتى لا يدخل للوحة التحكم
+      }
+
+      // 4. إنشاء جلسة الخادم واستلام الدور
       const res = await fetch("/api/auth/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ idToken }),
+        body: JSON.stringify({ idToken: freshToken }), // نرسل التوكن المحدث هنا
       });
       const data = await res.json(); // جلب البيانات التي تحتوي على role
 
-      redirectAfterLogin(userCredential.user.email || "", data.role);
+      redirectAfterLogin(user.email || "", data.role);
     } catch (err: any) {
       setError(err.message || "Login failed");
       setShowCaptcha(false);
@@ -56,7 +71,6 @@ const redirectAfterLogin = (userEmail: string, userRole: string) => {
       setLoading(false);
     }
   };
-
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,8 +83,7 @@ const redirectAfterLogin = (userEmail: string, userRole: string) => {
     setShowCaptcha(true);
   };
 
-
-  // ✅ دوال Google و Facebook تم تحديثها
+  // ✅ دوال Google و Facebook
   const handleSocialLogin = async (providerInstance: any) => {
     setLoading(true);
     setError("");
