@@ -1,5 +1,6 @@
 "use client";
 
+import { auth } from "@/lib/firebase/client";
 import { Suspense, useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Mail, ArrowLeft, Loader2, ShieldCheck } from "lucide-react";
@@ -33,7 +34,7 @@ function VerifyEmailContent() {
     setDigits(newDigits);
   };
 
-  const handleSubmit = async () => {
+const handleSubmit = async () => {
     const fullCode = digits.join("");
     if (fullCode.length < 6) {
       setError("Please enter the full 6-digit code.");
@@ -63,6 +64,12 @@ function VerifyEmailContent() {
 
       const role = data.role as string;
       localStorage.setItem("userRole", role);
+
+      // 🔥 هنا تم إضافة كود تحديث حالة فايربيز 🔥
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        await auth.currentUser.getIdToken(true);
+      }
 
       setSuccess(true);
 
