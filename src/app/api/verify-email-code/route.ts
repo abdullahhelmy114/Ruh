@@ -1,5 +1,6 @@
 export const runtime = 'nodejs';
 
+import { getAdminAuth } from "@/lib/firebase/admin";
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db/client';
 
@@ -27,18 +28,22 @@ export async function POST(request: Request) {
 
     const { firebase_uid, role } = records[0];
 
+    // 🔥 تفعيل الطالب فقط، أما المعلم فيبقى pending حتى يوافق عليه الإدمن
     if (role === 'student') {
-      await sql`UPDATE profiles SET status = 'active' WHERE firebase_uid = ${firebase_uid};`;
-    } else if (role === 'teacher') {
-      await sql`UPDATE profiles SET status = 'active' WHERE firebase_uid = ${firebase_uid}`;
-    } else {
       await sql`UPDATE profiles SET status = 'active' WHERE firebase_uid = ${firebase_uid}`;
     }
 
+    // 🔥 هذا السطر يخبر فايربيز أن الإيميل تم تأكيده نهائياً للطالب والمعلم 🔥
+    await getAdminAuth().updateUser(firebase_uid, {
+      emailVerified: true,
+    });
+
+    // حذف رمز التحقق لأنه تم استخدامه بنجاح
     await sql`DELETE FROM verification_codes WHERE user_uid = ${firebase_uid}`;
 
     return NextResponse.json({ success: true, role });
   } catch (error: any) {
+    console.error("Verification error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
